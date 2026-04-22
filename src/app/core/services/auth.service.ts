@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -7,6 +7,7 @@ import { ApiResponse } from '../types/api-response.types';
 import { TokenStorageService } from './token-storage.service';
 import { CurrentUser } from '../models/current-user.model';
 import { switchMap } from 'rxjs/operators';
+import { SKIP_GLOBAL_ERROR_TOAST } from '../http/http-context-tokens';
 
 export interface LoginItem {
   accessToken: string;
@@ -68,7 +69,9 @@ export class AuthService {
     }
 
     return this.http
-      .get<ApiResponse<MeResponseData>>(`${environment.apiBaseUrl}/auth/me`)
+      .get<ApiResponse<MeResponseData>>(`${environment.apiBaseUrl}/auth/me`, {
+      context: new HttpContext().set(SKIP_GLOBAL_ERROR_TOAST, true),
+    })
       .pipe(
         map((response) => response.data.item),
         tap((user) => {

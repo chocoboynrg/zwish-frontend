@@ -28,7 +28,15 @@ export const apiErrorInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       if (error.status === 401) {
-        tokenStorage.clear();
+        const isAuthRoute =
+        req.url.includes('/auth/login') ||
+        req.url.includes('/auth/register') ||
+        req.url.includes('/auth/verify-email') ||
+        req.url.includes('/auth/resend-verification');
+
+        if (!isAuthRoute) {
+          tokenStorage.clear();
+        }
 
         if (!skipToast) {
           toastService.error('Votre session a expiré. Veuillez vous reconnecter.');

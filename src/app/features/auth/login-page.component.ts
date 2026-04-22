@@ -430,7 +430,7 @@ export class LoginPageComponent implements OnInit {
 
       if (!isVerified) {
         this.router.navigate(['/check-email'], {
-          queryParams: { email: user.email },
+          queryParams: { email: user.email, from: 'login' },
         });
         return;
       }

@@ -21,7 +21,7 @@ export const authGuard: CanActivateFn = () => {
 
   if (user.emailVerified === false) {
     return router.createUrlTree(['/check-email'], {
-      queryParams: { email: user.email },
+      queryParams: { email: user.email, from: 'login' },
     });
   }
 
