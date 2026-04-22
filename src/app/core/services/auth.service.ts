@@ -1,12 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpContext } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../types/api-response.types';
 import { TokenStorageService } from './token-storage.service';
 import { CurrentUser } from '../models/current-user.model';
-import { switchMap } from 'rxjs/operators';
 import { SKIP_GLOBAL_ERROR_TOAST } from '../http/http-context-tokens';
 
 export interface LoginItem {
@@ -38,7 +37,7 @@ export class AuthService {
 
   readonly currentUser$ = this.currentUserSubject.asObservable();
 
-  login(payload: { email: string; password: string; }): Observable<LoginItem> {
+  login(payload: { email: string; password: string }): Observable<LoginItem> {
     return this.http
       .post<ApiResponse<LoginResponseData>>(
         `${environment.apiBaseUrl}/auth/login`,
@@ -47,8 +46,8 @@ export class AuthService {
       .pipe(
         map((response) => {
           const item: LoginItem = {
-            accessToken: response.data.item.accessToken,  // ← était response.data.accessToken
-            user: response.data.item.user,                // ← était response.data.user
+            accessToken: response.data.item.accessToken,
+            user: response.data.item.user,
           };
 
           this.tokenStorage.setToken(item.accessToken);
@@ -70,16 +69,20 @@ export class AuthService {
 
     return this.http
       .get<ApiResponse<MeResponseData>>(`${environment.apiBaseUrl}/auth/me`, {
-      context: new HttpContext().set(SKIP_GLOBAL_ERROR_TOAST, true),
-    })
+        context: new HttpContext().set(SKIP_GLOBAL_ERROR_TOAST, true),
+      })
       .pipe(
         map((response) => response.data.item),
         tap((user) => {
           this.tokenStorage.setUser(user);
           this.currentUserSubject.next(user);
         }),
-        catchError(() => {
-          this.logout();
+        catchError((error: unknown) => {
+          // ✅ On ne déconnecte QUE si le token est vraiment invalide/expiré (401)
+          // Une erreur réseau ou serveur temporaire ne doit PAS déconnecter l'utilisateur
+          if (error instanceof HttpErrorResponse && error.status === 401) {
+            this.logout();
+          }
           return of(null);
         }),
       );
@@ -148,8 +151,7 @@ export class AuthService {
     if (!user) return false;
 
     return (
-      user.platformRole === 'ADMIN' ||
-      user.platformRole === 'SUPER_ADMIN'
+      user.platformRole === 'ADMIN' || user.platformRole === 'SUPER_ADMIN'
     );
   }
 }
