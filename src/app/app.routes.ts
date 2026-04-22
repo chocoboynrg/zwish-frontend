@@ -30,6 +30,8 @@ import { PublicHomePageComponent } from './features/public/pages/public-home-pag
 import { HowItWorksPageComponent } from './features/public/pages/how-it-works-page.component';
 import { PublicCatalogPageComponent } from './features/public/pages/public-catalog-page.component';
 import { ProductRequestsPageComponent } from './features/product-requests/pages/product-requests-page.component';
+import { UsersAdminPageComponent } from './features/users/pages/users-admin-page.component';
+import { UserDetailAdminPageComponent } from './features/users/pages/user-detail-admin-page.component';
 
 export const routes: Routes = [
   {
@@ -141,6 +143,14 @@ export const routes: Routes = [
       {
         path: 'notifications',
         component: NotificationsPageComponent,
+      }, 
+      {
+        path: 'users',
+        component: UsersAdminPageComponent,
+      },
+      {
+        path: 'users/:id',
+        component: UserDetailAdminPageComponent,
       },
     ],
   },
