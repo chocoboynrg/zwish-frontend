@@ -23,26 +23,24 @@ export const apiErrorInterceptor: HttpInterceptorFn = (req, next) => {
         if (!skipToast) {
           toastService.error('Erreur réseau.');
         }
-
         return throwError(() => error);
       }
 
       if (error.status === 401) {
         const isAuthRoute =
-        req.url.includes('/auth/login') ||
-        req.url.includes('/auth/register') ||
-        req.url.includes('/auth/verify-email') ||
-        req.url.includes('/auth/resend-verification');
+          req.url.includes('/auth/login') ||
+          req.url.includes('/auth/register') ||
+          req.url.includes('/auth/verify-email') ||
+          req.url.includes('/auth/resend-verification');
 
         if (!isAuthRoute) {
           tokenStorage.clear();
+          if (!skipToast) {
+            toastService.error('Votre session a expiré. Veuillez vous reconnecter.');
+          }
+          router.navigate(['/login']);
         }
 
-        if (!skipToast) {
-          toastService.error('Votre session a expiré. Veuillez vous reconnecter.');
-        }
-
-        router.navigate(['/login']);
         return throwError(() => error);
       }
 
