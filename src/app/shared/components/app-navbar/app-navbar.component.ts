@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { filter, take } from 'rxjs/operators';
+import { delay, filter, take } from 'rxjs/operators';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationCenterService } from '../../../features/notifications/services/notification-center.service'; 
@@ -1016,6 +1016,7 @@ export class AppNavbarComponent {
       .pipe(
         filter((user) => !!user),
         take(1),
+        delay(0), // S'assure que les autres effets liés à l'authentification se sont déclenchés
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(() => {
