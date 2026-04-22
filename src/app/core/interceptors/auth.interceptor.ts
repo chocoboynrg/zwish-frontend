@@ -1,29 +1,59 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+
+import { ToastService } from '../services/toast.service';
+import { ApiErrorService } from '../services/api-error.service';
+import { SKIP_GLOBAL_ERROR_TOAST } from '../http/http-context-tokens';
 import { TokenStorageService } from '../services/token-storage.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const toastService = inject(ToastService);
+  const apiErrorService = inject(ApiErrorService);
   const tokenStorage = inject(TokenStorageService);
-  const token = tokenStorage.getToken();
+  const router = inject(Router);
 
-  if (!token) {
-    return next(req);
-  }
+  const skipToast = req.context.get(SKIP_GLOBAL_ERROR_TOAST);
 
-  if (
-    req.url.includes('/auth/login') ||
-    req.url.includes('/auth/register')||
-    req.url.includes('/auth/verify-email') ||
-    req.url.includes('/auth/resend-verification')
-  ) {
-    return next(req);
-  }
+  return next(req).pipe(
+    catchError((error: unknown) => {
+      if (!(error instanceof HttpErrorResponse)) {
+        if (!skipToast) {
+          toastService.error('Erreur réseau.');
+        }
 
-  return next(
-    req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
+        return throwError(() => error);
+      }
+
+      if (error.status === 401) {
+        const isAuthRoute =
+          req.url.includes('/auth/login') ||
+          req.url.includes('/auth/register') ||
+          req.url.includes('/auth/verify-email') ||
+          req.url.includes('/auth/resend-verification');
+
+        // ✅ On ne touche au token, au toast, ni à la navigation que si ce n'est PAS une route d'auth
+        if (!isAuthRoute) {
+          tokenStorage.clear();
+
+          if (!skipToast) {
+            toastService.error('Votre session a expiré. Veuillez vous reconnecter.');
+          }
+
+          router.navigate(['/login']);
+        }
+
+        return throwError(() => error);
+      }
+
+      if (!skipToast) {
+        const message = apiErrorService.getUserMessage(error);
+        toastService.error(message);
+      }
+
+      return throwError(() => error);
     }),
   );
 };
