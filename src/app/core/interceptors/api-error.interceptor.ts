@@ -33,7 +33,12 @@ export const apiErrorInterceptor: HttpInterceptorFn = (req, next) => {
           req.url.includes('/auth/verify-email') ||
           req.url.includes('/auth/resend-verification');
 
-        if (!isAuthRoute) {
+        // ✅ Les routes notifications peuvent échouer silencieusement
+        // (token pas encore prêt au chargement initial)
+        const isSilentRoute =
+          req.url.includes('/notifications/me');
+
+        if (!isAuthRoute && !isSilentRoute) {
           tokenStorage.clear();
           if (!skipToast) {
             toastService.error('Votre session a expiré. Veuillez vous reconnecter.');

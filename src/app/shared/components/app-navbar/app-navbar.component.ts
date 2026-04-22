@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { filter } from 'rxjs/operators';
+import { filter, take } from 'rxjs/operators';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationCenterService } from '../../../features/notifications/services/notification-center.service'; 
@@ -1011,12 +1011,17 @@ export class AppNavbarComponent {
       document.body.style.overflow = this.mobileMenuOpen() ? 'hidden' : '';
     });
 
-    effect(() => {
-      if (this.isAuthenticated()) {
+    // ✅ Ne se déclenche qu'une seule fois quand l'utilisateur devient authentifié
+    this.authService.currentUser$
+      .pipe(
+        filter((user) => !!user),
+        take(1),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
         this.notificationCenter.loadUnreadCount();
         this.notificationCenter.loadNotifications();
-      }
-    });
+      });
 
     this.router.events
       .pipe(

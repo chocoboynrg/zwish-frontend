@@ -19,11 +19,16 @@ export class ApiErrorService {
     }
 
     if (error.status === 403) {
-      return 'Vous n’avez pas les droits pour effectuer cette action.';
+      return 'Vous n\'avez pas les droits pour effectuer cette action.';
     }
 
     if (error.status === 404) {
       return 'Ressource introuvable.';
+    }
+
+    // ✅ 429 géré explicitement — ne jamais afficher le message brut du throttler
+    if (error.status === 429) {
+      return 'Trop de requêtes. Veuillez patienter quelques instants.';
     }
 
     if (error.status >= 500) {

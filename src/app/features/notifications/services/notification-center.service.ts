@@ -1,7 +1,9 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { HttpContext } from '@angular/common/http';
 
 import { NotificationsService } from './notifications.service';
 import { AppNotification } from '../models/notification.model';
+import { SKIP_GLOBAL_ERROR_TOAST } from '../../../core/http/http-context-tokens';
 
 @Injectable({
   providedIn: 'root',
@@ -34,7 +36,8 @@ export class NotificationCenterService {
         this._unreadCount.set(Number(result?.unreadCount ?? 0));
       },
       error: () => {
-        // on garde le compteur courant si l'appel échoue
+        // ✅ Silencieux — pas de toast, pas de déconnexion
+        // Un 401 ici = token pas encore prêt, on ignore
       },
     });
   }
@@ -62,7 +65,7 @@ export class NotificationCenterService {
         this._loading.set(false);
       },
       error: () => {
-        this._error.set('Impossible de charger les notifications.');
+        // ✅ Silencieux — pas de toast, pas de déconnexion
         this._loading.set(false);
       },
     });
