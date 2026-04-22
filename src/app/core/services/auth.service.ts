@@ -14,8 +14,10 @@ export interface LoginItem {
 }
 
 interface LoginResponseData {
-  accessToken: string;
-  user: CurrentUser;
+  item: {
+    accessToken: string;
+    user: CurrentUser;
+  };
 }
 
 interface MeResponseData {
@@ -35,10 +37,7 @@ export class AuthService {
 
   readonly currentUser$ = this.currentUserSubject.asObservable();
 
-  login(payload: {
-    email: string;
-    password: string;
-  }): Observable<LoginItem> {
+  login(payload: { email: string; password: string; }): Observable<LoginItem> {
     return this.http
       .post<ApiResponse<LoginResponseData>>(
         `${environment.apiBaseUrl}/auth/login`,
@@ -47,8 +46,8 @@ export class AuthService {
       .pipe(
         map((response) => {
           const item: LoginItem = {
-            accessToken: response.data.accessToken,
-            user: response.data.user,
+            accessToken: response.data.item.accessToken,  // ← était response.data.accessToken
+            user: response.data.item.user,                // ← était response.data.user
           };
 
           this.tokenStorage.setToken(item.accessToken);
