@@ -32,6 +32,8 @@ import { PublicCatalogPageComponent } from './features/public/pages/public-catal
 import { ProductRequestsPageComponent } from './features/product-requests/pages/product-requests-page.component';
 import { UsersAdminPageComponent } from './features/users/pages/users-admin-page.component';
 import { UserDetailAdminPageComponent } from './features/users/pages/user-detail-admin-page.component';
+import { PaymentsAdminPageComponent } from './features/payments/pages/payments-admin-page.component';
+import { PaymentDetailAdminPageComponent } from './features/payments/pages/payment-detail-admin-page.component';
 
 export const routes: Routes = [
   {
@@ -151,6 +153,14 @@ export const routes: Routes = [
       {
         path: 'users/:id',
         component: UserDetailAdminPageComponent,
+      },
+      {
+        path: 'payments',
+        component: PaymentsAdminPageComponent,
+      },
+      {
+        path: 'payments/:id',
+        component: PaymentDetailAdminPageComponent,
       },
     ],
   },

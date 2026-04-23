@@ -19,6 +19,11 @@ export const apiErrorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: unknown) => {
+
+      if (req.responseType === 'blob') {
+          return throwError(() => error);
+      }
+
       if (!(error instanceof HttpErrorResponse)) {
         if (!skipToast) {
           toastService.error('Erreur réseau.');
