@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 
@@ -9,464 +9,231 @@ import { AuthService } from '../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
-    <section class="auth-shell">
-      <div class="container auth-grid">
-        <div class="auth-aside">
-          <span class="eyebrow">Créer un compte</span>
-          <h1>Organisez vos événements et centralisez les contributions</h1>
-          <p>
-            Créez votre compte pour gérer vos wishlists, suivre les participations
-            et partager facilement vos événements avec vos proches.
-          </p>
-
-          <div class="benefits">
-            <div class="benefit-card">
-              <strong>Événements centralisés</strong>
-              <span>Créez et gérez vos événements depuis un seul espace.</span>
-            </div>
-
-            <div class="benefit-card">
-              <strong>Wishlist claire</strong>
-              <span>Ajoutez des produits, suivez leur financement et évitez les doublons.</span>
-            </div>
-
-            <div class="benefit-card">
-              <strong>Parcours simple</strong>
-              <span>Une expérience pensée pour les organisateurs comme pour les invités.</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="auth-card">
-          <div class="card-head">
-            <span class="eyebrow small">Bienvenue</span>
-            <h2>Créer mon compte</h2>
-            <p class="subtitle">
-              Renseignez vos informations pour démarrer.
-            </p>
-          </div>
-
-          <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-            <div class="form-grid">
-              <div class="form-group">
-                <label for="name">Nom</label>
-                <input
-                  id="name"
-                  type="text"
-                  formControlName="name"
-                  placeholder="Votre nom"
-                  [class.invalid]="isFieldInvalid('name')"
-                />
-                <small class="field-error" *ngIf="isFieldInvalid('name')">
-                  Le nom est requis.
-                </small>
+    <div class="auth-page">
+      <!-- Panneau gauche -->
+      <div class="auth-panel">
+        <div class="panel-content">
+          <a routerLink="/" class="panel-logo"><span class="z">Z</span>Wish</a>
+          <div class="panel-body">
+            <h2>Créez votre compte.<br/>Lancez-vous dès aujourd'hui.</h2>
+            <p>Rejoignez des centaines d'organisateurs qui font confiance à ZWish pour leurs moments importants.</p>
+            <div class="panel-steps">
+              <div class="ps-item">
+                <div class="ps-num">1</div>
+                <span>Créez votre compte en 30 secondes</span>
               </div>
-
-              <div class="form-group">
-                <label for="email">Email</label>
-                <input
-                  id="email"
-                  type="email"
-                  formControlName="email"
-                  placeholder="votre@email.com"
-                  [class.invalid]="isFieldInvalid('email')"
-                />
-                <small class="field-error" *ngIf="isFieldInvalid('email')">
-                  Veuillez saisir une adresse email valide.
-                </small>
+              <div class="ps-item">
+                <div class="ps-num">2</div>
+                <span>Vérifiez votre email</span>
               </div>
-
-              <div class="form-group">
-                <label for="phone">Téléphone <span>(optionnel)</span></label>
-                <input
-                  id="phone"
-                  type="text"
-                  formControlName="phone"
-                  placeholder="Ex : +22670000000"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="password">Mot de passe</label>
-                <input
-                  id="password"
-                  type="password"
-                  formControlName="password"
-                  placeholder="Choisissez un mot de passe"
-                  [class.invalid]="isFieldInvalid('password')"
-                />
-                <small class="field-error" *ngIf="isFieldInvalid('password')">
-                  Le mot de passe est requis.
-                </small>
-              </div>
-
-              <div class="form-group full-width">
-                <label for="confirmPassword">Confirmer le mot de passe</label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  formControlName="confirmPassword"
-                  placeholder="Retapez votre mot de passe"
-                  [class.invalid]="passwordMismatch"
-                />
-                <small class="field-error" *ngIf="passwordMismatch">
-                  Les mots de passe ne correspondent pas.
-                </small>
+              <div class="ps-item">
+                <div class="ps-num">3</div>
+                <span>Lancez votre premier événement</span>
               </div>
             </div>
-
-            <button type="submit" class="primary-btn" [disabled]="loading">
-              {{ loading ? 'Création...' : 'Créer mon compte' }}
-            </button>
-          </form>
-
-          <div class="success-box" *ngIf="successMessage">
-            {{ successMessage }}
           </div>
-
-          <div class="error-box" *ngIf="errorMessage">
-            {{ errorMessage }}
-          </div>
-
-          <div class="helper-links">
-            <a routerLink="/login">Déjà un compte ? Se connecter</a>
-            <a routerLink="/">Retour à l’accueil</a>
+          <div class="panel-cta">
+            Déjà inscrit ? <a routerLink="/login" class="panel-link">Se connecter →</a>
           </div>
         </div>
       </div>
-    </section>
+
+      <!-- Formulaire -->
+      <div class="auth-form-side">
+        <div class="form-wrap">
+          <div class="form-header">
+            <h1>Créer un compte</h1>
+            <p>Déjà inscrit ? <a routerLink="/login" class="link">Se connecter →</a></p>
+          </div>
+
+          <div class="alert alert-error" *ngIf="errorMessage">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v5M10 13.5v.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            {{ errorMessage }}
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+            <div class="field">
+              <label>Nom complet</label>
+              <input type="text" formControlName="name" placeholder="Marie Dupont" [class.invalid]="isInvalid('name')" autocomplete="name" />
+              <span class="field-err" *ngIf="isInvalid('name')">Nom requis.</span>
+            </div>
+
+            <div class="field">
+              <label>Adresse email</label>
+              <input type="email" formControlName="email" placeholder="vous@exemple.com" [class.invalid]="isInvalid('email')" autocomplete="email" />
+              <span class="field-err" *ngIf="isInvalid('email')">Email invalide.</span>
+            </div>
+
+            <div class="field">
+              <label>Mot de passe</label>
+              <div class="password-wrap">
+                <input [type]="showPw ? 'text' : 'password'" formControlName="password" placeholder="8 caractères minimum" [class.invalid]="isInvalid('password')" autocomplete="new-password" />
+                <button type="button" class="toggle-pw" (click)="showPw = !showPw" tabindex="-1">
+                  <svg *ngIf="!showPw" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg>
+                  <svg *ngIf="showPw" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+              <span class="field-err" *ngIf="isInvalid('password')">8 caractères minimum.</span>
+              <!-- Force du mot de passe -->
+              <div class="pw-strength" *ngIf="form.get('password')?.value">
+                <div class="pw-bar">
+                  <div class="pw-fill" [style.width]="pwStrength() + '%'" [ngClass]="pwClass()"></div>
+                </div>
+                <span class="pw-label" [ngClass]="pwClass()">{{ pwLabel() }}</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Confirmer le mot de passe</label>
+              <input [type]="showPw ? 'text' : 'password'" formControlName="confirmPassword" placeholder="••••••••" [class.invalid]="isInvalid('confirmPassword') || mismatch()" autocomplete="new-password" />
+              <span class="field-err" *ngIf="mismatch()">Les mots de passe ne correspondent pas.</span>
+            </div>
+
+            <button type="submit" class="btn-submit" [disabled]="loading">
+              <span *ngIf="!loading">Créer mon compte</span>
+              <span *ngIf="loading" class="loading-dots"><span></span><span></span><span></span></span>
+            </button>
+
+            <p class="terms">En créant un compte, vous acceptez nos <a href="#" class="terms-link">Conditions d'utilisation</a> et notre <a href="#" class="terms-link">Politique de confidentialité</a>.</p>
+          </form>
+        </div>
+      </div>
+    </div>
   `,
   styles: [`
-    :host {
-      display: block;
-      min-height: 100%;
-      background: #fffaf8;
+    :host { display: block; }
+    .auth-page { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+
+    .auth-panel {
+      background: #000; position: relative; overflow: hidden;
+      background-image: radial-gradient(ellipse 70% 60% at 20% 30%, rgba(255,215,0,0.1) 0%, transparent 55%),
+                        radial-gradient(ellipse 60% 70% at 85% 75%, rgba(255,100,0,0.07) 0%, transparent 50%);
     }
+    .panel-content { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; padding: 40px 48px; gap: 40px; }
+    .panel-logo { font-size: 1.6rem; font-weight: 900; color: white; text-decoration: none; letter-spacing: -0.02em; }
+    .z { color: #FFD700; }
+    .panel-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 24px; }
+    .panel-body h2 { font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 900; color: white; line-height: 1.2; letter-spacing: -0.03em; margin: 0; }
+    .panel-body p { color: rgba(255,255,255,0.5); font-size: 1rem; line-height: 1.7; margin: 0; }
+    .panel-steps { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+    .ps-item { display: flex; align-items: center; gap: 14px; color: rgba(255,255,255,0.7); font-size: 0.9rem; }
+    .ps-num { width: 28px; height: 28px; border-radius: 50%; background: #FFD700; color: #000; font-weight: 900; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .panel-cta { color: rgba(255,255,255,0.4); font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 24px; }
+    .panel-link { color: #FFD700; font-weight: 700; text-decoration: none; }
 
-    .container {
-      width: min(1180px, calc(100% - 32px));
-      margin: 0 auto;
-    }
+    .auth-form-side { background: #fff; display: flex; align-items: center; justify-content: center; padding: 40px 24px; overflow-y: auto; }
+    .form-wrap { width: min(440px, 100%); display: flex; flex-direction: column; gap: 24px; }
 
-    .auth-shell {
-      min-height: calc(100vh - 120px);
-      display: flex;
-      align-items: center;
-      padding: 40px 0 56px;
-      background:
-        radial-gradient(circle at top right, rgba(255, 179, 71, 0.18), transparent 28%),
-        radial-gradient(circle at bottom left, rgba(255, 122, 89, 0.12), transparent 30%);
-    }
+    .form-header h1 { font-size: 2rem; font-weight: 900; color: #111; margin: 0 0 8px; letter-spacing: -0.02em; }
+    .form-header p { color: #6b7280; margin: 0; font-size: 0.9rem; }
+    .link { color: #111; font-weight: 700; text-decoration: none; }
 
-    .auth-grid {
-      display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
-      gap: 24px;
-      align-items: center;
-    }
+    .alert { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border-radius: 12px; font-size: 0.88rem; }
+    .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .alert svg { flex-shrink: 0; margin-top: 1px; }
 
-    .auth-aside,
-    .auth-card,
-    .benefit-card {
-      background: white;
-      border: 1px solid #f0e5df;
-      box-shadow: 0 18px 50px rgba(17, 24, 39, 0.06);
-    }
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    label { font-size: 0.85rem; font-weight: 700; color: #374151; }
+    input { padding: 12px 16px; border: 1.5px solid #e5e7eb; border-radius: 12px; font: inherit; font-size: 0.95rem; background: #f9fafb; transition: 0.2s; outline: 0; }
+    input:focus { border-color: #111; background: white; }
+    input.invalid { border-color: #ef4444; background: #fff5f5; }
+    .field-err { font-size: 0.78rem; color: #ef4444; }
 
-    .auth-aside,
-    .auth-card {
-      border-radius: 28px;
-      padding: 28px;
-    }
+    .password-wrap { position: relative; }
+    .password-wrap input { width: 100%; box-sizing: border-box; padding-right: 48px; }
+    .toggle-pw { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: 0; border: 0; cursor: pointer; color: #9ca3af; padding: 4px; }
 
-    .eyebrow {
-      display: inline-block;
-      margin-bottom: 12px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: #fff1eb;
-      color: #e85d3e;
-      font-weight: 700;
-      font-size: 0.9rem;
-    }
+    .pw-strength { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+    .pw-bar { flex: 1; height: 4px; background: #f3f4f6; border-radius: 999px; overflow: hidden; }
+    .pw-fill { height: 100%; border-radius: 999px; transition: width 0.3s, background 0.3s; }
+    .pw-fill.weak { background: #ef4444; }
+    .pw-fill.medium { background: #f59e0b; }
+    .pw-fill.strong { background: #22c55e; }
+    .pw-label { font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+    .pw-label.weak { color: #ef4444; }
+    .pw-label.medium { color: #f59e0b; }
+    .pw-label.strong { color: #22c55e; }
 
-    .eyebrow.small {
-      margin-bottom: 8px;
-      font-size: 0.82rem;
-    }
+    .btn-submit { width: 100%; padding: 14px; border: 0; border-radius: 12px; background: #111; color: white; font: inherit; font-size: 1rem; font-weight: 800; cursor: pointer; transition: 0.2s; margin-top: 4px; }
+    .btn-submit:hover:not(:disabled) { background: #000; transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    .auth-aside h1 {
-      margin: 0 0 14px;
-      font-size: clamp(2rem, 4vw, 3.2rem);
-      line-height: 1.08;
-      color: #111827;
-    }
+    .loading-dots { display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .loading-dots span { width: 6px; height: 6px; border-radius: 50%; background: white; animation: bounce 1.2s infinite; }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,80%,100% { transform: scale(0.8); opacity: 0.5; } 40% { transform: scale(1.2); opacity: 1; } }
 
-    .auth-aside p {
-      margin: 0;
-      color: #4b5563;
-      line-height: 1.75;
-      font-size: 1.02rem;
-      max-width: 720px;
-    }
+    .terms { color: #9ca3af; font-size: 0.78rem; text-align: center; margin: 0; line-height: 1.6; }
+    .terms-link { color: #6b7280; }
 
-    .benefits {
-      display: grid;
-      gap: 14px;
-      margin-top: 22px;
-    }
-
-    .benefit-card {
-      border-radius: 20px;
-      padding: 18px 20px;
-    }
-
-    .benefit-card strong {
-      display: block;
-      margin-bottom: 6px;
-      color: #111827;
-    }
-
-    .benefit-card span {
-      color: #6b7280;
-      line-height: 1.6;
-      font-size: 0.95rem;
-    }
-
-    .card-head {
-      margin-bottom: 18px;
-    }
-
-    .card-head h2 {
-      margin: 0 0 8px;
-      color: #111827;
-      font-size: 1.8rem;
-    }
-
-    .subtitle {
-      margin: 0;
-      color: #6b7280;
-      line-height: 1.6;
-    }
-
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .full-width {
-      grid-column: 1 / -1;
-    }
-
-    label {
-      font-weight: 700;
-      color: #374151;
-      font-size: 0.95rem;
-    }
-
-    label span {
-      color: #9ca3af;
-      font-weight: 600;
-      font-size: 0.85rem;
-    }
-
-    input {
-      width: 100%;
-      height: 48px;
-      padding: 0 14px;
-      border: 1px solid #e7ddd7;
-      border-radius: 14px;
-      box-sizing: border-box;
-      background: white;
-      outline: none;
-      font: inherit;
-      color: #111827;
-      transition: 0.2s ease;
-    }
-
-    input:focus {
-      border-color: #ffb8a6;
-      box-shadow: 0 0 0 4px rgba(255, 122, 89, 0.10);
-    }
-
-    input.invalid {
-      border-color: #fca5a5;
-      background: #fffdfd;
-    }
-
-    .field-error {
-      color: #b91c1c;
-      font-size: 0.82rem;
-      line-height: 1.4;
-    }
-
-    .primary-btn {
-      margin-top: 6px;
-      height: 48px;
-      border: none;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #ff7a59, #ffb347);
-      color: white;
-      font-weight: 700;
-      font: inherit;
-      cursor: pointer;
-      transition: 0.2s ease;
-      box-shadow: 0 10px 25px rgba(255, 122, 89, 0.22);
-    }
-
-    .primary-btn:hover {
-      transform: translateY(-1px);
-    }
-
-    .primary-btn:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .success-box {
-      margin-top: 16px;
-      padding: 14px 16px;
-      border-radius: 14px;
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
-      color: #166534;
-      line-height: 1.5;
-      font-size: 0.95rem;
-    }
-
-    .error-box {
-      margin-top: 16px;
-      padding: 14px 16px;
-      border-radius: 14px;
-      background: #fff7f7;
-      border: 1px solid #fecaca;
-      color: #b91c1c;
-      line-height: 1.5;
-      font-size: 0.95rem;
-    }
-
-    .helper-links {
-      margin-top: 18px;
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .helper-links a {
-      text-decoration: none;
-      color: #ff7a59;
-      font-weight: 700;
-    }
-
-    .helper-links a:hover {
-      text-decoration: underline;
-    }
-
-    @media (max-width: 980px) {
-      .auth-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .auth-aside,
-      .auth-card {
-        padding: 22px;
-        border-radius: 24px;
-      }
-
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .helper-links {
-        flex-direction: column;
-        gap: 10px;
-      }
+    @media (max-width: 768px) {
+      .auth-page { grid-template-columns: 1fr; }
+      .auth-panel { display: none; }
     }
   `],
 })
 export class RegisterPageComponent {
   private readonly fb = inject(FormBuilder);
-  private readonly authService = inject(AuthService);
+  private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  loading = false;
-  errorMessage = '';
-  successMessage = '';
-
-  readonly form = this.fb.group({
-    name: ['', [Validators.required]],
+  form = this.fb.group({
+    name: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
-    phone: [''],
-    password: ['', [Validators.required, Validators.minLength(6)]],
+    password: ['', [Validators.required, Validators.minLength(8)]],
     confirmPassword: ['', [Validators.required]],
   });
 
-  get passwordMismatch(): boolean {
-    const password = this.form.controls.password.value;
-    const confirmPassword = this.form.controls.confirmPassword.value;
+  loading = false;
+  showPw = false;
+  errorMessage = '';
 
-    return !!password && !!confirmPassword && password !== confirmPassword;
+  isInvalid(field: string): boolean {
+    const c = this.form.get(field);
+    return !!(c?.invalid && c.touched);
   }
 
-  isFieldInvalid(
-    fieldName: 'name' | 'email' | 'password' | 'confirmPassword',
-  ): boolean {
-    const control = this.form.controls[fieldName];
-    return !!control && control.invalid && (control.dirty || control.touched);
+  mismatch(): boolean {
+    const pw = this.form.get('password')?.value;
+    const cpw = this.form.get('confirmPassword')?.value;
+    return !!(this.form.get('confirmPassword')?.touched && pw && cpw && pw !== cpw);
+  }
+
+  pwStrength(): number {
+    const pw = this.form.get('password')?.value ?? '';
+    if (pw.length < 6) return 25;
+    if (pw.length < 10 || !/[A-Z]/.test(pw) || !/[0-9]/.test(pw)) return 55;
+    return 100;
+  }
+
+  pwClass(): string {
+    const s = this.pwStrength();
+    if (s < 40) return 'weak';
+    if (s < 80) return 'medium';
+    return 'strong';
+  }
+
+  pwLabel(): string {
+    const c = this.pwClass();
+    if (c === 'weak') return 'Faible';
+    if (c === 'medium') return 'Moyen';
+    return 'Fort';
   }
 
   submit(): void {
-    if (this.form.invalid || this.loading || this.passwordMismatch) {
-      this.form.markAllAsTouched();
-      return;
-    }
-
+    if (this.form.invalid || this.mismatch()) { this.form.markAllAsTouched(); return; }
     this.loading = true;
     this.errorMessage = '';
-    this.successMessage = '';
-
-    const payload = {
-      name: this.form.controls.name.value!.trim(),
-      email: this.form.controls.email.value!.trim(),
-      password: this.form.controls.password.value!,
-      phone: this.form.controls.phone.value?.trim() || undefined,
-    };
-
-    this.authService.register(payload).subscribe({
+    const { name, email, password } = this.form.getRawValue();
+    this.auth.register({ name: name!, email: email!, password: password! }).subscribe({
       next: () => {
         this.loading = false;
-        this.router.navigate(['/check-email'], {
-          queryParams: { email: payload.email },
-        });
+        this.router.navigate(['/check-email'], { queryParams: { email } });
       },
-      error: (error: unknown) => {
+      error: (err: any) => {
         this.loading = false;
-
-        const message =
-          typeof error === 'object' &&
-          error !== null &&
-          'error' in error &&
-          typeof (error as any).error?.message === 'string'
-            ? (error as any).error.message
-            : 'Erreur lors de la création du compte';
-
-        this.errorMessage = message;
+        this.errorMessage = err?.error?.message ?? 'Erreur lors de l\'inscription.';
       },
     });
   }

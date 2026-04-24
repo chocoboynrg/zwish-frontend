@@ -34,6 +34,8 @@ import { UsersAdminPageComponent } from './features/users/pages/users-admin-page
 import { UserDetailAdminPageComponent } from './features/users/pages/user-detail-admin-page.component';
 import { PaymentsAdminPageComponent } from './features/payments/pages/payments-admin-page.component';
 import { PaymentDetailAdminPageComponent } from './features/payments/pages/payment-detail-admin-page.component';
+import { AuditLogsAdminPageComponent } from './features/audit/pages/audit-logs-admin-page.component';
+import { ReconciliationAdminPageComponent } from './features/payments/pages/reconciliation-admin-page.component';
 
 export const routes: Routes = [
   {
@@ -161,6 +163,14 @@ export const routes: Routes = [
       {
         path: 'payments/:id',
         component: PaymentDetailAdminPageComponent,
+      },
+      {
+        path: 'audit',
+        component: AuditLogsAdminPageComponent,
+      },
+      {
+        path: 'reconciliation',
+        component: ReconciliationAdminPageComponent,
       },
     ],
   },

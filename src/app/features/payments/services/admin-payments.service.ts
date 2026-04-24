@@ -34,6 +34,32 @@ export interface AdminPayment {
   } | null;
 }
 
+export interface WebhookEvent {
+  id: number;
+  provider: string;
+  eventKey: string;
+  externalStatus: string;
+  providerTransactionId: string | null;
+  providerReference: string | null;
+  failureReason: string | null;
+  processedAt: string | null;
+  resultingPaymentStatus: string | null;
+  createdAt: string;
+}
+ 
+export interface WebhookEventsResponse {
+  items: WebhookEvent[];
+  total: number;
+  summary: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    succeededCount: number;
+    failedCount: number;
+  };
+}
+
+
 export interface AdminPaymentDetail extends AdminPayment {
   rawProviderPayload: unknown;
   webhooks: {
@@ -142,17 +168,63 @@ export class AdminPaymentsService {
       .pipe(map((r) => r.data.item));
   }
 
-  getReconciliation(query: { page?: number; limit?: number; severity?: string; issueType?: string } = {}): Observable<ReconciliationResponse> {
+  markSucceeded(
+    id: number,
+    data: { providerTransactionId?: string; providerReference?: string; note?: string } = {}
+    ): Observable<AdminPayment> {
+    return this.http
+        .patch<any>(`${this.base}/${id}/succeed`, data)
+        .pipe(map((r) => r.data.item));
+  }
+    
+  markFailed(
+    id: number,
+    data: { failureReason?: string; note?: string } = {}
+    ): Observable<AdminPayment> {
+    return this.http
+        .patch<any>(`${this.base}/${id}/fail`, data)
+        .pipe(map((r) => r.data.item));
+  }
+
+  getWebhooks(
+    paymentId: number,
+    query: { page?: number; limit?: number; externalStatus?: string; provider?: string } = {}
+    ): Observable<WebhookEventsResponse> {
+    let params = new HttpParams();
+    if (query.page) params = params.set('page', query.page);
+    if (query.limit) params = params.set('limit', query.limit);
+    if (query.externalStatus) params = params.set('externalStatus', query.externalStatus);
+    if (query.provider) params = params.set('provider', query.provider);
+    
+    return this.http
+        .get<any>(`${this.base}/admin/${paymentId}/webhooks`, { params })
+        .pipe(map((r) => ({ items: r.data.items, total: r.data.total, summary: r.data.summary })));
+  }
+
+    
+  getReconciliation(query: {
+    page?: number;
+    limit?: number;
+    severity?: string;
+    issueType?: string;
+    paymentId?: number;
+    contributionId?: number;
+    eventId?: number;
+    } = {}): Observable<ReconciliationResponse> {
     let params = new HttpParams();
     if (query.page) params = params.set('page', query.page);
     if (query.limit) params = params.set('limit', query.limit);
     if (query.severity) params = params.set('severity', query.severity);
     if (query.issueType) params = params.set('issueType', query.issueType);
-
+    if (query.paymentId) params = params.set('paymentId', query.paymentId);
+    if (query.contributionId) params = params.set('contributionId', query.contributionId);
+    if (query.eventId) params = params.set('eventId', query.eventId);
+    
     return this.http
-      .get<any>(`${this.base}/admin/reconciliation`, { params })
-      .pipe(map((r) => ({ items: r.data.items, total: r.data.total, summary: r.data.summary })));
+        .get<any>(`${this.base}/admin/reconciliation`, { params })
+        .pipe(map((r) => ({ items: r.data.items, total: r.data.total, summary: r.data.summary })));
   }
+
 
   exportCsv(query: AdminPaymentsQuery = {}): Observable<Blob> {
     let params = new HttpParams();

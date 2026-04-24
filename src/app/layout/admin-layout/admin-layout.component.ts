@@ -28,6 +28,13 @@ import { CommonModule } from '@angular/common';
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="1" y="5" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M1 9h18" stroke="currentColor" stroke-width="1.6"/><path d="M5 13h3M13 13h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
             Paiements
           </a>
+          <a routerLink="/admin/reconciliation" routerLinkActive="active">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+            <path d="M10 2a8 8 0 100 16A8 8 0 0010 2z" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Réconciliation
+        </a>
           <a routerLink="/admin/events" routerLinkActive="active">
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M6 2v4M14 2v4M2 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
             Événements
@@ -43,6 +50,14 @@ import { CommonModule } from '@angular/common';
           <a routerLink="/admin/notifications" routerLinkActive="active">
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2.5a6.5 6.5 0 016.5 6.5v3l1.5 2H2l1.5-2V9A6.5 6.5 0 0110 2.5zM8 16a2 2 0 004 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
             Notifications
+          </a>
+          <a routerLink="/admin/audit" routerLinkActive="active">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+              <path d="M9 2H4a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M9 2v7h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M5 12h6M5 15h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            Audit Logs
           </a>
         </nav>
 

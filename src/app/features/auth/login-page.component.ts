@@ -10,509 +10,266 @@ import { CurrentUser } from '../../core/models/current-user.model';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
-    <section class="login-shell">
-      <div class="container login-grid">
-        <div class="login-aside">
-          <span class="eyebrow">Connexion ZWish</span>
-          <h1>Retrouvez vos événements, wishlists et contributions</h1>
-          <p>
-            Connectez-vous pour accéder à votre espace utilisateur ou administrateur,
-            gérer vos événements et participer facilement à ceux de vos proches.
-          </p>
-
-          <div class="benefits">
-            <div class="benefit-card">
-              <strong>Wishlist centralisée</strong>
-              <span>Accédez rapidement à vos événements et à leurs besoins.</span>
-            </div>
-
-            <div class="benefit-card">
-              <strong>Contributions suivies</strong>
-              <span>Retrouvez vos paiements, réservations et progressions en temps réel.</span>
-            </div>
-
-            <div class="benefit-card">
-              <strong>Expérience simple</strong>
-              <span>Une interface claire pensée pour les organisateurs comme pour les invités.</span>
+    <div class="auth-page">
+      <!-- Panneau gauche décoratif -->
+      <div class="auth-panel">
+        <div class="panel-content">
+          <a routerLink="/" class="panel-logo"><span class="z">Z</span>Wish</a>
+          <div class="panel-body">
+            <h2>Organisez vos événements.<br/>Recevez ce qui compte.</h2>
+            <p>La plateforme wishlist événementielle qui simplifie la vie des organisateurs et de leurs invités.</p>
+            <div class="panel-features">
+              <div class="pf-item">
+                <div class="pf-icon">🎁</div>
+                <div>
+                  <div class="pf-title">Wishlist centralisée</div>
+                  <div class="pf-desc">Gérez tous vos cadeaux au même endroit</div>
+                </div>
+              </div>
+              <div class="pf-item">
+                <div class="pf-icon">💳</div>
+                <div>
+                  <div class="pf-title">Contributions suivies</div>
+                  <div class="pf-desc">Paiements et progressions en temps réel</div>
+                </div>
+              </div>
+              <div class="pf-item">
+                <div class="pf-icon">🔗</div>
+                <div>
+                  <div class="pf-title">Partage simplifié</div>
+                  <div class="pf-desc">Un lien unique pour vos invités</div>
+                </div>
+              </div>
             </div>
           </div>
+          <div class="panel-quote">"Le meilleur cadeau est celui qu'on reçoit vraiment."</div>
         </div>
+      </div>
 
-        <div class="login-card">
-          <div class="card-head">
-            <span class="eyebrow small">Bienvenue</span>
-            <h2>Se connecter</h2>
-            <p class="subtitle">
-              Entrez vos identifiants pour accéder à votre espace.
-            </p>
+      <!-- Formulaire -->
+      <div class="auth-form-side">
+        <div class="form-wrap">
+          <div class="form-header">
+            <h1>Connexion</h1>
+            <p>Pas encore de compte ? <a routerLink="/register" class="link">Créer un compte →</a></p>
           </div>
 
-          <div class="auth-links">
-            <a routerLink="/register">Créer un compte</a>
+          <!-- Erreur / Succès -->
+          <div class="alert alert-error" *ngIf="errorMessage">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v5M10 13.5v.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            {{ errorMessage }}
           </div>
-
-          <div class="auth-links" *ngIf="showResend">
-            <a href="" (click)="onResendClick($event)">
-              Renvoyer l'email de vérification
-            </a>
-          </div>
-
-          <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-            <div class="form-group">
-              <label for="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                formControlName="email"
-                placeholder="votre@email.com"
-                [class.invalid]="isFieldInvalid('email')"
-              />
-
-              <small class="field-error" *ngIf="isFieldInvalid('email')">
-                Veuillez saisir une adresse email valide.
-              </small>
-            </div>
-
-            <div class="form-group">
-              <label for="password">Mot de passe</label>
-              <input
-                id="password"
-                type="password"
-                formControlName="password"
-                placeholder="Votre mot de passe"
-                [class.invalid]="isFieldInvalid('password')"
-              />
-
-              <small class="field-error" *ngIf="isFieldInvalid('password')">
-                Le mot de passe est requis.
-              </small>
-            </div>
-
-            <button type="submit" class="primary-btn" [disabled]="loading">
-              {{ loading ? 'Connexion...' : 'Se connecter' }}
-            </button>
-          </form>
-
-          <div class="success-box" *ngIf="successMessage">
+          <div class="alert alert-success" *ngIf="successMessage">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 10l2.5 2.5 4.5-4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
             {{ successMessage }}
           </div>
 
-          <div class="error-box" *ngIf="errorMessage">
-            {{ errorMessage }}
-          </div>
+          <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+            <div class="field">
+              <label>Adresse email</label>
+              <input
+                type="email"
+                formControlName="email"
+                placeholder="vous@exemple.com"
+                [class.invalid]="isInvalid('email')"
+                autocomplete="email"
+              />
+              <span class="field-err" *ngIf="isInvalid('email')">Email invalide.</span>
+            </div>
 
-          <div class="helper-links">
-            <a routerLink="/">Retour à l’accueil</a>
-            <a routerLink="/catalog">Voir le catalogue</a>
+            <div class="field">
+              <label>
+                Mot de passe
+                <a routerLink="/forgot-password" class="label-link">Mot de passe oublié ?</a>
+              </label>
+              <div class="password-wrap">
+                <input
+                  [type]="showPassword ? 'text' : 'password'"
+                  formControlName="password"
+                  placeholder="••••••••"
+                  [class.invalid]="isInvalid('password')"
+                  autocomplete="current-password"
+                />
+                <button type="button" class="toggle-pw" (click)="showPassword = !showPassword" tabindex="-1">
+                  <svg *ngIf="!showPassword" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg>
+                  <svg *ngIf="showPassword" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+              <span class="field-err" *ngIf="isInvalid('password')">Mot de passe requis.</span>
+            </div>
+
+            <button type="submit" class="btn-submit" [disabled]="loading">
+              <span *ngIf="!loading">Se connecter</span>
+              <span *ngIf="loading" class="loading-dots">
+                <span></span><span></span><span></span>
+              </span>
+            </button>
+          </form>
+
+          <div class="resend-wrap" *ngIf="showResend">
+            <p>Email non vérifié ?</p>
+            <button class="btn-resend" (click)="resendVerification()">Renvoyer l'email de vérification →</button>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   `,
   styles: [`
-    :host {
-      display: block;
-      min-height: 100%;
-      background: #fffaf8;
-    }
+    :host { display: block; }
+    .auth-page { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
 
-    .container {
-      width: min(1180px, calc(100% - 32px));
-      margin: 0 auto;
+    /* PANEL GAUCHE */
+    .auth-panel {
+      background: #000; position: relative; overflow: hidden;
+      background-image: radial-gradient(ellipse 80% 60% at 30% 40%, rgba(255,215,0,0.12) 0%, transparent 60%),
+                        radial-gradient(ellipse 60% 80% at 80% 80%, rgba(255,100,0,0.07) 0%, transparent 50%);
     }
-
-    .login-shell {
-      min-height: calc(100vh - 120px);
-      display: flex;
-      align-items: center;
-      padding: 40px 0 56px;
-      background:
-        radial-gradient(circle at top right, rgba(255, 179, 71, 0.18), transparent 28%),
-        radial-gradient(circle at bottom left, rgba(255, 122, 89, 0.12), transparent 30%);
+    .panel-content {
+      position: relative; z-index: 1; height: 100%;
+      display: flex; flex-direction: column; padding: 40px 48px; gap: 40px;
     }
-
-    .login-grid {
-      display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
-      gap: 24px;
-      align-items: center;
+    .panel-logo {
+      font-size: 1.6rem; font-weight: 900; color: white; text-decoration: none;
+      letter-spacing: -0.02em;
     }
+    .z { color: #FFD700; }
+    .panel-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 24px; }
+    .panel-body h2 { font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 900; color: white; line-height: 1.2; letter-spacing: -0.03em; margin: 0; }
+    .panel-body p { color: rgba(255,255,255,0.5); font-size: 1rem; line-height: 1.7; margin: 0; }
+    .panel-features { display: flex; flex-direction: column; gap: 20px; margin-top: 8px; }
+    .pf-item { display: flex; align-items: flex-start; gap: 16px; }
+    .pf-icon { font-size: 1.5rem; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; flex-shrink: 0; }
+    .pf-title { color: white; font-weight: 700; font-size: 0.92rem; margin-bottom: 3px; }
+    .pf-desc { color: rgba(255,255,255,0.45); font-size: 0.82rem; }
+    .panel-quote { color: rgba(255,255,255,0.3); font-style: italic; font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 24px; }
 
-    .login-aside,
-    .login-card,
-    .benefit-card {
-      background: white;
-      border: 1px solid #f0e5df;
-      box-shadow: 0 18px 50px rgba(17, 24, 39, 0.06);
-    }
+    /* FORM SIDE */
+    .auth-form-side { background: #fff; display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
+    .form-wrap { width: min(440px, 100%); display: flex; flex-direction: column; gap: 28px; }
 
-    .login-aside,
-    .login-card {
-      border-radius: 28px;
-      padding: 28px;
-    }
+    .form-header h1 { font-size: 2rem; font-weight: 900; color: #111; margin: 0 0 8px; letter-spacing: -0.02em; }
+    .form-header p { color: #6b7280; margin: 0; font-size: 0.9rem; }
+    .link { color: #111; font-weight: 700; text-decoration: none; }
+    .link:hover { text-decoration: underline; }
 
-    .eyebrow {
-      display: inline-block;
-      margin-bottom: 12px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: #fff1eb;
-      color: #e85d3e;
-      font-weight: 700;
-      font-size: 0.9rem;
-    }
+    /* Alerts */
+    .alert { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border-radius: 12px; font-size: 0.88rem; line-height: 1.5; }
+    .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .alert-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .alert svg { flex-shrink: 0; margin-top: 1px; }
 
-    .eyebrow.small {
-      margin-bottom: 8px;
-      font-size: 0.82rem;
-    }
-
-    .login-aside h1 {
-      margin: 0 0 14px;
-      font-size: clamp(2rem, 4vw, 3.4rem);
-      line-height: 1.08;
-      color: #111827;
-    }
-
-    .login-aside p {
-      margin: 0;
-      color: #4b5563;
-      line-height: 1.75;
-      font-size: 1.02rem;
-      max-width: 720px;
-    }
-
-    .benefits {
-      display: grid;
-      gap: 14px;
-      margin-top: 22px;
-    }
-
-    .benefit-card {
-      border-radius: 20px;
-      padding: 18px 20px;
-    }
-
-    .benefit-card strong {
-      display: block;
-      margin-bottom: 6px;
-      color: #111827;
-    }
-
-    .benefit-card span {
-      color: #6b7280;
-      line-height: 1.6;
-      font-size: 0.95rem;
-    }
-
-    .card-head {
-      margin-bottom: 18px;
-    }
-
-    .card-head h2 {
-      margin: 0 0 8px;
-      color: #111827;
-      font-size: 1.8rem;
-    }
-
-    .subtitle {
-      margin: 0;
-      color: #6b7280;
-      line-height: 1.6;
-    }
-
-    .auth-links {
-      margin-bottom: 12px;
-    }
-
-    .auth-links a {
-      text-decoration: none;
-      color: #ff7a59;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .auth-links a:hover {
-      text-decoration: underline;
-    }
-
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
+    /* Fields */
+    .field { display: flex; flex-direction: column; gap: 7px; }
     label {
-      font-weight: 700;
-      color: #374151;
-      font-size: 0.95rem;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.85rem; font-weight: 700; color: #374151;
     }
-
+    .label-link { font-weight: 600; color: #6b7280; text-decoration: none; font-size: 0.8rem; }
+    .label-link:hover { color: #111; }
     input {
-      width: 100%;
-      height: 48px;
-      padding: 0 14px;
-      border: 1px solid #e7ddd7;
-      border-radius: 14px;
-      box-sizing: border-box;
-      background: white;
-      outline: none;
-      font: inherit;
-      color: #111827;
-      transition: 0.2s ease;
+      padding: 12px 16px; border: 1.5px solid #e5e7eb; border-radius: 12px;
+      font: inherit; font-size: 0.95rem; background: #f9fafb;
+      transition: border-color 0.2s, background 0.2s; outline: 0;
     }
+    input:focus { border-color: #111; background: white; }
+    input.invalid { border-color: #ef4444; background: #fff5f5; }
+    .field-err { font-size: 0.78rem; color: #ef4444; }
 
-    input:focus {
-      border-color: #ffb8a6;
-      box-shadow: 0 0 0 4px rgba(255, 122, 89, 0.10);
+    .password-wrap { position: relative; }
+    .password-wrap input { width: 100%; box-sizing: border-box; padding-right: 48px; }
+    .toggle-pw { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: 0; border: 0; cursor: pointer; color: #9ca3af; padding: 4px; }
+    .toggle-pw:hover { color: #374151; }
+
+    .btn-submit {
+      width: 100%; padding: 14px; border: 0; border-radius: 12px;
+      background: #111; color: white; font: inherit; font-size: 1rem; font-weight: 800;
+      cursor: pointer; transition: 0.2s; margin-top: 4px;
     }
+    .btn-submit:hover:not(:disabled) { background: #000; transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    input.invalid {
-      border-color: #fca5a5;
-      background: #fffdfd;
-    }
+    .loading-dots { display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .loading-dots span { width: 6px; height: 6px; border-radius: 50%; background: white; animation: bounce 1.2s infinite; }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,80%,100% { transform: scale(0.8); opacity: 0.5; } 40% { transform: scale(1.2); opacity: 1; } }
 
-    .field-error {
-      color: #b91c1c;
-      font-size: 0.82rem;
-      line-height: 1.4;
-    }
+    .resend-wrap { background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .resend-wrap p { margin: 0; font-size: 0.85rem; color: #92400e; font-weight: 600; }
+    .btn-resend { background: 0; border: 0; color: #92400e; font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; padding: 0; text-decoration: underline; }
 
-    .primary-btn {
-      margin-top: 6px;
-      height: 48px;
-      border: none;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #ff7a59, #ffb347);
-      color: white;
-      font-weight: 700;
-      font: inherit;
-      cursor: pointer;
-      transition: 0.2s ease;
-      box-shadow: 0 10px 25px rgba(255, 122, 89, 0.22);
-    }
-
-    .primary-btn:hover {
-      transform: translateY(-1px);
-    }
-
-    .primary-btn:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .success-box {
-      margin-top: 16px;
-      padding: 14px 16px;
-      border-radius: 14px;
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
-      color: #166534;
-      line-height: 1.5;
-      font-size: 0.95rem;
-    }
-
-    .error-box {
-      margin-top: 16px;
-      padding: 14px 16px;
-      border-radius: 14px;
-      background: #fff7f7;
-      border: 1px solid #fecaca;
-      color: #b91c1c;
-      line-height: 1.5;
-      font-size: 0.95rem;
-    }
-
-    .helper-links {
-      margin-top: 18px;
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .helper-links a {
-      text-decoration: none;
-      color: #ff7a59;
-      font-weight: 700;
-    }
-
-    .helper-links a:hover {
-      text-decoration: underline;
-    }
-
-    @media (max-width: 980px) {
-      .login-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .login-aside,
-      .login-card {
-        padding: 22px;
-        border-radius: 24px;
-      }
-
-      .helper-links {
-        flex-direction: column;
-        gap: 10px;
-      }
+    @media (max-width: 768px) {
+      .auth-page { grid-template-columns: 1fr; }
+      .auth-panel { display: none; }
     }
   `],
 })
 export class LoginPageComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
-  private readonly authService = inject(AuthService);
+  private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  private returnUrl = '/app';
-
-  loading = false;
-  errorMessage = '';
-  successMessage = '';
-  showResend = false;
-
-  readonly form = this.fb.group({
+  form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required]],
   });
 
-  ngOnInit(): void {
-    const requested =
-      this.route.snapshot.queryParamMap.get('returnUrl') || '/app';
+  loading = false;
+  showPassword = false;
+  showResend = false;
+  errorMessage = '';
+  successMessage = '';
+  private returnUrl = '';
 
-    this.returnUrl = requested.startsWith('/') ? requested : '/app';
+  ngOnInit(): void {
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] ?? '/app';
   }
 
-  isFieldInvalid(fieldName: 'email' | 'password'): boolean {
-    const control = this.form.controls[fieldName];
-    return !!control && control.invalid && (control.dirty || control.touched);
+  isInvalid(field: string): boolean {
+    const c = this.form.get(field);
+    return !!(c?.invalid && c.touched);
   }
 
   submit(): void {
-  if (this.form.invalid || this.loading) {
-    this.form.markAllAsTouched();
-    return;
-  }
-
-  this.loading = true;
-  this.errorMessage = '';
-  this.successMessage = '';
-  this.showResend = false;
-
-  const payload = this.form.getRawValue() as {
-    email: string;
-    password: string;
-  };
-
-  this.authService.login(payload).subscribe({
-    next: (response) => {
-      this.loading = false;
-
-      const user = response.user;
-
-      if (!user) {
-        this.errorMessage = 'Erreur de réponse serveur';
-        return;
-      }
-
-      const isVerified =
-        (user as CurrentUser & { emailVerified?: boolean }).emailVerified === true;
-
-      if (!isVerified) {
-        this.router.navigate(['/check-email'], {
-          queryParams: { email: user.email, from: 'login' },
-        });
-        return;
-      }
-
-      const role = user.platformRole;
-
-      if (this.returnUrl && this.returnUrl !== '/app') {
-        this.router.navigateByUrl(this.returnUrl);
-        return;
-      }
-
-      if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
-        this.router.navigateByUrl('/admin');
-        return;
-      }
-
-      this.router.navigateByUrl('/app');
-    },
-    error: (error: unknown) => {
-      this.loading = false;
-
-      const message =
-        typeof error === 'object' &&
-        error !== null &&
-        'error' in error &&
-        typeof (error as any).error?.message === 'string'
-          ? (error as any).error.message
-          : 'Connexion impossible';
-
-      this.errorMessage = message;
-
-      const lower = message.toLowerCase();
-      if (
-        lower.includes('non vérifié') ||
-        lower.includes('non verifie') ||
-        lower.includes('not verified') ||
-        lower.includes('verify')
-      ) {
-        this.showResend = true;
-      }
-    },
-  });
-}
-
-  onResendClick(event: Event): void {
-    event.preventDefault();
-    this.resendVerification();
-  }
-
-  resendVerification(): void {
-    const email = this.form.controls.email.value?.trim();
-
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    this.loading = true;
     this.errorMessage = '';
     this.successMessage = '';
 
-    if (!email) {
-      this.errorMessage = 'Veuillez entrer votre email avant de renvoyer le message.';
-      this.form.controls.email.markAsTouched();
-      return;
-    }
-
-    if (this.form.controls.email.invalid) {
-      this.errorMessage = 'Veuillez saisir une adresse email valide.';
-      this.form.controls.email.markAsTouched();
-      return;
-    }
-
-    this.authService.resendVerification(email).subscribe({
-      next: () => {
-        this.successMessage = 'Email de vérification envoyé.';
+    const { email, password } = this.form.getRawValue();
+    this.auth.login({ email: email!, password: password! }).subscribe({
+      next: (response) => {
+        const user = response.user;
+        this.loading = false;
+        const isVerified = (user as any).emailVerified === true;
+        if (!isVerified) {
+          this.router.navigate(['/check-email'], { queryParams: { email: user.email, from: 'login' } });
+          return;
+        }
+        const role = user.platformRole;
+        if (this.returnUrl && this.returnUrl !== '/app') { this.router.navigateByUrl(this.returnUrl); return; }
+        if (role === 'ADMIN' || role === 'SUPER_ADMIN') { this.router.navigateByUrl('/admin'); return; }
+        this.router.navigateByUrl('/app');
       },
-      error: (error: unknown) => {
-        const message =
-          typeof error === 'object' &&
-          error !== null &&
-          'error' in error &&
-          typeof (error as any).error?.message === 'string'
-            ? (error as any).error.message
-            : 'Erreur lors de l’envoi de l’email de vérification.';
-
-        this.errorMessage = message;
+      error: (err: any) => {
+        this.loading = false;
+        const msg = err?.error?.message ?? 'Connexion impossible';
+        this.errorMessage = msg;
+        const lower = msg.toLowerCase();
+        if (lower.includes('vérifié') || lower.includes('verifie') || lower.includes('verify')) {
+          this.showResend = true;
+        }
       },
+    });
+  }
+
+  resendVerification(): void {
+    const email = this.form.get('email')?.value?.trim();
+    if (!email) { this.errorMessage = 'Entrez votre email d\'abord.'; return; }
+    this.auth.resendVerification(email).subscribe({
+      next: () => { this.successMessage = 'Email de vérification envoyé !'; this.showResend = false; },
+      error: (err: any) => { this.errorMessage = err?.error?.message ?? 'Erreur lors de l\'envoi.'; },
     });
   }
 }
