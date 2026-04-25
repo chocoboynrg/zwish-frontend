@@ -17,6 +17,7 @@ export interface MyPaymentItem {
   paymentUrl?: string | null;
   failureReason?: string | null;
   initiatedAt?: string | null;
+  expiresAt?: string | null; 
   confirmedAt?: string | null;
   failedAt?: string | null;
   refundedAt?: string | null;
