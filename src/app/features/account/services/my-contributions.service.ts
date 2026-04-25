@@ -36,8 +36,8 @@ export interface MyContributionItem {
     status: string;
     provider?: string | null;
     paymentMethod?: string | null;
+    expiresAt?: string | null; 
   } | null;
-  expiresAt?: string | null; 
 }
 
 export interface MyContributionsResponse {
