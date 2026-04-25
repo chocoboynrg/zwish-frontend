@@ -12,6 +12,8 @@ export interface DashboardEventItem {
   status?: string;
   participantRole?: string;
   description?: string | null;
+  // ✅ Le backend inclut wishlistId dans organizedEvents
+  wishlistId?: number | null;
 }
 
 export interface MyDashboardResponse {

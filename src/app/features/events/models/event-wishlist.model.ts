@@ -11,6 +11,7 @@ export interface EventWishlistItem {
   name: string;
   price: number | null;
   quantity: number;
+  imageUrl: string | null;  // ✅ présent dans la réponse backend
   isReserved: boolean;
   reservationMode: string;
   targetAmount: number;

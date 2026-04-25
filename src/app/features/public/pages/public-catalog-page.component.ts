@@ -10,12 +10,15 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { UserWishlistItemService } from '../../account/services/user-wishlist-item.service';
 import { DashboardService } from '../../account/services/dashboard.service';
+import { EventsService } from '../../events/services/events.service';
+import { WishlistDrawerService } from '../services/wishlist-drawer.service';
 import { environment } from '../../../../environments/environment';
 
 interface WishlistChoice {
   wishlistId: number;
   eventId: number;
   eventTitle: string;
+  existingNames: string[]; // noms déjà présents dans cette wishlist
 }
 
 @Component({
@@ -211,11 +214,16 @@ interface WishlistChoice {
             <button
               *ngFor="let choice of wishlistChoices()"
               class="wishlist-choice-btn"
-              (click)="confirmAdd(choice)"
-              [disabled]="submittingId() !== null"
+              [class.already-added]="isAlreadyInWishlist(choice)"
+              (click)="!isAlreadyInWishlist(choice) && confirmAdd(choice)"
+              [disabled]="submittingId() !== null || isAlreadyInWishlist(choice)"
             >
-              <div class="choice-event-name">{{ choice.eventTitle }}</div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <div class="choice-left">
+                <div class="choice-event-name">{{ choice.eventTitle }}</div>
+                <div class="choice-already" *ngIf="isAlreadyInWishlist(choice)">Déjà dans cette wishlist</div>
+              </div>
+              <svg *ngIf="!isAlreadyInWishlist(choice)" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <svg *ngIf="isAlreadyInWishlist(choice)" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
           </div>
         </div>
@@ -334,7 +342,7 @@ interface WishlistChoice {
     .card-currency { font-size: 0.72rem; font-weight: 600; color: #9ca3af; }
     .card-cta {
       display: inline-flex; align-items: center; gap: 5px;
-      background: #111; color: white; border: 0; border-radius: 10px;
+      background: #111; color: white; border: 1px solid transparent; border-radius: 10px;
       padding: 8px 14px; font: inherit; font-size: 0.82rem; font-weight: 700;
       cursor: pointer; transition: 0.15s; white-space: nowrap;
     }
@@ -365,11 +373,14 @@ interface WishlistChoice {
     .wishlist-choice-btn {
       display: flex; align-items: center; justify-content: space-between;
       padding: 14px 18px; border: 1.5px solid #e5e7eb; border-radius: 12px;
-      background: white; font: inherit; cursor: pointer; text-align: left; transition: 0.15s;
+      background: white; font: inherit; cursor: pointer; text-align: left; transition: 0.15s; gap: 12px;
     }
-    .wishlist-choice-btn:hover:not(:disabled) { border-color: #111; background: #f9fafb; }
-    .wishlist-choice-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .wishlist-choice-btn:hover:not(:disabled):not(.already-added) { border-color: #111; background: #f9fafb; }
+    .wishlist-choice-btn.already-added { border-color: #bbf7d0; background: #f0fdf4; cursor: default; }
+    .wishlist-choice-btn:disabled:not(.already-added) { opacity: 0.5; cursor: not-allowed; }
+    .choice-left { display: flex; flex-direction: column; gap: 2px; }
     .choice-event-name { font-size: 0.9rem; font-weight: 600; color: #111; }
+    .choice-already { font-size: 0.75rem; color: #16a34a; font-weight: 600; }
 
     /* RESPONSIVE */
     @media (max-width: 1100px) {
@@ -393,6 +404,8 @@ export class PublicCatalogPageComponent implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly wishlistItemService = inject(UserWishlistItemService);
   private readonly dashboardService = inject(DashboardService);
+  private readonly eventsService = inject(EventsService);
+  private readonly wishlistDrawer = inject(WishlistDrawerService);
 
   readonly products = signal<CatalogProduct[]>([]);
   readonly categories = signal<CatalogCategory[]>([]);
@@ -495,18 +508,47 @@ export class PublicCatalogPageComponent implements OnInit {
     this.loadWishlists();
   }
 
+
   private loadWishlists(): void {
     this.wishlistLoading.set(true);
     this.wishlistChoices.set([]);
     this.dashboardService.getMyDashboard().subscribe({
       next: (dashboard) => {
-        const choices = (dashboard.organizedEvents ?? []).map((e: any) => ({
-          wishlistId: e.wishlistId ?? e.id,
-          eventId: e.id,
-          eventTitle: e.title,
-        }));
-        this.wishlistChoices.set(choices);
-        this.wishlistLoading.set(false);
+        const events = dashboard.organizedEvents ?? [];
+        if (events.length === 0) {
+          this.wishlistLoading.set(false);
+          return;
+        }
+
+        // Pour chaque événement, charger la wishlist pour connaître les items existants
+        let remaining = events.length;
+        const choices: WishlistChoice[] = [];
+
+        events.forEach((e: any) => {
+          this.eventsService.getEventWishlist(e.id).subscribe({
+            next: (wl) => {
+              choices.push({
+                wishlistId: 0, // résolu dans confirmAdd via getMyEventView
+                eventId: e.id,
+                eventTitle: e.title,
+                existingNames: (wl.items ?? []).map((item: any) =>
+                  item.name.trim().toLowerCase()
+                ),
+              });
+            },
+            error: () => {
+              // si erreur sur la wishlist, on ajoute quand même sans noms
+              choices.push({ wishlistId: 0, eventId: e.id, eventTitle: e.title, existingNames: [] });
+            },
+            complete: () => {
+              remaining--;
+              if (remaining === 0) {
+                this.wishlistChoices.set(choices);
+                this.wishlistLoading.set(false);
+              }
+            },
+          });
+        });
       },
       error: () => {
         this.wishlistLoading.set(false);
@@ -515,26 +557,48 @@ export class PublicCatalogPageComponent implements OnInit {
     });
   }
 
+  isAlreadyInWishlist(choice: WishlistChoice): boolean {
+    const productName = this.selectedProduct()?.name?.trim().toLowerCase() ?? '';
+    return choice.existingNames.includes(productName);
+  }
+
   confirmAdd(choice: WishlistChoice): void {
     const product = this.selectedProduct();
     if (!product) return;
     this.submittingId.set(product.id);
 
-    this.wishlistItemService.createWishlistItem({
-      wishlistId: choice.wishlistId,
-      name: product.name,
-      price: product.estimatedPrice ?? 0,
-      quantity: 1,
-      imageUrl: product.mainImageUrl ?? undefined,
-    }).subscribe({
-      next: () => {
-        this.submittingId.set(null);
-        this.showModal.set(false);
-        this.toast.success(`"${product.name}" ajouté à votre wishlist !`);
+    // Résoudre le wishlistId via getMyEventView puis créer l'item
+    this.eventsService.getMyEventView(choice.eventId).subscribe({
+      next: (view) => {
+        const wishlistId = view.event.wishlistId;
+        if (!wishlistId) {
+          this.submittingId.set(null);
+          this.toast.error('Wishlist introuvable pour cet événement.');
+          return;
+        }
+        this.wishlistItemService.createWishlistItem({
+          wishlistId,
+          name: product.name,
+          price: product.estimatedPrice ?? 0,
+          quantity: 1,
+          imageUrl: product.mainImageUrl ?? undefined,
+        }).subscribe({
+          next: () => {
+            this.submittingId.set(null);
+            this.showModal.set(false);
+            this.toast.success(`"${product.name}" ajouté à votre wishlist !`);
+            this.loadWishlists();
+            this.wishlistDrawer.notifyAdded(choice.eventId);
+          },
+          error: (e: any) => {
+            this.submittingId.set(null);
+            this.toast.error(e?.error?.message ?? 'Erreur lors de l\'ajout.');
+          },
+        });
       },
-      error: (e: any) => {
+      error: () => {
         this.submittingId.set(null);
-        this.toast.error(e?.error?.message ?? 'Erreur lors de l\'ajout.');
+        this.toast.error('Impossible de récupérer la wishlist de cet événement.');
       },
     });
   }

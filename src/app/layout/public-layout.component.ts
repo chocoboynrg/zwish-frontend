@@ -1,22 +1,21 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, inject, signal } from '@angular/core';
+import { Component, HostListener, inject, signal, computed } from '@angular/core';
 import { RouterLink, RouterOutlet, RouterLinkActive } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
+import { WishlistDrawerService } from '../features/public/services/wishlist-drawer.service';
+import { WishlistDrawerComponent } from '../features/public/components/wishlist-drawer.component';
 
 @Component({
   selector: 'app-public-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, WishlistDrawerComponent],
   template: `
     <div class="shell">
       <header class="topnav" [class.scrolled]="scrolled()">
         <div class="nav-inner">
-          <a routerLink="/" class="nav-brand">
-            <span class="brand-z">Z</span>Wish
-          </a>
+          <a routerLink="/" class="nav-brand"><span class="brand-z">Z</span>Wish</a>
 
           <nav class="nav-links">
             <a routerLink="/" routerLinkActive="nav-active" [routerLinkActiveOptions]="{exact:true}">Accueil</a>
@@ -24,10 +23,18 @@ import { AuthService } from '../core/services/auth.service';
             <a routerLink="/how-it-works" routerLinkActive="nav-active">Comment ça marche</a>
           </nav>
 
-          <!-- Actions selon état connexion -->
           <div class="nav-actions">
-            <!-- Connecté -->
             <ng-container *ngIf="isAuthenticated()">
+              <!-- Bouton Wishlist -->
+              <button class="nav-wishlist-btn" (click)="wishlistDrawer.toggle()" title="Ma wishlist">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="nav-wishlist-badge" *ngIf="wishlistDrawer.totalItems() > 0">
+                  {{ wishlistDrawer.totalItems() > 99 ? '99+' : wishlistDrawer.totalItems() }}
+                </span>
+              </button>
+
               <a routerLink="/app" class="nav-btn-ghost">Mon espace</a>
               <div class="nav-avatar-wrap" (click)="avatarOpen.set(!avatarOpen())" [class.open]="avatarOpen()">
                 <div class="nav-avatar">{{ initials() }}</div>
@@ -52,7 +59,6 @@ import { AuthService } from '../core/services/auth.service';
               </div>
             </ng-container>
 
-            <!-- Non connecté -->
             <ng-container *ngIf="!isAuthenticated()">
               <a routerLink="/login" class="nav-btn-ghost">Connexion</a>
               <a routerLink="/register" class="nav-btn-cta">Créer un compte</a>
@@ -82,7 +88,6 @@ import { AuthService } from '../core/services/auth.service';
         </div>
       </header>
 
-      <!-- Overlay dropdown -->
       <div class="nav-overlay" *ngIf="avatarOpen()" (click)="avatarOpen.set(false)"></div>
 
       <main class="main">
@@ -132,6 +137,9 @@ import { AuthService } from '../core/services/auth.service';
           </div>
         </div>
       </footer>
+
+      <!-- Wishlist Drawer -->
+      <app-wishlist-drawer *ngIf="isAuthenticated()"></app-wishlist-drawer>
     </div>
   `,
   styles: [`
@@ -139,7 +147,6 @@ import { AuthService } from '../core/services/auth.service';
     .shell { min-height: 100vh; display: flex; flex-direction: column; }
     .main { flex: 1; }
 
-    /* NAV */
     .topnav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(0,0,0,0.92); backdrop-filter: blur(16px); transition: background 0.3s, box-shadow 0.3s; border-bottom: 1px solid rgba(255,255,255,0.06); }
     .topnav.scrolled { background: rgba(0,0,0,0.98); box-shadow: 0 4px 24px rgba(0,0,0,0.3); }
     .nav-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; height: 64px; display: flex; align-items: center; gap: 40px; }
@@ -148,19 +155,32 @@ import { AuthService } from '../core/services/auth.service';
     .nav-links { display: flex; gap: 32px; flex: 1; }
     .nav-links a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: color 0.2s; }
     .nav-links a:hover, .nav-links a.nav-active { color: white; }
-    .nav-actions { display: flex; gap: 12px; align-items: center; }
+    .nav-actions { display: flex; gap: 10px; align-items: center; }
     .nav-btn-ghost { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.85rem; font-weight: 600; padding: 8px 16px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; transition: 0.2s; }
     .nav-btn-ghost:hover { border-color: white; color: white; }
     .nav-btn-cta { background: #FFD700; color: #000; text-decoration: none; font-size: 0.85rem; font-weight: 800; padding: 8px 18px; border-radius: 8px; transition: 0.2s; }
     .nav-btn-cta:hover { background: #FFC000; }
 
-    /* Avatar connecté */
+    /* Wishlist btn */
+    .nav-wishlist-btn {
+      position: relative; width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px; background: transparent; cursor: pointer; color: rgba(255,255,255,0.7);
+      display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0;
+    }
+    .nav-wishlist-btn:hover { border-color: rgba(255,215,0,0.5); color: #FFD700; background: rgba(255,215,0,0.08); }
+    .nav-wishlist-badge {
+      position: absolute; top: -7px; right: -7px; min-width: 18px; height: 18px;
+      background: #FFD700; color: #000; border-radius: 999px; font-size: 0.65rem; font-weight: 900;
+      display: flex; align-items: center; justify-content: center; padding: 0 4px;
+      border: 2px solid #000;
+    }
+
+    /* Avatar */
     .nav-avatar-wrap { position: relative; display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 5px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); transition: 0.2s; }
     .nav-avatar-wrap:hover, .nav-avatar-wrap.open { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.06); }
     .nav-avatar { width: 28px; height: 28px; border-radius: 8px; background: #FFD700; color: #000; font-weight: 900; font-size: 0.72rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .nav-user-name { color: white; font-size: 0.85rem; font-weight: 600; }
     .nav-avatar-wrap svg { color: rgba(255,255,255,0.5); }
-
     .nav-dropdown { position: absolute; top: calc(100% + 10px); right: 0; width: 240px; background: #111; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; box-shadow: 0 16px 48px rgba(0,0,0,0.4); overflow: hidden; z-index: 200; animation: dropIn 0.15s ease; }
     @keyframes dropIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
     .nav-dropdown-user { display: flex; align-items: center; gap: 12px; padding: 16px; }
@@ -185,7 +205,7 @@ import { AuthService } from '../core/services/auth.service';
     .mobile-menu a { color: rgba(255,255,255,0.8); text-decoration: none; padding: 16px 24px; font-size: 0.95rem; font-weight: 500; border-bottom: 1px solid rgba(255,255,255,0.05); display: block; }
     .mobile-menu a:hover { color: white; background: rgba(255,255,255,0.04); }
     .mobile-cta { color: #FFD700 !important; font-weight: 700 !important; }
-    .mobile-logout { background: 0; border: 0; width: 100%; text-align: left; padding: 16px 24px; color: #f87171; font: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .mobile-logout { background: 0; border: 0; width: 100%; text-align: left; padding: 16px 24px; color: #f87171; font: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
 
     @media (max-width: 900px) {
       .nav-links, .nav-actions { display: none; }
@@ -194,7 +214,7 @@ import { AuthService } from '../core/services/auth.service';
     }
 
     /* FOOTER */
-    .footer { background: #0a0a0a; color: rgba(255,255,255,0.7); margin-top: 0; }
+    .footer { background: #0a0a0a; color: rgba(255,255,255,0.7); }
     .footer-top { padding: 64px 0 48px; border-bottom: 1px solid rgba(255,255,255,0.08); }
     .footer-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; gap: 80px; flex-wrap: wrap; }
     .footer-brand-col { flex: 1; min-width: 260px; max-width: 360px; }
@@ -215,6 +235,7 @@ import { AuthService } from '../core/services/auth.service';
 export class PublicLayoutComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  readonly wishlistDrawer = inject(WishlistDrawerService);
 
   readonly currentUser = toSignal(this.auth.currentUser$, {
     initialValue: this.auth.getCurrentUserSnapshot(),

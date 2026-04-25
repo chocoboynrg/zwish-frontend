@@ -26,6 +26,7 @@ export class UserWishlistItemService {
   }
 
   deleteWishlistItem(id: number): Observable<void> {
-  return this.http.delete<void>(`${this.baseUrl}/wishlist-items/${id}`);
-}
+    // ⚠️ Fix : était `${this.baseUrl}/wishlist-items/${id}` (URL doublée)
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
 }
