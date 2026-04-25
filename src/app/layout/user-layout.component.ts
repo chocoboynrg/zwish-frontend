@@ -31,10 +31,6 @@ import { NotificationCenterService } from '../features/notifications/services/no
               <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 2l2.39 4.84L18 7.64l-4 3.9.94 5.5L10 14.27l-4.94 2.77.94-5.5-4-3.9 5.61-.8L10 2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
               Contributions
             </a>
-            <a routerLink="/app/payments" routerLinkActive="active">
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="1" y="5" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M1 9h18" stroke="currentColor" stroke-width="1.6"/></svg>
-              Paiements
-            </a>
             <a routerLink="/catalog" routerLinkActive="active">
               <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 4h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
               Catalogue
@@ -100,7 +96,6 @@ import { NotificationCenterService } from '../features/notifications/services/no
           <a routerLink="/app" (click)="mobileOpen.set(false)">Dashboard</a>
           <a routerLink="/app/events" (click)="mobileOpen.set(false)">Mes événements</a>
           <a routerLink="/app/contributions" (click)="mobileOpen.set(false)">Contributions</a>
-          <a routerLink="/app/payments" (click)="mobileOpen.set(false)">Paiements</a>
           <a routerLink="/catalog" (click)="mobileOpen.set(false)">Catalogue</a>
           <div class="mobile-sep"></div>
           <a routerLink="/app/events/new" class="mobile-cta" (click)="mobileOpen.set(false)">+ Créer un événement</a>

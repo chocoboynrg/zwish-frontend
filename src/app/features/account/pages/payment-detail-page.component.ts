@@ -1,793 +1,337 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-
-import {
-  MyPaymentItem,
-  MyPaymentsService,
-} from '../services/my-payments.service';
-import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { CountdownTimerComponent } from '../../../shared/components/countdown-timer/countdown-timer.component';
+import { MyPaymentItem, MyPaymentsService } from '../services/my-payments.service';
 
 @Component({
   selector: 'app-payment-detail-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, EmptyStateComponent],
+  imports: [CommonModule, RouterLink, CountdownTimerComponent],
   template: `
-    <section class="page">
-      <div class="top-nav">
-        <a routerLink="/app/payments" class="back-link">← Retour à mes paiements</a>
-      </div>
+    <div class="page-wrap">
 
-      <div *ngIf="loading" class="state-card">
-        <div class="state-title">Chargement du paiement...</div>
-        <div class="state-text">Préparation du détail de la transaction.</div>
-      </div>
+      <!-- Hero -->
+      <div class="page-hero" [ngClass]="getHeroClass()">
+        <div class="page-hero-inner">
 
-      <div *ngIf="error && !loading" class="state-card error">
-        <div class="state-title">Impossible de charger le paiement</div>
-        <div class="state-text">{{ error }}</div>
-      </div>
+          <a routerLink="/app/payments" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M12 4L6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Mes paiements
+          </a>
 
-      <ng-container *ngIf="payment && !loading">
-        <header class="hero-card">
-          <div class="hero-head">
-            <div class="hero-main">
-              <span class="eyebrow">Détail paiement</span>
-              <h1>{{ payment.contribution?.wishlistItem?.title || 'Transaction' }}</h1>
-              <p class="hero-subtitle">
-                {{ payment.contribution?.event?.title || 'Événement non renseigné' }}
-              </p>
-
-              <div class="hero-meta">
-                <span class="meta-pill">Paiement #{{ payment.id }}</span>
-                <span class="meta-pill">{{ payment.createdAt | date:'medium' }}</span>
-                <span class="meta-pill">{{ payment.provider || 'Prestataire non renseigné' }}</span>
-              </div>
-            </div>
-
-            <div class="hero-side">
-              <span class="status-badge" [ngClass]="getStatusClass(payment.status)">
-                {{ formatStatus(payment.status) }}
-              </span>
-
-              <div class="hero-amount-card">
-                <span class="hero-amount-label">Montant</span>
-                <strong class="hero-amount-value">
-                  {{ toNumber(payment.amount) | number:'1.0-0' }}
-                  {{ payment.currencyCode || 'XOF' }}
-                </strong>
-                <span class="hero-amount-help">
-                  {{ formatContributionStatus(payment.contribution?.status) }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <section class="action-banner" *ngIf="getActionState() as actionState">
-          <div class="action-banner-content">
-            <div class="action-kicker">Prochaine action</div>
-            <h2>{{ actionState.title }}</h2>
-            <p>{{ actionState.message }}</p>
+          <!-- Loading -->
+          <div class="hero-loading" *ngIf="loading">
+            <div class="loading-spinner"></div>
+            <span>Chargement...</span>
           </div>
 
-          <div class="action-banner-actions">
-            <a
-              *ngIf="actionState.showRetry"
-              class="btn btn-primary link-btn"
-              [href]="payment.paymentUrl || ''"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Reprendre le paiement
-            </a>
-
-            <a class="btn btn-secondary link-btn" routerLink="/app/payments">
-              Voir tous mes paiements
-            </a>
-          </div>
-        </section>
-
-        <section class="summary-grid">
-          <article class="summary-card summary-card-accent">
-            <span class="summary-label">Statut paiement</span>
-            <strong class="summary-value">{{ formatStatus(payment.status) }}</strong>
-            <span class="summary-help">État actuel de la transaction</span>
-          </article>
-
-          <article class="summary-card">
-            <span class="summary-label">Statut contribution</span>
-            <strong class="summary-value">
-              {{ formatContributionStatus(payment.contribution?.status) }}
-            </strong>
-            <span class="summary-help">Synchronisé avec la wishlist</span>
-          </article>
-
-          <article class="summary-card">
-            <span class="summary-label">Méthode</span>
-            <strong class="summary-value">
-              {{ payment.paymentMethod || 'Non renseignée' }}
-            </strong>
-            <span class="summary-help">Canal utilisé pour payer</span>
-          </article>
-        </section>
-
-        <section class="content-grid">
-          <article class="content-card">
-            <div class="section-head">
-              <div>
-                <span class="section-kicker">Transaction</span>
-                <h2>Informations générales</h2>
-              </div>
-            </div>
-
-            <div class="info-grid">
-              <div class="info-block">
-                <span class="info-label">ID paiement</span>
-                <strong>{{ payment.id }}</strong>
-              </div>
-
-              <div class="info-block">
-                <span class="info-label">Montant</span>
-                <strong>
-                  {{ toNumber(payment.amount) | number:'1.0-0' }}
-                  {{ payment.currencyCode || 'XOF' }}
-                </strong>
-              </div>
-
-              <div class="info-block">
-                <span class="info-label">Prestataire</span>
-                <strong>{{ payment.provider || '—' }}</strong>
-              </div>
-
-              <div class="info-block">
-                <span class="info-label">Méthode</span>
-                <strong>{{ payment.paymentMethod || '—' }}</strong>
-              </div>
-
-              <div class="info-block" *ngIf="payment.providerReference">
-                <span class="info-label">Référence prestataire</span>
-                <strong>{{ payment.providerReference }}</strong>
-              </div>
-
-              <div class="info-block" *ngIf="payment.providerTransactionId">
-                <span class="info-label">Transaction PSP</span>
-                <strong>{{ payment.providerTransactionId }}</strong>
-              </div>
-            </div>
-          </article>
-
-          <article class="content-card">
-            <div class="section-head">
-              <div>
-                <span class="section-kicker">Contexte</span>
-                <h2>Événement et item</h2>
-              </div>
-            </div>
-
-            <div class="context-stack">
-              <div class="context-block">
-                <span class="context-label">Événement</span>
-                <strong>{{ payment.contribution?.event?.title || '—' }}</strong>
-              </div>
-
-              <div class="context-block">
-                <span class="context-label">Item</span>
-                <strong>{{ payment.contribution?.wishlistItem?.title || '—' }}</strong>
-              </div>
-
-              <div class="context-block">
-                <span class="context-label">Montant contribution</span>
-                <strong>
-                  {{ toNumber(payment.contribution?.amount) | number:'1.0-0' }}
-                  {{ payment.currencyCode || 'XOF' }}
-                </strong>
-              </div>
-
-              <div class="context-block">
-                <span class="context-label">Contribution</span>
-                <strong>{{ formatContributionStatus(payment.contribution?.status) }}</strong>
-              </div>
-
-              <div class="context-block">
-                <span class="context-label">Funding item</span>
-                <strong>{{ payment.contribution?.wishlistItem?.fundingStatus || '—' }}</strong>
-              </div>
-            </div>
-          </article>
-        </section>
-
-        <section class="content-card">
-          <div class="section-head">
-            <div>
-              <span class="section-kicker">Suivi</span>
-              <h2>Timeline du paiement</h2>
-            </div>
+          <!-- Erreur -->
+          <div class="hero-error" *ngIf="error && !loading">
+            <div class="error-icon">⚠️</div>
+            <h2>{{ error }}</h2>
           </div>
 
-          <div class="timeline">
-            <div class="timeline-item" [class.active]="!!payment.createdAt">
-              <div class="timeline-dot"></div>
-              <div class="timeline-body">
-                <strong>Création</strong>
-                <p>{{ payment.createdAt | date:'medium' }}</p>
+          <!-- Contenu hero -->
+          <ng-container *ngIf="payment && !loading">
+            <div class="hero-content">
+              <div class="hero-left">
+                <div class="hero-status-pill" [ngClass]="getStatusPillClass(payment.status)">
+                  {{ getStatusEmoji(payment.status) }} {{ getStatusLabel(payment.status) }}
+                </div>
+                <div class="hero-item-name">{{ payment.contribution?.wishlistItem?.title ?? 'Transaction' }}</div>
+                <div class="hero-event-name" *ngIf="payment.contribution?.event?.title">
+                  <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 2v4M14 2v4M2 9h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                  {{ payment.contribution!.event!.title }}
+                </div>
+                <div class="hero-meta-pills">
+                  <span class="hero-meta-pill">#{{ payment.id }}</span>
+                  <span class="hero-meta-pill">{{ payment.provider }}</span>
+                  <span class="hero-meta-pill" *ngIf="payment.paymentMethod">{{ payment.paymentMethod }}</span>
+                </div>
+              </div>
+              <div class="hero-right">
+                <div class="hero-amount">{{ toNumber(payment.amount) | number:'1.0-0' }}</div>
+                <div class="hero-currency">{{ payment.currencyCode }}</div>
               </div>
             </div>
 
-            <div class="timeline-item" [class.active]="!!payment.initiatedAt">
-              <div class="timeline-dot"></div>
-              <div class="timeline-body">
-                <strong>Initialisation</strong>
-                <p>
-                  {{
-                    payment.initiatedAt
-                      ? (payment.initiatedAt | date:'medium')
-                      : 'Non disponible'
-                  }}
-                </p>
+            <!-- Action si paiement initié et URL disponible -->
+            <div class="hero-action-bar" *ngIf="payment.status === 'INITIATED' && payment.paymentUrl">
+              <div class="action-bar-text">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.4"/><path d="M10 6v5M10 13.5v.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                Votre paiement est en attente de finalisation.
+                <app-countdown-timer
+                  *ngIf="payment.expiresAt"
+                  [expiresAt]="payment.expiresAt"
+                  [showExpired]="true"
+                ></app-countdown-timer>
               </div>
-            </div>
-
-            <div class="timeline-item success" [class.active]="!!payment.confirmedAt">
-              <div class="timeline-dot"></div>
-              <div class="timeline-body">
-                <strong>Confirmation</strong>
-                <p>
-                  {{
-                    payment.confirmedAt
-                      ? (payment.confirmedAt | date:'medium')
-                      : 'Pas encore confirmé'
-                  }}
-                </p>
-              </div>
-            </div>
-
-            <div class="timeline-item failed" [class.active]="!!payment.failedAt">
-              <div class="timeline-dot"></div>
-              <div class="timeline-body">
-                <strong>Échec</strong>
-                <p>
-                  {{
-                    payment.failedAt
-                      ? (payment.failedAt | date:'medium')
-                      : 'Aucun échec enregistré'
-                  }}
-                </p>
-              </div>
-            </div>
-
-            <div class="timeline-item refunded" [class.active]="!!payment.refundedAt">
-              <div class="timeline-dot"></div>
-              <div class="timeline-body">
-                <strong>Remboursement</strong>
-                <p>
-                  {{
-                    payment.refundedAt
-                      ? (payment.refundedAt | date:'medium')
-                      : 'Aucun remboursement'
-                  }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="content-card" *ngIf="payment.failureReason || canRetryPayment(payment)">
-          <div class="section-head">
-            <div>
-              <span class="section-kicker">Assistance</span>
-              <h2>Action et diagnostic</h2>
-            </div>
-          </div>
-
-          <div class="support-stack">
-            <div class="support-box support-box-failed" *ngIf="payment.failureReason">
-              <span class="support-label">Motif d’échec</span>
-              <strong class="multiline">{{ payment.failureReason }}</strong>
-            </div>
-
-            <div class="support-box support-box-action" *ngIf="canRetryPayment(payment)">
-              <span class="support-label">Lien de paiement</span>
-              <p>
-                Cette transaction peut encore être reprise si le lien de paiement est toujours valide.
-              </p>
-
-              <a
-                class="btn btn-primary link-btn"
-                [href]="payment.paymentUrl || ''"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Reprendre le paiement
+              <a [href]="payment.paymentUrl" target="_blank" rel="noopener" class="btn-pay-now">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="1" y="5" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M1 9h18" stroke="currentColor" stroke-width="1.5"/></svg>
+                Finaliser le paiement
               </a>
             </div>
-          </div>
-        </section>
 
-        <app-empty-state
-          *ngIf="!payment"
-          icon="💳"
-          title="Paiement introuvable"
-          description="Impossible d’afficher le détail de cette transaction."
-        />
-      </ng-container>
-    </section>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="page-body" *ngIf="payment && !loading">
+        <div class="body-inner">
+
+          <!-- Timeline statut -->
+          <div class="timeline-card">
+            <div class="card-title">Chronologie</div>
+            <div class="timeline">
+              <div class="timeline-item" [class.done]="true">
+                <div class="tl-dot tl-dot-done"></div>
+                <div class="tl-content">
+                  <div class="tl-label">Initié</div>
+                  <div class="tl-date">{{ payment.initiatedAt ? (payment.initiatedAt | date:'dd MMM yyyy HH:mm') : (payment.createdAt | date:'dd MMM yyyy HH:mm') }}</div>
+                </div>
+              </div>
+              <div class="timeline-connector"></div>
+              <div class="timeline-item" [class.done]="payment.status === 'SUCCEEDED'">
+                <div class="tl-dot" [ngClass]="payment.status === 'SUCCEEDED' ? 'tl-dot-done' : (payment.status === 'FAILED' || payment.status === 'EXPIRED' ? 'tl-dot-failed' : 'tl-dot-pending')"></div>
+                <div class="tl-content">
+                  <div class="tl-label">{{ payment.status === 'SUCCEEDED' ? 'Confirmé' : payment.status === 'FAILED' ? 'Échoué' : payment.status === 'EXPIRED' ? 'Expiré' : 'En attente de confirmation' }}</div>
+                  <div class="tl-date" *ngIf="payment.confirmedAt">{{ payment.confirmedAt | date:'dd MMM yyyy HH:mm' }}</div>
+                  <div class="tl-date" *ngIf="payment.failedAt">{{ payment.failedAt | date:'dd MMM yyyy HH:mm' }}</div>
+                  <div class="tl-date tl-muted" *ngIf="!payment.confirmedAt && !payment.failedAt">En attente...</div>
+                </div>
+              </div>
+              <ng-container *ngIf="payment.refundedAt">
+                <div class="timeline-connector"></div>
+                <div class="timeline-item done">
+                  <div class="tl-dot tl-dot-refund"></div>
+                  <div class="tl-content">
+                    <div class="tl-label">Remboursé</div>
+                    <div class="tl-date">{{ payment.refundedAt | date:'dd MMM yyyy HH:mm' }}</div>
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+
+          <div class="two-col">
+
+            <!-- Détails transaction -->
+            <div class="info-card">
+              <div class="card-title">Détails de la transaction</div>
+              <div class="info-list">
+                <div class="info-row">
+                  <span class="info-label">Référence paiement</span>
+                  <span class="info-val mono">#{{ payment.id }}</span>
+                </div>
+                <div class="info-row" *ngIf="payment.providerReference">
+                  <span class="info-label">Réf. opérateur</span>
+                  <span class="info-val mono">{{ payment.providerReference }}</span>
+                </div>
+                <div class="info-row" *ngIf="payment.providerTransactionId">
+                  <span class="info-label">Transaction ID</span>
+                  <span class="info-val mono">{{ payment.providerTransactionId }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Opérateur</span>
+                  <span class="info-val">{{ payment.provider }}</span>
+                </div>
+                <div class="info-row" *ngIf="payment.paymentMethod">
+                  <span class="info-label">Méthode</span>
+                  <span class="info-val">{{ payment.paymentMethod }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Montant</span>
+                  <span class="info-val strong">{{ toNumber(payment.amount) | number:'1.0-0' }} {{ payment.currencyCode }}</span>
+                </div>
+                <div class="info-row" *ngIf="payment.failureReason">
+                  <span class="info-label">Raison échec</span>
+                  <span class="info-val error-val">{{ payment.failureReason }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contribution liée -->
+            <div class="info-card" *ngIf="payment.contribution">
+              <div class="card-title">Contribution associée</div>
+              <div class="info-list">
+                <div class="info-row">
+                  <span class="info-label">Référence</span>
+                  <span class="info-val mono">#{{ payment.contribution!.id }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Statut contribution</span>
+                  <span class="status-badge" [ngClass]="getContribStatusClass(payment.contribution!.status)">
+                    {{ getContribStatusLabel(payment.contribution!.status) }}
+                  </span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Montant contribution</span>
+                  <span class="info-val strong">{{ toNumber(payment.contribution!.amount) | number:'1.0-0' }} {{ payment.currencyCode }}</span>
+                </div>
+                <div class="info-row" *ngIf="payment.contribution!.wishlistItem">
+                  <span class="info-label">Item wishlist</span>
+                  <span class="info-val">{{ payment.contribution!.wishlistItem!.title }}</span>
+                </div>
+                <div class="info-row" *ngIf="payment.contribution!.event">
+                  <span class="info-label">Événement</span>
+                  <span class="info-val">{{ payment.contribution!.event!.title }}</span>
+                </div>
+              </div>
+
+              <!-- Lien vers événement -->
+              <a
+                *ngIf="payment.contribution!.event?.id"
+                [routerLink]="['/app/events', payment.contribution!.event!.id]"
+                class="card-link-btn"
+              >
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 2v4M14 2v4M2 9h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                Voir l'événement
+              </a>
+            </div>
+
+          </div>
+
+          <!-- Alerte si URL de paiement disponible -->
+          <div class="pending-banner" *ngIf="payment.status === 'INITIATED' && payment.paymentUrl">
+            <div class="pending-banner-left">
+              <div class="pending-banner-icon">⏳</div>
+              <div>
+                <div class="pending-banner-title">Paiement en attente</div>
+                <div class="pending-banner-desc">Votre session de paiement est active. Cliquez sur le bouton pour finaliser votre transaction.</div>
+              </div>
+            </div>
+            <a [href]="payment.paymentUrl" target="_blank" rel="noopener" class="btn-pay-now-large">
+              Finaliser le paiement →
+            </a>
+          </div>
+
+          <!-- Retour contributions -->
+          <div class="footer-nav">
+            <a routerLink="/app/contributions" class="footer-nav-link">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M12 4L6 10l6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              Retour à mes contributions
+            </a>
+            <a routerLink="/app/payments" class="footer-nav-link">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M12 4L6 10l6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              Retour à mes paiements
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
   `,
   styles: [`
-    :host {
-      display: block;
-    }
-
-    .page {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-      color: #111827;
-    }
-
-    .top-nav {
-      display: flex;
-      align-items: center;
-    }
-
-    .back-link {
-      color: #ea580c;
-      text-decoration: none;
-      font-weight: 700;
-    }
-
-    .back-link:hover {
-      color: #c2410c;
-    }
-
-    .hero-card,
-    .summary-card,
-    .content-card,
-    .state-card,
-    .action-banner {
-      background: #ffffff;
-      border: 1px solid #f3e8e2;
-      border-radius: 24px;
-      box-shadow: 0 18px 50px rgba(17, 24, 39, 0.06);
-    }
-
-    .hero-card {
-      padding: 24px;
-      background:
-        radial-gradient(circle at top right, rgba(255, 179, 71, 0.16), transparent 28%),
-        radial-gradient(circle at bottom left, rgba(255, 122, 89, 0.10), transparent 32%),
-        linear-gradient(135deg, #fff7f2, #ffffff 58%);
-    }
-
-    .content-card,
-    .state-card,
-    .action-banner {
-      padding: 20px;
-    }
-
-    .eyebrow,
-    .section-kicker,
-    .action-kicker {
-      color: #ea580c;
-      font-size: 0.78rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .hero-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 20px;
-    }
-
-    .hero-main {
-      min-width: 0;
-      flex: 1;
-    }
-
-    .hero-main h1 {
-      margin: 8px 0 8px;
-      font-size: clamp(2rem, 4vw, 2.7rem);
-      line-height: 1.1;
-      letter-spacing: -0.03em;
-      color: #111827;
-    }
-
-    .hero-subtitle {
-      margin: 0;
-      color: #4b5563;
-      line-height: 1.7;
-      font-size: 1rem;
-    }
-
-    .hero-meta {
-      margin-top: 18px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .meta-pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid #f3dfd4;
-      color: #7c2d12;
-      font-size: 0.88rem;
-      font-weight: 700;
-    }
-
-    .hero-side {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 14px;
-      min-width: 260px;
-    }
-
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 10px 14px;
-      border-radius: 999px;
-      font-size: 0.88rem;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .status-succeeded {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .status-pending {
-      background: #fef3c7;
-      color: #92400e;
-    }
-
-    .status-failed {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .status-cancelled,
-    .status-refunded {
-      background: #e0f2fe;
-      color: #075985;
-    }
-
-    .status-default {
-      background: #e5e7eb;
-      color: #374151;
-    }
-
-    .hero-amount-card {
-      width: 100%;
-      border-radius: 22px;
-      padding: 18px;
-      background: #ffffff;
-      border: 1px solid #f3e8e2;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .hero-amount-label {
-      color: #6b7280;
-      font-size: 0.9rem;
-    }
-
-    .hero-amount-value {
-      font-size: 1.7rem;
-      line-height: 1.15;
-      color: #111827;
-    }
-
-    .hero-amount-help {
-      color: #6b7280;
-      font-size: 0.92rem;
-    }
-
-    .action-banner {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 18px;
-      background: linear-gradient(135deg, #fff7f2, #ffffff);
-    }
-
-    .action-banner-content h2 {
-      margin: 6px 0;
-      font-size: 1.2rem;
-      color: #111827;
-    }
-
-    .action-banner-content p {
-      margin: 0;
-      color: #4b5563;
-      line-height: 1.6;
-    }
-
-    .action-banner-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: flex-end;
-    }
-
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    .summary-card {
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .summary-card-accent {
-      background: linear-gradient(135deg, #fff1e8, #ffffff);
-    }
-
-    .summary-label {
-      color: #6b7280;
-      font-size: 0.9rem;
-    }
-
-    .summary-value {
-      font-size: 1.35rem;
-      line-height: 1.2;
-      color: #111827;
-      word-break: break-word;
-    }
-
-    .summary-help {
-      color: #6b7280;
-      font-size: 0.9rem;
-    }
-
-    .content-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 18px;
-    }
-
-    .section-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .section-head h2 {
-      margin: 4px 0 0;
-      font-size: 1.2rem;
-      color: #111827;
-    }
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .info-block,
-    .context-block,
-    .support-box {
-      border: 1px solid #f3e8e2;
-      border-radius: 16px;
-      padding: 14px;
-      background: #fffaf7;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .info-label,
-    .context-label,
-    .support-label {
-      font-size: 13px;
-      color: #6b7280;
-    }
-
-    .context-stack,
-    .support-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .multiline {
-      line-height: 1.6;
-      word-break: break-word;
-    }
-
-    .timeline {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .timeline-item {
-      display: grid;
-      grid-template-columns: 24px 1fr;
-      gap: 14px;
-      align-items: start;
-      opacity: 0.55;
-    }
-
-    .timeline-item.active {
-      opacity: 1;
-    }
-
-    .timeline-dot {
-      width: 14px;
-      height: 14px;
-      border-radius: 999px;
-      background: #d1d5db;
-      margin-top: 4px;
-      position: relative;
-    }
-
-    .timeline-item.active .timeline-dot {
-      background: #ea580c;
-      box-shadow: 0 0 0 6px rgba(234, 88, 12, 0.12);
-    }
-
-    .timeline-item.success.active .timeline-dot {
-      background: #16a34a;
-      box-shadow: 0 0 0 6px rgba(22, 163, 74, 0.12);
-    }
-
-    .timeline-item.failed.active .timeline-dot {
-      background: #dc2626;
-      box-shadow: 0 0 0 6px rgba(220, 38, 38, 0.12);
-    }
-
-    .timeline-item.refunded.active .timeline-dot {
-      background: #0284c7;
-      box-shadow: 0 0 0 6px rgba(2, 132, 199, 0.12);
-    }
-
-    .timeline-body strong {
-      display: block;
-      margin-bottom: 4px;
-      color: #111827;
-    }
-
-    .timeline-body p {
-      margin: 0;
-      color: #6b7280;
-      line-height: 1.6;
-    }
-
-    .support-box-failed {
-      background: #fff7f7;
-      border-color: #fecaca;
-    }
-
-    .support-box-action {
-      background: #fffaf7;
-    }
-
-    .support-box p {
-      margin: 0;
-      color: #4b5563;
-      line-height: 1.6;
-    }
-
-    .state-card.error {
-      border-color: #fecaca;
-      background: #fff7f7;
-    }
-
-    .state-title {
-      font-weight: 700;
-      color: #111827;
-      margin-bottom: 4px;
-    }
-
-    .state-text {
-      color: #6b7280;
-      line-height: 1.6;
-      margin: 0;
-    }
-
-    .btn {
-      border: 0;
-      border-radius: 14px;
-      padding: 11px 16px;
-      cursor: pointer;
-      font: inherit;
-      font-weight: 700;
-      transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
-      text-align: center;
-    }
-
-    .btn:hover:not(:disabled) {
-      transform: translateY(-1px);
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #ff7a59, #ffb347);
-      color: white;
-      box-shadow: 0 14px 28px rgba(255, 122, 89, 0.18);
-    }
-
-    .btn-secondary {
-      background: #fff7f3;
-      color: #9a3412;
-      border: 1px solid #f3dfd4;
-    }
-
-    .link-btn {
-      text-decoration: none;
-    }
-
-    @media (max-width: 1100px) {
-      .summary-grid,
-      .content-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+    .page-wrap { background: #f9fafb; min-height: calc(100vh - 64px); }
+
+    /* ── HERO ── */
+    .page-hero { padding: 32px 0 36px; border-bottom: 4px solid rgba(0,0,0,0.06); }
+    .page-hero.hero-succeeded { background: linear-gradient(135deg, #000 60%, #064e3b); }
+    .page-hero.hero-initiated, .page-hero.hero-pending { background: linear-gradient(135deg, #000 60%, #78350f); }
+    .page-hero.hero-failed, .page-hero.hero-expired { background: linear-gradient(135deg, #000 60%, #7f1d1d); }
+    .page-hero.hero-refunded { background: linear-gradient(135deg, #000 60%, #4c1d95); }
+    .page-hero.hero-default { background: #000; }
+
+    .page-hero-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; flex-direction: column; gap: 24px; }
+
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.5); font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: color 0.2s; }
+    .back-link:hover { color: white; }
+
+    .hero-loading { display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,0.5); font-size: 0.9rem; padding: 24px 0; }
+    .loading-spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.1); border-top-color: #FFD700; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hero-error { display: flex; align-items: center; gap: 12px; color: white; padding: 24px 0; }
+    .error-icon { font-size: 2rem; }
+    .hero-error h2 { margin: 0; font-size: 1rem; font-weight: 700; }
+
+    .hero-content { display: flex; align-items: flex-start; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+    .hero-left { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+    .hero-status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 999px; font-size: 0.78rem; font-weight: 800; align-self: flex-start; }
+    .pill-succeeded { background: rgba(34,197,94,0.2); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .pill-initiated, .pill-pending { background: rgba(251,191,36,0.2); color: #fde68a; border: 1px solid rgba(251,191,36,0.3); }
+    .pill-failed, .pill-expired { background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+    .pill-refunded { background: rgba(167,139,250,0.2); color: #c4b5fd; border: 1px solid rgba(167,139,250,0.3); }
+    .pill-default { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
+    .hero-item-name { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 900; color: white; letter-spacing: -0.02em; line-height: 1.1; }
+    .hero-event-name { display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.5); font-size: 0.88rem; }
+    .hero-meta-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .hero-meta-pill { padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.5); font-size: 0.75rem; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); }
+    .hero-right { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
+    .hero-amount { font-size: clamp(2rem, 5vw, 3rem); font-weight: 900; color: #FFD700; letter-spacing: -0.03em; line-height: 1; }
+    .hero-currency { color: rgba(255,255,255,0.4); font-size: 0.85rem; font-weight: 700; margin-top: 4px; }
+
+    .hero-action-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); border-radius: 14px; flex-wrap: wrap; }
+    .action-bar-text { display: flex; align-items: center; gap: 8px; color: #fde68a; font-size: 0.85rem; font-weight: 600; }
+    .btn-pay-now { display: flex; align-items: center; gap: 7px; padding: 10px 20px; background: #FFD700; color: #000; border-radius: 10px; text-decoration: none; font-weight: 800; font-size: 0.85rem; white-space: nowrap; transition: 0.2s; }
+    .btn-pay-now:hover { background: #FFC000; }
+
+    /* ── BODY ── */
+    .page-body { padding: 32px 0; }
+    .body-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; flex-direction: column; gap: 20px; }
+
+    /* Timeline */
+    .timeline-card { background: white; border: 1.5px solid #f3f4f6; border-radius: 20px; padding: 24px; }
+    .card-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; margin-bottom: 20px; }
+    .timeline { display: flex; align-items: flex-start; gap: 0; }
+    .timeline-item { display: flex; align-items: flex-start; gap: 10px; flex: 1; }
+    .timeline-connector { flex: 1; height: 2px; background: #f3f4f6; margin-top: 11px; }
+    .tl-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #e5e7eb; background: white; flex-shrink: 0; transition: 0.2s; }
+    .tl-dot-done { background: #22c55e; border-color: #22c55e; }
+    .tl-dot-failed { background: #ef4444; border-color: #ef4444; }
+    .tl-dot-pending { background: #FFD700; border-color: #FFD700; animation: pulse 1.5s infinite; }
+    .tl-dot-refund { background: #8b5cf6; border-color: #8b5cf6; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.5} }
+    .tl-content { display: flex; flex-direction: column; gap: 2px; }
+    .tl-label { font-size: 0.82rem; font-weight: 700; color: #111; }
+    .tl-date { font-size: 0.72rem; color: #6b7280; }
+    .tl-muted { color: #d1d5db; }
+
+    /* Two col */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* Info cards */
+    .info-card { background: white; border: 1.5px solid #f3f4f6; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+    .info-list { display: flex; flex-direction: column; gap: 0; }
+    .info-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid #f9fafb; }
+    .info-row:last-child { border-bottom: 0; }
+    .info-label { font-size: 0.78rem; color: #9ca3af; font-weight: 600; flex-shrink: 0; }
+    .info-val { font-size: 0.88rem; color: #111; font-weight: 600; text-align: right; word-break: break-all; }
+    .info-val.mono { font-family: monospace; }
+    .info-val.strong { font-weight: 900; font-size: 1rem; }
+    .info-val.error-val { color: #ef4444; }
+
+    .status-badge { padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
+    .cs-confirmed { background: #dcfce7; color: #166534; }
+    .cs-awaiting { background: #fef3c7; color: #92400e; }
+    .cs-failed, .cs-cancelled { background: #fee2e2; color: #991b1b; }
+    .cs-refunded { background: #ede9fe; color: #6d28d9; }
+    .cs-default { background: #f3f4f6; color: #6b7280; }
+
+    .card-link-btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 16px; border: 1.5px solid #e5e7eb; border-radius: 10px; text-decoration: none; color: #374151; font-size: 0.85rem; font-weight: 700; transition: 0.2s; align-self: flex-start; }
+    .card-link-btn:hover { border-color: #111; color: #111; }
+
+    /* Pending banner */
+    .pending-banner { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 24px; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 16px; flex-wrap: wrap; }
+    .pending-banner-left { display: flex; align-items: flex-start; gap: 14px; }
+    .pending-banner-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .pending-banner-title { font-size: 0.95rem; font-weight: 800; color: #111; margin-bottom: 4px; }
+    .pending-banner-desc { font-size: 0.82rem; color: #6b7280; line-height: 1.5; }
+    .btn-pay-now-large { padding: 12px 24px; background: #FFD700; color: #000; border-radius: 12px; text-decoration: none; font-weight: 800; font-size: 0.9rem; white-space: nowrap; transition: 0.2s; flex-shrink: 0; }
+    .btn-pay-now-large:hover { background: #FFC000; }
+
+    /* Footer nav */
+    .footer-nav { display: flex; gap: 16px; flex-wrap: wrap; padding-top: 4px; }
+    .footer-nav-link { display: flex; align-items: center; gap: 6px; color: #6b7280; font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: color 0.2s; }
+    .footer-nav-link:hover { color: #111; }
 
     @media (max-width: 900px) {
-      .hero-head,
-      .action-banner,
-      .section-head {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .hero-side {
-        align-items: stretch;
-        min-width: 0;
-      }
-
-      .info-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .action-banner-actions {
-        justify-content: stretch;
-      }
-
-      .action-banner-actions .btn {
-        width: 100%;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .hero-card,
-      .summary-card,
-      .content-card,
-      .state-card,
-      .action-banner {
-        border-radius: 20px;
-      }
-
-      .hero-card,
-      .content-card,
-      .state-card,
-      .action-banner {
-        padding: 18px;
-      }
-
-      .hero-main h1 {
-        font-size: 1.9rem;
-      }
-
-      .hero-amount-value {
-        font-size: 1.35rem;
-      }
+      .two-col { grid-template-columns: 1fr; }
+      .timeline { flex-direction: column; }
+      .timeline-connector { width: 2px; height: 24px; margin: 0 0 0 10px; }
+      .timeline-item { flex-direction: row; }
     }
   `],
 })
@@ -800,156 +344,44 @@ export class PaymentDetailPageComponent implements OnInit {
   payment: MyPaymentItem | null = null;
 
   ngOnInit(): void {
-    this.loadPayment();
-  }
-
-  private loadPayment(): void {
-    const paymentId = Number(this.route.snapshot.paramMap.get('id'));
-
-    if (!paymentId || Number.isNaN(paymentId)) {
-      this.error = 'Identifiant paiement invalide.';
-      this.loading = false;
-      return;
-    }
-
-    this.loading = true;
-    this.error = '';
-
-    this.myPaymentsService.getOne(paymentId).subscribe({
-      next: (payment: MyPaymentItem) => {
-        this.payment = payment;
-        this.loading = false;
-      },
-      error: () => {
-        this.error = 'Impossible de charger le détail du paiement.';
-        this.loading = false;
-      },
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    if (!id || Number.isNaN(id)) { this.error = 'Identifiant invalide.'; this.loading = false; return; }
+    this.myPaymentsService.getOne(id).subscribe({
+      next: (p) => { this.payment = p; this.loading = false; },
+      error: () => { this.error = 'Impossible de charger ce paiement.'; this.loading = false; },
     });
   }
 
-  toNumber(value: unknown): number {
-    const parsed = Number(value ?? 0);
-    return Number.isFinite(parsed) ? parsed : 0;
+  toNumber(v: unknown): number { const n = Number(v ?? 0); return Number.isFinite(n) ? n : 0; }
+
+  getHeroClass(): string {
+    if (!this.payment) return 'hero-default';
+    const m: Record<string,string> = { SUCCEEDED: 'hero-succeeded', INITIATED: 'hero-initiated', PENDING: 'hero-pending', FAILED: 'hero-failed', EXPIRED: 'hero-expired', REFUNDED: 'hero-refunded' };
+    return m[this.payment.status] ?? 'hero-default';
   }
 
-  formatStatus(status: string | null | undefined): string {
-    switch (status) {
-      case 'SUCCEEDED':
-        return 'Réussi';
-      case 'INITIATED':
-        return 'Initié';
-      case 'PENDING':
-        return 'En attente';
-      case 'FAILED':
-        return 'Échoué';
-      case 'CANCELLED':
-        return 'Annulé';
-      case 'REFUNDED':
-        return 'Remboursé';
-      default:
-        return status || '—';
-    }
+  getStatusEmoji(s: string): string {
+    const m: Record<string,string> = { SUCCEEDED: '✅', INITIATED: '⏳', PENDING: '⏳', FAILED: '❌', EXPIRED: '⌛', REFUNDED: '↩️' };
+    return m[s] ?? 'ℹ️';
   }
 
-  formatContributionStatus(status: string | null | undefined): string {
-    switch (status) {
-      case 'CONFIRMED':
-        return 'Confirmée';
-      case 'AWAITING_PAYMENT':
-        return 'En attente de paiement';
-      case 'FAILED':
-        return 'Échouée';
-      case 'CANCELLED':
-        return 'Annulée';
-      case 'REFUNDED':
-        return 'Remboursée';
-      case 'PENDING':
-        return 'En attente';
-      default:
-        return status || '—';
-    }
+  getStatusLabel(s: string): string {
+    const m: Record<string,string> = { SUCCEEDED: 'Réussi', INITIATED: 'Initié', PENDING: 'En attente', FAILED: 'Échoué', EXPIRED: 'Expiré', REFUNDED: 'Remboursé' };
+    return m[s] ?? s;
   }
 
-  getStatusClass(status: string | null | undefined): string {
-    switch (status) {
-      case 'SUCCEEDED':
-        return 'status-succeeded';
-      case 'INITIATED':
-      case 'PENDING':
-        return 'status-pending';
-      case 'FAILED':
-        return 'status-failed';
-      case 'CANCELLED':
-        return 'status-cancelled';
-      case 'REFUNDED':
-        return 'status-refunded';
-      default:
-        return 'status-default';
-    }
+  getStatusPillClass(s: string): string {
+    const m: Record<string,string> = { SUCCEEDED: 'hero-status-pill pill-succeeded', INITIATED: 'hero-status-pill pill-initiated', PENDING: 'hero-status-pill pill-pending', FAILED: 'hero-status-pill pill-failed', EXPIRED: 'hero-status-pill pill-expired', REFUNDED: 'hero-status-pill pill-refunded' };
+    return m[s] ?? 'hero-status-pill pill-default';
   }
 
-  canRetryPayment(payment: MyPaymentItem | null): boolean {
-    if (!payment) {
-      return false;
-    }
-
-    return (
-      (payment.status === 'INITIATED' || payment.status === 'PENDING') &&
-      !!payment.paymentUrl
-    );
+  getContribStatusLabel(s: string): string {
+    const m: Record<string,string> = { CONFIRMED: 'Confirmée', AWAITING_PAYMENT: 'En attente', FAILED: 'Échouée', CANCELLED: 'Annulée', REFUNDED: 'Remboursée' };
+    return m[s] ?? s;
   }
 
-  getActionState():
-    | { title: string; message: string; showRetry: boolean }
-    | null {
-    if (!this.payment) {
-      return null;
-    }
-
-    switch (this.payment.status) {
-      case 'SUCCEEDED':
-        return {
-          title: 'Paiement terminé avec succès',
-          message:
-            'La contribution a été confirmée. Vous pouvez revenir à la liste des paiements ou consulter l’événement concerné.',
-          showRetry: false,
-        };
-
-      case 'INITIATED':
-      case 'PENDING':
-        return {
-          title: 'Paiement à finaliser',
-          message:
-            'Votre transaction est encore en attente. Reprenez le paiement pour terminer le processus si le lien est toujours valide.',
-          showRetry: this.canRetryPayment(this.payment),
-        };
-
-      case 'FAILED':
-        return {
-          title: 'Paiement non abouti',
-          message:
-            'La transaction a échoué. Vérifiez le motif d’échec ci-dessous puis relancez le paiement si possible.',
-          showRetry: this.canRetryPayment(this.payment),
-        };
-
-      case 'CANCELLED':
-        return {
-          title: 'Paiement annulé',
-          message:
-            'Cette transaction a été annulée. Vous pouvez revenir à vos paiements ou relancer une nouvelle contribution si nécessaire.',
-          showRetry: false,
-        };
-
-      case 'REFUNDED':
-        return {
-          title: 'Paiement remboursé',
-          message:
-            'Le montant de cette transaction a été remboursé. Les détails de remboursement sont visibles dans la timeline.',
-          showRetry: false,
-        };
-
-      default:
-        return null;
-    }
+  getContribStatusClass(s: string): string {
+    const m: Record<string,string> = { CONFIRMED: 'status-badge cs-confirmed', AWAITING_PAYMENT: 'status-badge cs-awaiting', FAILED: 'status-badge cs-failed', CANCELLED: 'status-badge cs-cancelled', REFUNDED: 'status-badge cs-refunded' };
+    return m[s] ?? 'status-badge cs-default';
   }
 }

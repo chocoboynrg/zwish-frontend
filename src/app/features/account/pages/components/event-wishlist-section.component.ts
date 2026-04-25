@@ -2,12 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UserEventView } from '../../../events/services/events.service';
-import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import {
   WishlistItem,
   formatAmount,
   formatFundingStatus,
-  formatReservationMode,
   getFundingPercent,
 } from './event-ui.utils';
 
@@ -22,56 +20,49 @@ type WishlistSort =
 @Component({
   selector: 'app-event-wishlist-section',
   standalone: true,
-  imports: [CommonModule, FormsModule, EmptyStateComponent],
+  imports: [CommonModule, FormsModule],
   template: `
-    <section class="card section-card">
-      <div class="section-header section-header-wishlist">
-        <div>
-          <div class="section-kicker">Liste de souhaits</div>
+    <div class="wishlist-wrap">
+
+      <!-- Header + toolbar -->
+      <div class="wishlist-header">
+        <div class="wishlist-header-left">
           <h2>Wishlist</h2>
+          <span class="item-count-badge" *ngIf="data?.wishlist?.length">
+            {{ filteredWishlist.length }}<span *ngIf="filteredWishlist.length !== data?.wishlist?.length"> / {{ data?.wishlist?.length }}</span> item{{ filteredWishlist.length > 1 ? 's' : '' }}
+          </span>
         </div>
 
-        <div class="wishlist-count-badge" *ngIf="data?.wishlist?.length">
-          {{ filteredWishlist.length }} / {{ data?.wishlist?.length }} item(s)
-        </div>
-      </div>
+        <!-- Toolbar -->
+        <div class="toolbar" *ngIf="data?.wishlist?.length">
+          <!-- Recherche -->
+          <div class="search-wrap">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" class="search-icon"><circle cx="8.5" cy="8.5" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M13.5 13.5l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <input
+              type="text"
+              class="search-input"
+              [ngModel]="wishlistSearch"
+              (ngModelChange)="wishlistSearchChange.emit($event)"
+              placeholder="Rechercher..."
+            />
+          </div>
 
-      <div class="wishlist-toolbar" *ngIf="data?.wishlist?.length">
-        <div class="toolbar-search">
-          <label for="wishlist-search">Recherche</label>
-          <input
-            id="wishlist-search"
-            type="text"
-            [ngModel]="wishlistSearch"
-            (ngModelChange)="wishlistSearchChange.emit($event)"
-            placeholder="Rechercher un item..."
-          />
-        </div>
+          <!-- Filtres pills -->
+          <div class="filter-pills">
+            <button *ngFor="let f of filters"
+              class="filter-pill"
+              [class.active]="selectedFilter === f.value"
+              (click)="selectedFilterChange.emit(f.value)"
+            >{{ f.label }}</button>
+          </div>
 
-        <div class="toolbar-select">
-          <label for="wishlist-filter">Filtre</label>
-          <select
-            id="wishlist-filter"
-            [ngModel]="selectedFilter"
-            (ngModelChange)="selectedFilterChange.emit($event)"
-          >
-            <option value="ALL">Tous</option>
-            <option value="AVAILABLE">Disponibles</option>
-            <option value="RESERVED">Réservés</option>
-            <option value="FUNDED">Financés</option>
-            <option value="PENDING">En attente</option>
-          </select>
-        </div>
-
-        <div class="toolbar-select">
-          <label for="wishlist-sort">Tri</label>
-          <select
-            id="wishlist-sort"
+          <!-- Tri -->
+          <select class="sort-select"
             [ngModel]="selectedSort"
             (ngModelChange)="selectedSortChange.emit($event)"
           >
-            <option value="DEFAULT">Ordre par défaut</option>
-            <option value="TARGET_DESC">Montant cible décroissant</option>
+            <option value="DEFAULT">Défaut</option>
+            <option value="TARGET_DESC">Prix décroissant</option>
             <option value="REMAINING_DESC">Reste à financer</option>
             <option value="FUNDED_DESC">Plus financés</option>
             <option value="PROGRESS_DESC">Presque financés</option>
@@ -79,251 +70,284 @@ type WishlistSort =
         </div>
       </div>
 
-      <div *ngIf="contributionError" class="state-card error compact-state">
+      <!-- Erreurs -->
+      <div class="alert-error" *ngIf="contributionError">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v5M10 13.5v.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         {{ contributionError }}
       </div>
-
-      <div *ngIf="reservationError" class="state-card error compact-state">
+      <div class="alert-error" *ngIf="reservationError">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v5M10 13.5v.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         {{ reservationError }}
       </div>
 
-      <app-empty-state
-        *ngIf="!data?.wishlist?.length"
-        icon="🎁"
-        title="Wishlist vide"
-        description="Aucun item dans la wishlist pour le moment."
-      />
+      <!-- Vide total -->
+      <div class="empty-state" *ngIf="!data?.wishlist?.length">
+        <div class="empty-icon">🎁</div>
+        <div class="empty-title">Wishlist vide</div>
+        <div class="empty-desc">Aucun item dans la wishlist pour le moment.</div>
+      </div>
 
-      <app-empty-state
-        *ngIf="data?.wishlist?.length && filteredWishlist.length === 0"
-        icon="🔎"
-        title="Aucun résultat"
-        description="Aucun item ne correspond à votre recherche ou au filtre sélectionné."
-      />
+      <!-- Aucun résultat filtre -->
+      <div class="empty-state" *ngIf="data?.wishlist?.length && filteredWishlist.length === 0">
+        <div class="empty-icon">🔎</div>
+        <div class="empty-title">Aucun résultat</div>
+        <div class="empty-desc">Modifiez votre recherche ou le filtre sélectionné.</div>
+      </div>
 
-      <div class="wishlist-grid-v2 wishlist-grid-amazon3" *ngIf="filteredWishlist.length > 0">
+      <!-- Grille items -->
+      <div class="wishlist-grid" *ngIf="filteredWishlist.length > 0">
         <article
-          class="wishlist-card-v2"
+          class="wish-card"
           *ngFor="let item of filteredWishlist"
+          [class.funded]="item.fundingStatus === 'FUNDED'"
+          [class.reserved]="item.isReserved"
           (click)="openItemDetail.emit(item)"
         >
-          <div class="wishlist-image-shell">
-            <div class="wishlist-image-v2">
-              <img *ngIf="item.imageUrl; else noImage" [src]="item.imageUrl" [alt]="item.name" />
-              <ng-template #noImage>
-                <div class="image-placeholder">🎁</div>
-              </ng-template>
-            </div>
+          <!-- Image -->
+          <div class="wish-img-wrap">
+            <img *ngIf="item.imageUrl" [src]="item.imageUrl" [alt]="item.name" class="wish-img" />
+            <div class="wish-img-placeholder" *ngIf="!item.imageUrl">🎁</div>
 
-            <div class="image-top-badges">
-              <span class="mini-badge funding-badge">
-                {{ formatFundingStatus(item.fundingStatus) }}
+            <!-- Badge statut -->
+            <div class="wish-badges">
+              <span class="badge badge-funded" *ngIf="item.fundingStatus === 'FUNDED'">
+                <svg width="10" height="10" viewBox="0 0 20 20" fill="none"><path d="M4 10l4.5 4.5 7.5-7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                Financé
               </span>
-
-              <span class="mini-badge reservation-badge" *ngIf="item.isReserved">
+              <span class="badge badge-partial" *ngIf="item.fundingStatus === 'PARTIALLY_FUNDED'">
+                En cours
+              </span>
+              <span class="badge badge-reserved" *ngIf="item.isReserved && item.fundingStatus !== 'FUNDED'">
                 {{ item.reservedByMe ? 'Réservé par moi' : 'Réservé' }}
               </span>
             </div>
           </div>
 
-          <div class="wishlist-content-v2">
-            <div class="wishlist-top-row">
-              <div class="wishlist-title-wrap">
-                <h3 class="item-title">{{ item.name }}</h3>
-                <p class="item-subtitle">
-                  Quantité demandée : <strong>{{ item.quantity }}</strong>
-                </p>
+          <!-- Contenu -->
+          <div class="wish-content">
+            <div class="wish-name">{{ item.name }}</div>
+            <div class="wish-qty" *ngIf="item.quantity > 1">Qté : {{ item.quantity }}</div>
+
+            <!-- Progress -->
+            <div class="wish-progress-block">
+              <div class="wish-progress-header">
+                <span class="wish-funded-amount">{{ formatAmount(item.fundedAmount) }}</span>
+                <span class="wish-pct" [class.pct-done]="item.fundingStatus === 'FUNDED'">
+                  {{ getPercent(item) }}%
+                </span>
               </div>
-            </div>
-
-            <div class="item-reservation premium-note" *ngIf="item.isReserved && item.reservedByName">
-              Réservé par :
-              <strong>{{ item.reservedByMe ? 'vous' : (item.reservedByName || 'un participant') }}</strong>
-            </div>
-
-            <div class="alert-chip" *ngIf="item.hasPendingContribution">
-              {{
-                item.pendingContributionByMe
-                  ? 'Votre paiement est en attente sur cet item.'
-                  : 'Un paiement est en attente sur cet item.'
-              }}
-            </div>
-
-            <div class="price-strip">
-              <div class="price-main">
-                <span class="price-label">Reste à financer</span>
-                <strong class="price-value">{{ formatAmount(item.remainingAmount) }}</strong>
-              </div>
-
-              <div class="price-side">
-                <span>{{ formatAmount(item.fundedAmount) }} financés</span>
-                <span>sur {{ formatAmount(item.targetAmount) }}</span>
-              </div>
-            </div>
-
-            <div class="progress-block-v2">
-              <div class="progress-head-v2">
-                <span>Progression</span>
-                <strong>{{ getFundingPercent(item) }}%</strong>
-              </div>
-
-              <div class="progress-bar-v2 progress-bar-premium">
+              <div class="wish-progress-track">
                 <div
-                  class="progress-fill-v2 progress-fill-premium"
-                  [style.width.%]="getFundingPercent(item)"
+                  class="wish-progress-fill"
+                  [style.width]="getPercent(item) + '%'"
+                  [class.fill-funded]="item.fundingStatus === 'FUNDED'"
+                  [class.fill-partial]="item.fundingStatus === 'PARTIALLY_FUNDED'"
                 ></div>
               </div>
-
-              <div class="progress-info-v2">
-                <span>{{ formatAmount(item.fundedAmount) }} collectés</span>
-                <span>{{ formatAmount(item.remainingAmount) }} restants</span>
+              <div class="wish-progress-footer">
+                <span class="wish-remaining" *ngIf="item.fundingStatus !== 'FUNDED'">
+                  {{ formatAmount(item.remainingAmount) }} restants
+                </span>
+                <span class="wish-target">sur {{ formatAmount(item.targetAmount) }}</span>
               </div>
             </div>
 
-            <div class="metrics-row-v2">
-              <div class="metric-chip">
-                <span class="metric-label">Montant cible</span>
-                <strong>{{ formatAmount(item.targetAmount) }}</strong>
-              </div>
-
-              <div class="metric-chip">
-                <span class="metric-label">Réservation</span>
-                <strong>{{ formatReservationMode(item.reservationMode) }}</strong>
-              </div>
+            <!-- Réservé par -->
+            <div class="wish-reserved-by" *ngIf="item.isReserved && item.reservedByName">
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M10 11a4 4 0 100-8 4 4 0 000 8zM2 19a8 8 0 0116 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              {{ item.reservedByMe ? 'Réservé par vous' : 'Réservé par ' + item.reservedByName }}
             </div>
 
-            <div class="item-actions-v2 item-actions-premium" (click)="$event.stopPropagation()">
-              <button type="button" class="btn btn-ghost-detail" (click)="openItemDetail.emit(item)">
-                Voir détail
-              </button>
+            <!-- Actions -->
+            <div class="wish-actions" (click)="$event.stopPropagation()">
 
+              <!-- Contribution -->
               <button
-                type="button"
-                class="btn btn-primary btn-amazon"
-                [disabled]="contributionLoading || (!item.canContribute && !item.pendingContributionByMe)"
+                *ngIf="item.canContribute || item.pendingContributionByMe"
+                class="btn-contribute"
+                [class.btn-pending]="item.pendingContributionByMe"
+                [disabled]="contributionLoading"
                 (click)="handleContribution.emit(item)"
               >
-                {{ item.pendingContributionByMe ? 'Reprendre paiement' : 'Contribuer' }}
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                {{ item.pendingContributionByMe ? 'Voir mon paiement' : 'Contribuer' }}
               </button>
 
+              <!-- Réservation -->
               <button
-                type="button"
-                class="btn btn-secondary btn-outline-soft"
-                [disabled]="reservationLoading || !item.canReserve"
+                *ngIf="item.canReserve && !item.isReserved"
+                class="btn-reserve"
+                [disabled]="reservationLoading"
                 (click)="reserveItem.emit(item.id)"
               >
-                {{ reservationLoading ? 'Réservation...' : 'Réserver' }}
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M5 9l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                Réserver
               </button>
+
+              <!-- Détail -->
+              <button class="btn-detail" (click)="openItemDetail.emit(item)">
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.4"/><path d="M10 9v5M10 6.5v.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                Détail
+              </button>
+
             </div>
           </div>
         </article>
       </div>
-    </section>
+
+    </div>
   `,
   styles: [`
-    .card {
-      background: #ffffff;
-      border: 1px solid #f3e8e2;
-      border-radius: 24px;
-      box-shadow: 0 18px 50px rgba(17, 24, 39, 0.06);
-      padding: 22px;
-    }
-    .compact-state { padding: 14px 16px; margin-bottom: 12px; border-radius: 16px; box-shadow: none; }
-    .state-card.error { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; }
-    .section-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
-    .section-header h2 { margin: 4px 0 0; font-size: 1.3rem; line-height: 1.2; }
-    .section-kicker { color: #ea580c; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; }
-    .section-header-wishlist { margin-bottom: 18px; }
-    .wishlist-count-badge {
-      display: inline-flex; align-items: center; padding: 9px 12px; border-radius: 999px; background: #fff7f3;
-      color: #9a3412; border: 1px solid #f3dfd4; font-size: 0.86rem; font-weight: 700; white-space: nowrap;
-    }
-    .wishlist-toolbar {
-      display: grid; grid-template-columns: minmax(220px, 1.3fr) minmax(180px, 0.8fr) minmax(200px, 0.9fr);
-      gap: 12px; margin-bottom: 16px; padding: 14px; border: 1px solid #f3dfd4; border-radius: 18px;
-      background: linear-gradient(180deg, #fffaf7 0%, #ffffff 100%);
-    }
-    .toolbar-search, .toolbar-select { display: flex; flex-direction: column; gap: 6px; }
-    .toolbar-search label, .toolbar-select label { font-size: 12px; font-weight: 700; color: #6b7280; }
-    .toolbar-search input, .toolbar-select select {
-      width: 100%; box-sizing: border-box; border: 1px solid #e5d7cf; border-radius: 14px; padding: 11px 13px;
-      font: inherit; background: #ffffff; color: #111827;
-    }
-    .wishlist-grid-v2 { display: grid; gap: 18px; }
-    .wishlist-grid-amazon3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .wishlist-card-v2 {
-      position: relative; border: 1px solid #efe5de; border-radius: 22px; overflow: hidden;
-      background: linear-gradient(180deg, #fffdfc 0%, #ffffff 100%);
-      box-shadow: 0 14px 32px rgba(17, 24, 39, 0.05);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      display: flex; flex-direction: column; min-width: 0; cursor: pointer;
-    }
-    .wishlist-card-v2:hover { transform: translateY(-4px); box-shadow: 0 22px 44px rgba(17, 24, 39, 0.10); }
-    .wishlist-image-shell { position: relative; }
-    .wishlist-image-v2 {
-      height: 240px; background: linear-gradient(180deg, #fff7f3 0%, #f9fafb 100%);
-      display: flex; align-items: center; justify-content: center; overflow: hidden; border-bottom: 1px solid #f3e8e2;
-    }
-    .wishlist-image-v2 img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.35s ease; }
-    .image-placeholder { font-size: 3rem; opacity: 0.85; }
-    .image-top-badges {
-      position: absolute; top: 12px; left: 12px; right: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start;
-    }
-    .mini-badge {
-      display: inline-flex; align-items: center; padding: 7px 10px; border-radius: 999px;
-      font-size: 11px; font-weight: 800; line-height: 1;
-      backdrop-filter: blur(8px); box-shadow: 0 10px 20px rgba(17, 24, 39, 0.10);
-    }
-    .funding-badge { background: rgba(255,255,255,0.92); color: #7c2d12; border: 1px solid rgba(255,255,255,0.85); }
-    .reservation-badge { background: rgba(17,24,39,0.82); color: #ffffff; border: 1px solid rgba(255,255,255,0.16); }
-    .wishlist-content-v2 { display: flex; flex-direction: column; gap: 14px; padding: 18px; min-width: 0; height: 100%; }
-    .wishlist-top-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-    .wishlist-title-wrap { min-width: 0; flex: 1; }
-    .item-title { margin: 0 0 6px; color: #111827; font-size: 1.08rem; line-height: 1.35; }
-    .item-subtitle { margin: 0; color: #6b7280; font-size: 0.92rem; line-height: 1.5; }
-    .item-reservation { font-size: 0.92rem; color: #4b5563; }
-    .premium-note { padding: 10px 12px; border-radius: 14px; background: #fffaf7; border: 1px solid #f3e8e2; }
-    .alert-chip {
-      display: inline-flex; align-items: center; width: fit-content; max-width: 100%; padding: 10px 12px;
-      border-radius: 999px; background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412;
-      font-size: 0.84rem; font-weight: 700; line-height: 1.4;
-    }
-    .price-strip {
-      display: flex; justify-content: space-between; align-items: flex-end; gap: 14px; padding: 14px 16px;
-      border-radius: 18px; background: linear-gradient(135deg, #fff7f2, #ffffff); border: 1px solid #f3e8e2;
-    }
-    .price-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-    .price-label { font-size: 0.8rem; color: #6b7280; }
-    .price-value { font-size: 1.35rem; line-height: 1.1; color: #111827; letter-spacing: -0.02em; }
-    .price-side { display: flex; flex-direction: column; gap: 4px; text-align: right; font-size: 0.82rem; color: #6b7280; }
-    .metrics-row-v2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .metric-chip {
-      border: 1px solid #f3e8e2; background: #fffaf7; border-radius: 16px; padding: 12px;
-      display: flex; flex-direction: column; gap: 4px; min-width: 0;
-    }
-    .metric-label { font-size: 12px; color: #6b7280; }
-    .metric-chip strong { font-size: 0.95rem; color: #111827; line-height: 1.3; word-break: break-word; }
-    .progress-block-v2 { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
-    .progress-head-v2 { display: flex; justify-content: space-between; align-items: center; font-size: 0.92rem; color: #4b5563; }
-    .progress-bar-v2 { width: 100%; height: 10px; border-radius: 999px; background: #f3f4f6; overflow: hidden; }
-    .progress-bar-premium { height: 12px; background: #eceff3; box-shadow: inset 0 1px 2px rgba(17, 24, 39, 0.08); }
-    .progress-fill-v2 { height: 100%; border-radius: 999px; background: linear-gradient(135deg, #ff7a59, #ffb347); min-width: 0; }
-    .progress-info-v2 { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 0.86rem; color: #6b7280; }
-    .item-actions-v2 { display: flex; gap: 10px; flex-wrap: wrap; margin-top: auto; }
-    .btn { border: 0; border-radius: 14px; padding: 11px 16px; cursor: pointer; font: inherit; font-weight: 700; }
-    .btn-primary { background: linear-gradient(135deg, #ff7a59, #ffb347); color: white; }
-    .btn-secondary { background: #fff7f3; color: #9a3412; border: 1px solid #f3dfd4; }
-    .btn-ghost-detail { background: #ffffff; color: #374151; border: 1px solid #e5e7eb; }
-    .btn-amazon { min-height: 46px; border-radius: 999px; padding: 12px 18px; }
-    .btn-outline-soft { min-height: 46px; border-radius: 999px; padding: 12px 18px; background: #ffffff; color: #7c2d12; border: 1px solid #f3dfd4; }
+    .wishlist-wrap { display: flex; flex-direction: column; gap: 20px; }
 
-    @media (max-width: 1100px) {
-      .wishlist-grid-amazon3 { grid-template-columns: 1fr; }
+    /* ── HEADER ── */
+    .wishlist-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap;
     }
-    @media (max-width: 960px) {
-      .wishlist-toolbar, .metrics-row-v2 { grid-template-columns: 1fr; }
-      .price-strip, .progress-info-v2 { flex-direction: column; align-items: flex-start; }
-      .price-side { text-align: left; }
+    .wishlist-header-left { display: flex; align-items: center; gap: 12px; }
+    .wishlist-header-left h2 { font-size: 1.2rem; font-weight: 900; color: #111; margin: 0; }
+    .item-count-badge {
+      background: #111; color: white; padding: 3px 10px; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 800;
+    }
+
+    /* ── TOOLBAR ── */
+    .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .search-wrap { position: relative; }
+    .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9ca3af; pointer-events: none; }
+    .search-input {
+      padding: 8px 12px 8px 32px; border: 1.5px solid #e5e7eb; border-radius: 10px;
+      font: inherit; font-size: 0.85rem; background: white; outline: 0; width: 180px; transition: 0.2s;
+    }
+    .search-input:focus { border-color: #111; width: 220px; }
+
+    .filter-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+    .filter-pill {
+      padding: 6px 12px; border: 1.5px solid #e5e7eb; border-radius: 999px;
+      background: white; font: inherit; font-size: 0.78rem; font-weight: 600;
+      color: #6b7280; cursor: pointer; transition: 0.15s;
+    }
+    .filter-pill:hover { border-color: #111; color: #111; }
+    .filter-pill.active { background: #111; border-color: #111; color: white; }
+
+    .sort-select {
+      padding: 8px 12px; border: 1.5px solid #e5e7eb; border-radius: 10px;
+      font: inherit; font-size: 0.82rem; background: white; outline: 0; cursor: pointer; color: #374151;
+    }
+
+    /* ── ALERTES ── */
+    .alert-error {
+      display: flex; align-items: center; gap: 8px; padding: 12px 16px;
+      background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px;
+      color: #991b1b; font-size: 0.85rem; font-weight: 500;
+    }
+
+    /* ── EMPTY ── */
+    .empty-state {
+      background: white; border: 1.5px solid #f3f4f6; border-radius: 20px;
+      padding: 56px 24px; text-align: center; display: flex; flex-direction: column;
+      align-items: center; gap: 10px;
+    }
+    .empty-icon { font-size: 2.5rem; }
+    .empty-title { font-size: 1.05rem; font-weight: 800; color: #111; }
+    .empty-desc { color: #9ca3af; font-size: 0.88rem; }
+
+    /* ── GRILLE ── */
+    .wishlist-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    /* ── CARD ── */
+    .wish-card {
+      background: white; border: 1.5px solid #f3f4f6; border-radius: 20px;
+      overflow: hidden; display: flex; flex-direction: column;
+      cursor: pointer; transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+    }
+    .wish-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.09); transform: translateY(-2px); border-color: #e5e7eb; }
+    .wish-card.funded { border-color: #bbf7d0; }
+    .wish-card.reserved { border-color: #fde68a; }
+
+    /* Image */
+    .wish-img-wrap { position: relative; aspect-ratio: 4/3; background: #f9fafb; overflow: hidden; }
+    .wish-img { width: 100%; height: 100%; object-fit: cover; }
+    .wish-img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; background: #f3f4f6; }
+
+    /* Badges */
+    .wish-badges { position: absolute; top: 10px; left: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; }
+    .badge-funded { background: #dcfce7; color: #166534; }
+    .badge-partial { background: #fef3c7; color: #92400e; }
+    .badge-reserved { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+
+    /* Contenu */
+    .wish-content { padding: 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+    .wish-name { font-size: 0.95rem; font-weight: 800; color: #111; line-height: 1.3; }
+    .wish-qty { font-size: 0.75rem; color: #9ca3af; font-weight: 500; margin-top: -6px; }
+
+    /* Progress */
+    .wish-progress-block { display: flex; flex-direction: column; gap: 6px; }
+    .wish-progress-header { display: flex; align-items: center; justify-content: space-between; }
+    .wish-funded-amount { font-size: 0.95rem; font-weight: 900; color: #111; }
+    .wish-pct { font-size: 0.75rem; font-weight: 700; color: #9ca3af; }
+    .wish-pct.pct-done { color: #22c55e; }
+    .wish-progress-track { height: 5px; background: #f3f4f6; border-radius: 999px; overflow: hidden; }
+    .wish-progress-fill { height: 100%; border-radius: 999px; background: #e5e7eb; transition: width 0.4s ease; }
+    .fill-funded { background: #22c55e; }
+    .fill-partial { background: #FFD700; }
+    .wish-progress-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px; }
+    .wish-remaining { font-size: 0.75rem; color: #6b7280; }
+    .wish-target { font-size: 0.75rem; color: #9ca3af; }
+
+    /* Réservé par */
+    .wish-reserved-by {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 0.75rem; color: #92400e; background: #fffbeb;
+      padding: 5px 10px; border-radius: 8px; font-weight: 600;
+    }
+
+    /* Actions */
+    .wish-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; padding-top: 4px; }
+
+    .btn-contribute {
+      flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+      padding: 9px 14px; border: 0; border-radius: 10px;
+      background: #111; color: white; font: inherit; font-size: 0.8rem; font-weight: 700;
+      cursor: pointer; transition: 0.15s; white-space: nowrap;
+    }
+    .btn-contribute:hover:not(:disabled) { background: #000; }
+    .btn-contribute.btn-pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .btn-contribute.btn-pending:hover:not(:disabled) { background: #fde68a; }
+    .btn-contribute:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-reserve {
+      display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+      padding: 9px 12px; border: 1.5px solid #e5e7eb; border-radius: 10px;
+      background: white; color: #374151; font: inherit; font-size: 0.8rem; font-weight: 700;
+      cursor: pointer; transition: 0.15s; white-space: nowrap;
+    }
+    .btn-reserve:hover:not(:disabled) { border-color: #111; color: #111; }
+    .btn-reserve:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-detail {
+      display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+      padding: 9px 12px; border: 1.5px solid #f3f4f6; border-radius: 10px;
+      background: #f9fafb; color: #6b7280; font: inherit; font-size: 0.8rem; font-weight: 600;
+      cursor: pointer; transition: 0.15s; white-space: nowrap;
+    }
+    .btn-detail:hover { background: #f3f4f6; color: #111; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1100px) { .wishlist-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 700px) {
+      .wishlist-grid { grid-template-columns: 1fr; }
+      .wishlist-header { flex-direction: column; }
+      .toolbar { width: 100%; }
+      .search-input { width: 100%; }
+      .search-input:focus { width: 100%; }
     }
   `],
 })
@@ -346,7 +370,17 @@ export class EventWishlistSectionComponent {
   @Output() reserveItem = new EventEmitter<number>();
 
   readonly formatAmount = formatAmount;
-  readonly formatFundingStatus = formatFundingStatus;
-  readonly formatReservationMode = formatReservationMode;
   readonly getFundingPercent = getFundingPercent;
+
+  readonly filters: { label: string; value: WishlistFilter }[] = [
+    { label: 'Tous', value: 'ALL' },
+    { label: 'Disponibles', value: 'AVAILABLE' },
+    { label: 'Réservés', value: 'RESERVED' },
+    { label: 'Financés', value: 'FUNDED' },
+    { label: 'En attente', value: 'PENDING' },
+  ];
+
+  getPercent(item: WishlistItem): number {
+    return this.getFundingPercent(item);
+  }
 }

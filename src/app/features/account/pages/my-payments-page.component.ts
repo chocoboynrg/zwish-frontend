@@ -2,12 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { CountdownTimerComponent } from '../../../shared/components/countdown-timer/countdown-timer.component';
 import { MyPaymentsService, MyPaymentItem } from '../services/my-payments.service';
 
 @Component({
   selector: 'app-my-payments-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, CountdownTimerComponent],
   template: `
     <div class="page-wrap">
 
@@ -70,7 +71,13 @@ import { MyPaymentsService, MyPaymentItem } from '../services/my-payments.servic
                   <td class="event-cell">{{ p.contribution?.event?.title ?? '—' }}</td>
                   <td class="amount-cell">{{ p.amount | number:'1.0-0' }} <span class="currency">{{ p.currencyCode }}</span></td>
                   <td class="muted">{{ p.provider }}</td>
-                  <td><span class="status-badge" [ngClass]="getStatusClass(p.status)">{{ getStatusLabel(p.status) }}</span></td>
+                  <td><span class="status-badge" [ngClass]="getStatusClass(p.status)">{{ getStatusLabel(p.status) }}</span>
+                    <app-countdown-timer
+                      *ngIf="(p.status === 'INITIATED' || p.status === 'PENDING') && p.expiresAt"
+                      [expiresAt]="p.expiresAt!"
+                      [showExpired]="true"
+                    ></app-countdown-timer>
+                  </td>
                   <td class="muted small">{{ p.createdAt | date:'dd/MM/yy HH:mm' }}</td>
                   <td>
                     <a [routerLink]="['/app/payments', p.id]" class="table-link">Détail</a>
