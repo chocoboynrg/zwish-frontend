@@ -1,355 +1,168 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-
-import {
-  DashboardService,
-  MyDashboardResponse,
-} from '../services/dashboard.service';
-import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { DashboardService, MyDashboardResponse } from '../services/dashboard.service';
 
 @Component({
   selector: 'app-my-events-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, EmptyStateComponent],
+  imports: [CommonModule, RouterLink],
   template: `
-    <section class="page">
-      <div class="hero-card">
-        <div>
-          <span class="eyebrow">Mes événements</span>
-          <h1>Retrouvez vos événements</h1>
-          <p class="subtitle">
-            Gérez les événements que vous organisez et ceux auxquels vous participez.
-          </p>
-        </div>
+    <div class="page-wrap">
 
-        <a routerLink="/app/events/new" class="create-link">
-          Créer un événement
-        </a>
+      <!-- Header -->
+      <div class="page-hero">
+        <div class="page-hero-inner">
+          <div>
+            <div class="page-eyebrow">Mon espace</div>
+            <h1>Mes événements</h1>
+            <p>Gérez vos événements organisés et ceux auxquels vous participez.</p>
+          </div>
+          <a routerLink="/app/events/new" class="btn-create">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            Créer un événement
+          </a>
+        </div>
       </div>
 
-      <div *ngIf="loading" class="state-card">
-        Chargement des événements...
+      <div class="page-body">
+        <div class="loading-state" *ngIf="loading()">Chargement...</div>
+
+        <ng-container *ngIf="!loading() && data()">
+
+          <!-- Stats -->
+          <div class="mini-stats">
+            <div class="mini-stat">
+              <strong>{{ data()!.organizedEvents.length }}</strong>
+              <span>organisés</span>
+            </div>
+            <div class="mini-stat">
+              <strong>{{ data()!.joinedEvents.length }}</strong>
+              <span>rejoints</span>
+            </div>
+          </div>
+
+          <!-- Organisés -->
+          <div class="section-block">
+            <div class="section-head">
+              <h2>Événements que j'organise</h2>
+              <span class="count-badge">{{ data()!.organizedEvents.length }}</span>
+            </div>
+
+            <div class="empty-block" *ngIf="data()!.organizedEvents.length === 0">
+              <div class="empty-icon">🎊</div>
+              <p>Vous n'organisez aucun événement pour l'instant.</p>
+              <a routerLink="/app/events/new" class="btn-yellow">Créer mon premier événement</a>
+            </div>
+
+            <div class="events-grid" *ngIf="data()!.organizedEvents.length > 0">
+              <a
+                *ngFor="let e of data()!.organizedEvents"
+                [routerLink]="['/app/events', e.id]"
+                class="event-card"
+              >
+                <div class="event-card-header">
+                  <span class="event-badge badge-organizer">Organisateur</span>
+                  <span class="event-date">{{ e.eventDate | date:'dd MMM yyyy' }}</span>
+                </div>
+                <div class="event-title">{{ e.title }}</div>
+                <div class="event-desc" *ngIf="e.description">{{ e.description | slice:0:80 }}{{ e.description.length > 80 ? '…' : '' }}</div>
+                <div class="event-footer">
+                  <span>Voir l'événement →</span>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Rejoints -->
+          <div class="section-block">
+            <div class="section-head">
+              <h2>Événements auxquels je participe</h2>
+              <span class="count-badge">{{ data()!.joinedEvents.length }}</span>
+            </div>
+
+            <div class="empty-block" *ngIf="data()!.joinedEvents.length === 0">
+              <div class="empty-icon">🔗</div>
+              <p>Rejoignez un événement via le lien de partage envoyé par un organisateur.</p>
+            </div>
+
+            <div class="events-grid" *ngIf="data()!.joinedEvents.length > 0">
+              <a
+                *ngFor="let e of data()!.joinedEvents"
+                [routerLink]="['/app/events', e.id]"
+                class="event-card"
+              >
+                <div class="event-card-header">
+                  <span class="event-badge badge-guest">Invité</span>
+                  <span class="event-date">{{ e.eventDate | date:'dd MMM yyyy' }}</span>
+                </div>
+                <div class="event-title">{{ e.title }}</div>
+                <div class="event-desc" *ngIf="e.description">{{ e.description | slice:0:80 }}{{ e.description.length > 80 ? '…' : '' }}</div>
+                <div class="event-footer">
+                  <span>Voir la wishlist →</span>
+                </div>
+              </a>
+            </div>
+          </div>
+
+        </ng-container>
       </div>
-
-      <div *ngIf="error && !loading" class="state-card error">
-        {{ error }}
-      </div>
-
-      <ng-container *ngIf="data && !loading">
-        <div class="stats-grid">
-          <article class="stat-card">
-            <span class="stat-label">Événements organisés</span>
-            <strong class="stat-value">
-              {{ data.summary?.organizedEventsCount ?? data.organizedEvents.length }}
-            </strong>
-          </article>
-
-          <article class="stat-card">
-            <span class="stat-label">Événements rejoints</span>
-            <strong class="stat-value">
-              {{ data.summary?.participatingEventsCount ?? data.joinedEvents.length }}
-            </strong>
-          </article>
-        </div>
-
-        <div class="content-grid">
-          <section class="panel">
-            <div class="panel-header">
-              <div>
-                <span class="panel-kicker">Organisation</span>
-                <h2>J’organise</h2>
-              </div>
-            </div>
-
-            <app-empty-state
-              *ngIf="data.organizedEvents.length === 0"
-              icon="🎉"
-              title="Aucun événement organisé"
-              description="Créez votre premier événement pour commencer."
-              actionLabel="Créer un événement"
-              (actionClick)="goToCreateEvent()"
-            />
-
-            <div class="list" *ngIf="data.organizedEvents.length > 0">
-              <article class="list-item" *ngFor="let event of data.organizedEvents">
-                <div class="main">
-                  <h3>{{ event.title }}</h3>
-                  <p>{{ event.eventDate | date:'mediumDate' }}</p>
-                </div>
-
-                <div class="actions">
-                  <span class="badge">ORGANIZER</span>
-                  <a class="action-link" [routerLink]="['/app/events', event.id]">
-                    Ouvrir
-                  </a>
-                </div>
-              </article>
-            </div>
-          </section>
-
-          <section class="panel">
-            <div class="panel-header">
-              <div>
-                <span class="panel-kicker">Participation</span>
-                <h2>Je participe</h2>
-              </div>
-            </div>
-
-            <app-empty-state
-              *ngIf="data.joinedEvents.length === 0"
-              icon="🤝"
-              title="Aucun événement rejoint"
-              description="Les événements rejoints apparaîtront ici."
-            />
-
-            <div class="list" *ngIf="data.joinedEvents.length > 0">
-              <article class="list-item" *ngFor="let event of data.joinedEvents">
-                <div class="main">
-                  <h3>{{ event.title }}</h3>
-                  <p>{{ event.eventDate | date:'mediumDate' }}</p>
-                </div>
-
-                <div class="actions">
-                  <span class="badge">{{ event.participantRole || 'PARTICIPANT' }}</span>
-                  <a class="action-link" [routerLink]="['/app/events', event.id]">
-                    Ouvrir
-                  </a>
-                </div>
-              </article>
-            </div>
-          </section>
-        </div>
-      </ng-container>
-    </section>
+    </div>
   `,
   styles: [`
-    :host {
-      display: block;
-      background: #fffaf8;
-      min-height: 100%;
-    }
+    .page-wrap { background: #f9fafb; min-height: calc(100vh - 64px); }
+    .page-hero { background: #000; padding: 40px 0; }
+    .page-hero-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+    .page-eyebrow { color: #FFD700; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px; }
+    h1 { font-size: 2rem; font-weight: 900; color: white; margin: 0 0 8px; letter-spacing: -0.02em; }
+    .page-hero p { color: rgba(255,255,255,0.5); margin: 0; font-size: 0.9rem; }
+    .btn-create { display: flex; align-items: center; gap: 8px; background: #FFD700; color: #000; padding: 11px 22px; border-radius: 12px; text-decoration: none; font-weight: 800; font-size: 0.9rem; white-space: nowrap; }
+    .btn-create:hover { background: #FFC000; }
 
-    .page {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-      padding: 24px;
-    }
+    .page-body { max-width: 1280px; margin: 0 auto; padding: 32px 24px; display: flex; flex-direction: column; gap: 32px; }
+    .loading-state { color: #9ca3af; text-align: center; padding: 48px; }
 
-    .hero-card,
-    .stat-card,
-    .panel,
-    .state-card {
-      background: #ffffff;
-      border: 1px solid #f0e5df;
-      border-radius: 24px;
-      box-shadow: 0 18px 50px rgba(17, 24, 39, 0.06);
-    }
+    .mini-stats { display: flex; gap: 16px; }
+    .mini-stat { background: white; border: 1.5px solid #f3f4f6; border-radius: 12px; padding: 14px 24px; display: flex; flex-direction: column; gap: 4px; }
+    .mini-stat strong { font-size: 1.5rem; font-weight: 900; color: #111; }
+    .mini-stat span { font-size: 0.78rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
 
-    .hero-card {
-      padding: 28px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      background:
-        radial-gradient(circle at top right, rgba(255, 179, 71, 0.14), transparent 30%),
-        linear-gradient(135deg, #fff5f0, #ffffff);
-    }
+    .section-block { display: flex; flex-direction: column; gap: 16px; }
+    .section-head { display: flex; align-items: center; gap: 12px; }
+    .section-head h2 { font-size: 1.15rem; font-weight: 800; color: #111; margin: 0; }
+    .count-badge { background: #111; color: white; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 800; }
 
-    .eyebrow,
-    .panel-kicker {
-      display: inline-block;
-      margin-bottom: 10px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: #fff1eb;
-      color: #e85d3e;
-      font-weight: 700;
-      font-size: 0.85rem;
-    }
+    .empty-block { background: white; border: 1.5px solid #f3f4f6; border-radius: 20px; padding: 48px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .empty-icon { font-size: 2.5rem; }
+    .empty-block p { color: #9ca3af; margin: 0; font-size: 0.9rem; }
+    .btn-yellow { background: #FFD700; color: #000; padding: 10px 22px; border-radius: 10px; text-decoration: none; font-weight: 800; font-size: 0.88rem; }
 
-    .hero-card h1 {
-      margin: 0 0 8px;
-      font-size: 2rem;
-      color: #111827;
-    }
+    .events-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .event-card { background: white; border: 1.5px solid #f3f4f6; border-radius: 18px; padding: 20px; text-decoration: none; display: flex; flex-direction: column; gap: 10px; transition: 0.2s; }
+    .event-card:hover { border-color: #111; box-shadow: 0 8px 24px rgba(0,0,0,0.08); transform: translateY(-2px); }
+    .event-card-header { display: flex; align-items: center; justify-content: space-between; }
+    .event-badge { padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
+    .badge-organizer { background: #fffbeb; color: #92400e; }
+    .badge-guest { background: #ede9fe; color: #6d28d9; }
+    .event-date { font-size: 0.78rem; color: #9ca3af; }
+    .event-title { font-size: 1rem; font-weight: 800; color: #111; line-height: 1.3; }
+    .event-desc { font-size: 0.82rem; color: #9ca3af; line-height: 1.5; flex: 1; }
+    .event-footer { font-size: 0.82rem; font-weight: 700; color: #6b7280; padding-top: 8px; border-top: 1px solid #f3f4f6; }
+    .event-card:hover .event-footer { color: #111; }
 
-    .subtitle {
-      margin: 0;
-      color: #6b7280;
-      line-height: 1.7;
-    }
-
-    .create-link {
-      text-decoration: none;
-      color: white;
-      background: linear-gradient(135deg, #ff7a59, #ffb347);
-      padding: 12px 18px;
-      border-radius: 14px;
-      font-weight: 700;
-      box-shadow: 0 10px 25px rgba(255, 122, 89, 0.22);
-      white-space: nowrap;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-    }
-
-    .stat-card {
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .stat-label {
-      color: #6b7280;
-      font-size: 14px;
-    }
-
-    .stat-value {
-      font-size: 28px;
-      color: #111827;
-    }
-
-    .content-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-
-    .panel {
-      padding: 22px;
-    }
-
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: start;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .panel-header h2 {
-      margin: 0;
-      font-size: 20px;
-      color: #111827;
-    }
-
-    .list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .list-item {
-      border: 1px solid #ece4df;
-      border-radius: 16px;
-      padding: 14px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      background: #fffdfc;
-    }
-
-    .main h3 {
-      margin: 0 0 6px;
-      font-size: 16px;
-      color: #111827;
-    }
-
-    .main p {
-      margin: 0;
-      color: #6b7280;
-      font-size: 14px;
-    }
-
-    .actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: #eef2ff;
-      color: #4338ca;
-      font-size: 12px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .action-link {
-      text-decoration: none;
-      color: #ff7a59;
-      font-weight: 700;
-    }
-
-    .state-card {
-      padding: 18px;
-      color: #374151;
-    }
-
-    .state-card.error {
-      color: #b91c1c;
-      background: #fff7f7;
-      border-color: #fecaca;
-    }
-
-    @media (max-width: 900px) {
-      .hero-card,
-      .content-grid,
-      .list-item {
-        flex-direction: column;
-        align-items: flex-start;
-        grid-template-columns: 1fr;
-      }
-
-      .actions {
-        justify-content: flex-start;
-      }
-    }
+    @media (max-width: 900px) { .events-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .events-grid { grid-template-columns: 1fr; } }
   `],
 })
 export class MyEventsPageComponent implements OnInit {
-  private readonly dashboardService = inject(DashboardService);
-  private readonly router = inject(Router);
-
-  loading = true;
-  error = '';
-  data: MyDashboardResponse | null = null;
+  private readonly dashService = inject(DashboardService);
+  readonly data = signal<MyDashboardResponse | null>(null);
+  readonly loading = signal(true);
 
   ngOnInit(): void {
-    this.loadData();
-  }
-
-  private loadData(): void {
-    this.loading = true;
-    this.error = '';
-
-    this.dashboardService.getMyDashboard().subscribe({
-      next: (response: MyDashboardResponse) => {
-        this.data = response;
-        this.loading = false;
-      },
-      error: () => {
-        this.error = 'Impossible de charger vos événements.';
-        this.loading = false;
-      },
+    this.dashService.getMyDashboard().subscribe({
+      next: (d) => { this.data.set(d); this.loading.set(false); },
+      error: () => this.loading.set(false),
     });
-  }
-
-  goToCreateEvent(): void {
-    this.router.navigate(['/app/events/new']);
   }
 }

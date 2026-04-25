@@ -1,15 +1,17 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, signal } from '@angular/core';
+import { Component, HostListener, inject, signal } from '@angular/core';
 import { RouterLink, RouterOutlet, RouterLinkActive } from '@angular/router';
-import { AppNavbarComponent } from '../shared/components/app-navbar/app-navbar.component';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { computed } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from '../core/services/auth.service';
 
 @Component({
   selector: 'app-public-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, AppNavbarComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   template: `
     <div class="shell">
-      <!-- Navbar custom style realme -->
       <header class="topnav" [class.scrolled]="scrolled()">
         <div class="nav-inner">
           <a routerLink="/" class="nav-brand">
@@ -22,12 +24,41 @@ import { AppNavbarComponent } from '../shared/components/app-navbar/app-navbar.c
             <a routerLink="/how-it-works" routerLinkActive="nav-active">Comment ça marche</a>
           </nav>
 
+          <!-- Actions selon état connexion -->
           <div class="nav-actions">
-            <a routerLink="/login" class="nav-btn-ghost">Connexion</a>
-            <a routerLink="/app/events/new" class="nav-btn-cta">Créer un événement</a>
+            <!-- Connecté -->
+            <ng-container *ngIf="isAuthenticated()">
+              <a routerLink="/app" class="nav-btn-ghost">Mon espace</a>
+              <div class="nav-avatar-wrap" (click)="avatarOpen.set(!avatarOpen())" [class.open]="avatarOpen()">
+                <div class="nav-avatar">{{ initials() }}</div>
+                <span class="nav-user-name">{{ firstName() }}</span>
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+
+                <div class="nav-dropdown" *ngIf="avatarOpen()">
+                  <div class="nav-dropdown-user">
+                    <div class="nav-dropdown-avatar">{{ initials() }}</div>
+                    <div>
+                      <div class="nav-dropdown-name">{{ currentUser()?.name }}</div>
+                      <div class="nav-dropdown-email">{{ currentUser()?.email }}</div>
+                    </div>
+                  </div>
+                  <div class="nav-dropdown-sep"></div>
+                  <a routerLink="/app" class="nav-dropdown-item" (click)="avatarOpen.set(false)">Dashboard</a>
+                  <a routerLink="/app/events" class="nav-dropdown-item" (click)="avatarOpen.set(false)">Mes événements</a>
+                  <a routerLink="/app/events/new" class="nav-dropdown-item" (click)="avatarOpen.set(false)">Créer un événement</a>
+                  <div class="nav-dropdown-sep"></div>
+                  <button class="nav-dropdown-logout" (click)="logout()">Se déconnecter</button>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- Non connecté -->
+            <ng-container *ngIf="!isAuthenticated()">
+              <a routerLink="/login" class="nav-btn-ghost">Connexion</a>
+              <a routerLink="/register" class="nav-btn-cta">Créer un compte</a>
+            </ng-container>
           </div>
 
-          <!-- Hamburger mobile -->
           <button class="hamburger" (click)="menuOpen.set(!menuOpen())" aria-label="Menu">
             <span [class.open]="menuOpen()"></span>
             <span [class.open]="menuOpen()"></span>
@@ -35,15 +66,24 @@ import { AppNavbarComponent } from '../shared/components/app-navbar/app-navbar.c
           </button>
         </div>
 
-        <!-- Menu mobile -->
         <div class="mobile-menu" [class.open]="menuOpen()">
           <a routerLink="/" (click)="menuOpen.set(false)">Accueil</a>
           <a routerLink="/catalog" (click)="menuOpen.set(false)">Catalogue</a>
           <a routerLink="/how-it-works" (click)="menuOpen.set(false)">Comment ça marche</a>
-          <a routerLink="/login" (click)="menuOpen.set(false)">Connexion</a>
-          <a routerLink="/app/events/new" class="mobile-cta" (click)="menuOpen.set(false)">Créer un événement</a>
+          <ng-container *ngIf="isAuthenticated()">
+            <a routerLink="/app" (click)="menuOpen.set(false)">Mon espace — {{ firstName() }}</a>
+            <a routerLink="/app/events" (click)="menuOpen.set(false)">Mes événements</a>
+            <button class="mobile-logout" (click)="logout()">Se déconnecter</button>
+          </ng-container>
+          <ng-container *ngIf="!isAuthenticated()">
+            <a routerLink="/login" (click)="menuOpen.set(false)">Connexion</a>
+            <a routerLink="/register" class="mobile-cta" (click)="menuOpen.set(false)">Créer un compte</a>
+          </ng-container>
         </div>
       </header>
+
+      <!-- Overlay dropdown -->
+      <div class="nav-overlay" *ngIf="avatarOpen()" (click)="avatarOpen.set(false)"></div>
 
       <main class="main">
         <router-outlet></router-outlet>
@@ -64,7 +104,6 @@ import { AppNavbarComponent } from '../shared/components/app-navbar/app-navbar.c
                 </a>
               </div>
             </div>
-
             <div class="footer-links-col">
               <div class="footer-section">
                 <h4>Plateforme</h4>
@@ -74,9 +113,14 @@ import { AppNavbarComponent } from '../shared/components/app-navbar/app-navbar.c
               </div>
               <div class="footer-section">
                 <h4>Mon compte</h4>
-                <a routerLink="/login">Connexion</a>
-                <a routerLink="/register">Inscription</a>
-                <a routerLink="/app">Mon espace</a>
+                <ng-container *ngIf="!isAuthenticated()">
+                  <a routerLink="/login">Connexion</a>
+                  <a routerLink="/register">Inscription</a>
+                </ng-container>
+                <ng-container *ngIf="isAuthenticated()">
+                  <a routerLink="/app">Mon espace</a>
+                  <a routerLink="/app/events">Mes événements</a>
+                </ng-container>
               </div>
             </div>
           </div>
@@ -96,66 +140,52 @@ import { AppNavbarComponent } from '../shared/components/app-navbar/app-navbar.c
     .main { flex: 1; }
 
     /* NAV */
-    .topnav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(0,0,0,0.92);
-      backdrop-filter: blur(16px);
-      transition: background 0.3s, box-shadow 0.3s;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
+    .topnav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(0,0,0,0.92); backdrop-filter: blur(16px); transition: background 0.3s, box-shadow 0.3s; border-bottom: 1px solid rgba(255,255,255,0.06); }
     .topnav.scrolled { background: rgba(0,0,0,0.98); box-shadow: 0 4px 24px rgba(0,0,0,0.3); }
-    .nav-inner {
-      max-width: 1280px; margin: 0 auto; padding: 0 24px;
-      height: 64px; display: flex; align-items: center; gap: 40px;
-    }
-    .nav-brand {
-      font-size: 1.4rem; font-weight: 900; color: white; text-decoration: none;
-      letter-spacing: -0.02em; flex-shrink: 0;
-    }
+    .nav-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; height: 64px; display: flex; align-items: center; gap: 40px; }
+    .nav-brand { font-size: 1.4rem; font-weight: 900; color: white; text-decoration: none; letter-spacing: -0.02em; flex-shrink: 0; }
     .brand-z { color: #FFD700; }
-    .nav-links {
-      display: flex; gap: 32px; flex: 1;
-    }
-    .nav-links a {
-      color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.88rem;
-      font-weight: 500; transition: color 0.2s; letter-spacing: 0.01em;
-    }
+    .nav-links { display: flex; gap: 32px; flex: 1; }
+    .nav-links a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: color 0.2s; }
     .nav-links a:hover, .nav-links a.nav-active { color: white; }
     .nav-actions { display: flex; gap: 12px; align-items: center; }
-    .nav-btn-ghost {
-      color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.85rem;
-      font-weight: 600; padding: 8px 16px; border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 8px; transition: 0.2s;
-    }
+    .nav-btn-ghost { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.85rem; font-weight: 600; padding: 8px 16px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; transition: 0.2s; }
     .nav-btn-ghost:hover { border-color: white; color: white; }
-    .nav-btn-cta {
-      background: #FFD700; color: #000; text-decoration: none; font-size: 0.85rem;
-      font-weight: 800; padding: 8px 18px; border-radius: 8px; transition: 0.2s;
-    }
+    .nav-btn-cta { background: #FFD700; color: #000; text-decoration: none; font-size: 0.85rem; font-weight: 800; padding: 8px 18px; border-radius: 8px; transition: 0.2s; }
     .nav-btn-cta:hover { background: #FFC000; }
 
-    .hamburger {
-      display: none; flex-direction: column; gap: 5px; background: 0; border: 0; cursor: pointer; padding: 4px;
-    }
-    .hamburger span {
-      display: block; width: 22px; height: 2px; background: white; transition: 0.3s;
-    }
+    /* Avatar connecté */
+    .nav-avatar-wrap { position: relative; display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 5px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); transition: 0.2s; }
+    .nav-avatar-wrap:hover, .nav-avatar-wrap.open { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.06); }
+    .nav-avatar { width: 28px; height: 28px; border-radius: 8px; background: #FFD700; color: #000; font-weight: 900; font-size: 0.72rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .nav-user-name { color: white; font-size: 0.85rem; font-weight: 600; }
+    .nav-avatar-wrap svg { color: rgba(255,255,255,0.5); }
+
+    .nav-dropdown { position: absolute; top: calc(100% + 10px); right: 0; width: 240px; background: #111; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; box-shadow: 0 16px 48px rgba(0,0,0,0.4); overflow: hidden; z-index: 200; animation: dropIn 0.15s ease; }
+    @keyframes dropIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    .nav-dropdown-user { display: flex; align-items: center; gap: 12px; padding: 16px; }
+    .nav-dropdown-avatar { width: 38px; height: 38px; border-radius: 10px; background: #FFD700; color: #000; font-weight: 900; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .nav-dropdown-name { font-weight: 700; color: white; font-size: 0.88rem; }
+    .nav-dropdown-email { color: rgba(255,255,255,0.4); font-size: 0.75rem; }
+    .nav-dropdown-sep { height: 1px; background: rgba(255,255,255,0.08); }
+    .nav-dropdown-item { display: block; padding: 11px 16px; color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: 0.15s; }
+    .nav-dropdown-item:hover { background: rgba(255,255,255,0.06); color: white; }
+    .nav-dropdown-logout { display: block; width: 100%; text-align: left; padding: 11px 16px; background: 0; border: 0; color: #f87171; font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+    .nav-dropdown-logout:hover { background: rgba(239,68,68,0.1); }
+    .nav-overlay { position: fixed; inset: 0; z-index: 99; }
+
+    /* Hamburger */
+    .hamburger { display: none; flex-direction: column; gap: 5px; background: 0; border: 0; cursor: pointer; padding: 4px; }
+    .hamburger span { display: block; width: 22px; height: 2px; background: white; transition: 0.3s; }
     .hamburger span.open:nth-child(1) { transform: translateY(7px) rotate(45deg); }
     .hamburger span.open:nth-child(2) { opacity: 0; }
     .hamburger span.open:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-
-    .mobile-menu {
-      display: none; flex-direction: column; gap: 0; padding: 0;
-      background: #000; border-top: 1px solid rgba(255,255,255,0.06);
-      max-height: 0; overflow: hidden; transition: max-height 0.3s;
-    }
-    .mobile-menu.open { max-height: 400px; }
-    .mobile-menu a {
-      color: rgba(255,255,255,0.8); text-decoration: none; padding: 16px 24px;
-      font-size: 0.95rem; font-weight: 500; border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
+    .mobile-menu { display: none; flex-direction: column; background: #000; border-top: 1px solid rgba(255,255,255,0.06); max-height: 0; overflow: hidden; transition: max-height 0.3s; }
+    .mobile-menu.open { max-height: 500px; }
+    .mobile-menu a { color: rgba(255,255,255,0.8); text-decoration: none; padding: 16px 24px; font-size: 0.95rem; font-weight: 500; border-bottom: 1px solid rgba(255,255,255,0.05); display: block; }
     .mobile-menu a:hover { color: white; background: rgba(255,255,255,0.04); }
     .mobile-cta { color: #FFD700 !important; font-weight: 700 !important; }
+    .mobile-logout { background: 0; border: 0; width: 100%; text-align: left; padding: 16px 24px; color: #f87171; font: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
     @media (max-width: 900px) {
       .nav-links, .nav-actions { display: none; }
@@ -171,11 +201,7 @@ import { AppNavbarComponent } from '../shared/components/app-navbar/app-navbar.c
     .footer-logo { font-size: 1.6rem; font-weight: 900; color: white; margin-bottom: 16px; }
     .footer-brand-col p { line-height: 1.7; font-size: 0.88rem; margin: 0 0 24px; }
     .footer-social { display: flex; gap: 12px; }
-    .social-icon {
-      width: 38px; height: 38px; border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 8px; display: flex; align-items: center; justify-content: center;
-      color: rgba(255,255,255,0.5); transition: 0.2s;
-    }
+    .social-icon { width: 38px; height: 38px; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.5); transition: 0.2s; }
     .social-icon:hover { border-color: #FFD700; color: #FFD700; }
     .footer-links-col { display: flex; gap: 64px; flex-wrap: wrap; }
     .footer-section { display: flex; flex-direction: column; gap: 14px; }
@@ -187,12 +213,34 @@ import { AppNavbarComponent } from '../shared/components/app-navbar/app-navbar.c
   `],
 })
 export class PublicLayoutComponent {
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+
+  readonly currentUser = toSignal(this.auth.currentUser$, {
+    initialValue: this.auth.getCurrentUserSnapshot(),
+  });
+  readonly isAuthenticated = computed(() => !!this.currentUser());
+  readonly initials = computed(() => {
+    const name = this.currentUser()?.name ?? '';
+    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  });
+  readonly firstName = computed(() => {
+    const name = this.currentUser()?.name ?? '';
+    return name.split(' ')[0] ?? '';
+  });
+
   scrolled = signal(false);
   menuOpen = signal(false);
+  avatarOpen = signal(false);
   readonly year = new Date().getFullYear();
 
   @HostListener('window:scroll')
-  onScroll() {
-    this.scrolled.set(window.scrollY > 20);
+  onScroll() { this.scrolled.set(window.scrollY > 20); }
+
+  logout(): void {
+    this.auth.logout();
+    this.avatarOpen.set(false);
+    this.menuOpen.set(false);
+    this.router.navigateByUrl('/');
   }
 }

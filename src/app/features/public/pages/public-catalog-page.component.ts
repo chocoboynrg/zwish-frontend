@@ -9,7 +9,7 @@ import { CatalogCategory } from '../../catalog/models/catalog-category.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { UserWishlistItemService } from '../../account/services/user-wishlist-item.service';
-import { EventsService } from '../../events/services/events.service';
+import { DashboardService } from '../../account/services/dashboard.service';
 import { environment } from '../../../../environments/environment';
 
 interface WishlistChoice {
@@ -392,7 +392,7 @@ export class PublicCatalogPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   private readonly wishlistItemService = inject(UserWishlistItemService);
-  private readonly eventsService = inject(EventsService);
+  private readonly dashboardService = inject(DashboardService);
 
   readonly products = signal<CatalogProduct[]>([]);
   readonly categories = signal<CatalogCategory[]>([]);
@@ -498,9 +498,9 @@ export class PublicCatalogPageComponent implements OnInit {
   private loadWishlists(): void {
     this.wishlistLoading.set(true);
     this.wishlistChoices.set([]);
-    this.eventsService.getEvents().subscribe({
-      next: (events: any[]) => {
-        const choices = events.map((e: any) => ({
+    this.dashboardService.getMyDashboard().subscribe({
+      next: (dashboard) => {
+        const choices = (dashboard.organizedEvents ?? []).map((e: any) => ({
           wishlistId: e.wishlistId ?? e.id,
           eventId: e.id,
           eventTitle: e.title,

@@ -1,709 +1,179 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
+import { MyContributionsService, MyContributionItem, MyContributionsResponse } from '../services/my-contributions.service';
 
-import {
-  MyContributionItem,
-  MyContributionsResponse,
-  MyContributionsService,
-} from '../services/my-contributions.service';
-import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
-
-type ContributionFilter =
-  | 'ALL'
-  | 'AWAITING_PAYMENT'
-  | 'CONFIRMED'
-  | 'FAILED'
-  | 'CANCELLED'
-  | 'REFUNDED';
+type Filter = 'ALL' | 'AWAITING_PAYMENT' | 'CONFIRMED' | 'FAILED' | 'CANCELLED' | 'REFUNDED';
 
 @Component({
   selector: 'app-my-contributions-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, EmptyStateComponent],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
-    <section class="page">
-      <header class="hero-card">
-        <div class="hero-top">
+    <div class="page-wrap">
+
+      <div class="page-hero">
+        <div class="page-hero-inner">
           <div>
-            <span class="eyebrow">Espace utilisateur</span>
+            <div class="page-eyebrow">Mon espace</div>
             <h1>Mes contributions</h1>
-            <p class="subtitle">
-              Suivez l’historique de vos participations financières, vos paiements
-              en attente et vos contributions déjà confirmées.
-            </p>
+            <p>Suivez vos participations financières et leurs statuts.</p>
           </div>
-
-          <a routerLink="/app" class="back-link">← Retour au tableau de bord</a>
-        </div>
-
-        <div class="hero-summary" *ngIf="!loading">
-          <div class="hero-summary-card hero-summary-card-accent">
-            <span class="hero-summary-label">Montant confirmé</span>
-            <strong class="hero-summary-value">
-              {{ confirmedAmount | number:'1.0-0' }} {{ defaultCurrency }}
-            </strong>
-            <span class="hero-summary-help">Contributions validées</span>
-          </div>
-
-          <div class="hero-summary-card">
-            <span class="hero-summary-label">En attente</span>
-            <strong class="hero-summary-value">
-              {{ awaitingPaymentCount }}
-            </strong>
-            <span class="hero-summary-help">Paiement à finaliser</span>
+          <div class="hero-stats" *ngIf="!loading()">
+            <div class="hero-stat">
+              <strong>{{ confirmedAmount() | number:'1.0-0' }} FCFA</strong>
+              <span>Montant confirmé</span>
+            </div>
+            <div class="hero-stat-sep"></div>
+            <div class="hero-stat">
+              <strong>{{ pendingCount() }}</strong>
+              <span>En attente</span>
+            </div>
           </div>
         </div>
-      </header>
-
-      <section class="toolbar-card">
-        <div class="toolbar-copy">
-          <div class="section-kicker">Filtrage</div>
-          <h2>Afficher mes contributions</h2>
-        </div>
-
-        <div class="toolbar">
-          <label for="status">Statut</label>
-          <select
-            id="status"
-            [(ngModel)]="selectedStatus"
-            (change)="loadContributions()"
-          >
-            <option value="ALL">Tous</option>
-            <option value="AWAITING_PAYMENT">En attente de paiement</option>
-            <option value="CONFIRMED">Confirmées</option>
-            <option value="FAILED">Échouées</option>
-            <option value="CANCELLED">Annulées</option>
-            <option value="REFUNDED">Remboursées</option>
-          </select>
-        </div>
-      </section>
-
-      <div *ngIf="loading" class="state-card">
-        <div class="state-title">Chargement des contributions...</div>
-        <div class="state-text">Préparation de votre historique.</div>
       </div>
 
-      <div *ngIf="error && !loading" class="state-card error">
-        <div class="state-title">Impossible de charger les contributions</div>
-        <div class="state-text">{{ error }}</div>
-      </div>
+      <div class="page-body">
 
-      <ng-container *ngIf="!loading && data">
-        <section class="stats-grid">
-          <article class="stat-card">
-            <span class="stat-label">Total contributions</span>
-            <strong class="stat-value">
-              {{ totalCount }}
-            </strong>
-          </article>
-
-          <article class="stat-card">
-            <span class="stat-label">Confirmées</span>
-            <strong class="stat-value">
-              {{ confirmedCount }}
-            </strong>
-          </article>
-
-          <article class="stat-card">
-            <span class="stat-label">En attente</span>
-            <strong class="stat-value">
-              {{ awaitingPaymentCount }}
-            </strong>
-          </article>
-
-          <article class="stat-card">
-            <span class="stat-label">Montant confirmé</span>
-            <strong class="stat-value">
-              {{ confirmedAmount | number:'1.0-0' }} {{ defaultCurrency }}
-            </strong>
-          </article>
-        </section>
-
-        <app-empty-state
-          *ngIf="!items.length"
-          icon="🤝"
-          title="Aucune contribution"
-          description="Aucune contribution trouvée pour ce filtre."
-        />
-
-        <div class="contributions-list" *ngIf="items.length > 0">
-          <article class="contribution-card" *ngFor="let contribution of items">
-            <div class="card-top">
-              <div class="card-main">
-                <h2>{{ contribution.wishlistItem?.title || 'Contribution' }}</h2>
-                <p class="event-name">
-                  {{ contribution.event?.title || 'Événement non renseigné' }}
-                </p>
-              </div>
-
-              <span class="badge" [ngClass]="getStatusClass(contribution.status)">
-                {{ formatStatus(contribution.status) }}
-              </span>
-            </div>
-
-            <div class="card-grid">
-              <div class="info-block">
-                <span class="info-label">Montant</span>
-                <strong>
-                  {{ toNumber(contribution.amount) | number:'1.0-0' }}
-                  {{ contribution.currencyCode || defaultCurrency }}
-                </strong>
-              </div>
-
-              <div class="info-block">
-                <span class="info-label">Date</span>
-                <strong>{{ contribution.createdAt | date:'medium' }}</strong>
-              </div>
-
-              <div class="info-block">
-                <span class="info-label">Anonymat</span>
-                <strong>{{ contribution.isAnonymous ? 'Oui' : 'Non' }}</strong>
-              </div>
-
-              <div class="info-block">
-                <span class="info-label">Paiement</span>
-                <strong>{{ formatPaymentStatus(contribution.payment?.status) }}</strong>
-              </div>
-            </div>
-
-            <div
-              class="payment-cta"
-              *ngIf="
-                contribution.status === 'AWAITING_PAYMENT' &&
-                contribution.payment?.id
-              "
-            >
-              <button
-                type="button"
-                class="btn btn-primary"
-                (click)="goToPayment(contribution.payment!.id)"
-              >
-                Payer maintenant
-              </button>
-            </div>
-
-            <div class="extra-lines">
-              <p *ngIf="contribution.payment?.provider">
-                <span class="muted">Prestataire :</span>
-                {{ contribution.payment?.provider }}
-              </p>
-
-              <p *ngIf="contribution.payment?.paymentMethod">
-                <span class="muted">Méthode :</span>
-                {{ contribution.payment?.paymentMethod }}
-              </p>
-
-              <p *ngIf="contribution.confirmedAt">
-                <span class="muted">Confirmée le :</span>
-                {{ contribution.confirmedAt | date:'medium' }}
-              </p>
-
-              <p *ngIf="contribution.message">
-                <span class="muted">Message :</span>
-                {{ contribution.message }}
-              </p>
-            </div>
-          </article>
+        <!-- Filtres -->
+        <div class="filter-row">
+          <button *ngFor="let f of filters" class="filter-btn" [class.active]="activeFilter() === f.value" (click)="activeFilter.set(f.value)">
+            {{ f.label }}
+            <span class="filter-count" *ngIf="getCount(f.value) > 0">{{ getCount(f.value) }}</span>
+          </button>
         </div>
-      </ng-container>
-    </section>
+
+        <div class="loading-state" *ngIf="loading()">Chargement...</div>
+
+        <div class="empty-block" *ngIf="!loading() && filtered().length === 0">
+          <div class="empty-icon">⭐</div>
+          <p>Aucune contribution {{ activeFilter() !== 'ALL' ? 'avec ce statut' : '' }}.</p>
+          <a routerLink="/catalog" class="btn-yellow">Parcourir le catalogue</a>
+        </div>
+
+        <div class="contrib-list" *ngIf="!loading() && filtered().length > 0">
+          <div class="contrib-card" *ngFor="let c of filtered()">
+            <div class="contrib-header">
+              <div class="contrib-item-name">{{ c.wishlistItem?.title ?? '—' }}</div>
+              <span class="status-badge" [ngClass]="getStatusClass(c.status)">{{ getStatusLabel(c.status) }}</span>
+            </div>
+            <div class="contrib-meta">
+              <div class="contrib-event">
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 2v4M14 2v4M2 9h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                {{ c.event?.title ?? '—' }}
+              </div>
+              <div class="contrib-date">{{ c.createdAt | date:'dd MMM yyyy' }}</div>
+            </div>
+            <div class="contrib-footer">
+              <div class="contrib-amount">{{ c.amount | number:'1.0-0' }} <span class="currency">{{ c.currencyCode }}</span></div>
+              <a [routerLink]="['/app/events', c.event?.id]" class="contrib-link">Voir l'événement →</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
   `,
   styles: [`
-    :host {
-      display: block;
-    }
+    .page-wrap { background: #f9fafb; min-height: calc(100vh - 64px); }
+    .page-hero { background: #000; padding: 40px 0; }
+    .page-hero-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+    .page-eyebrow { color: #FFD700; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px; }
+    h1 { font-size: 2rem; font-weight: 900; color: white; margin: 0 0 8px; letter-spacing: -0.02em; }
+    .page-hero p { color: rgba(255,255,255,0.5); margin: 0; font-size: 0.9rem; }
+    .hero-stats { display: flex; align-items: center; gap: 24px; }
+    .hero-stat { display: flex; flex-direction: column; gap: 4px; text-align: right; }
+    .hero-stat strong { color: white; font-size: 1.3rem; font-weight: 900; }
+    .hero-stat span { color: rgba(255,255,255,0.4); font-size: 0.75rem; }
+    .hero-stat-sep { width: 1px; height: 32px; background: rgba(255,255,255,0.1); }
 
-    .page {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-      color: #111827;
-    }
+    .page-body { max-width: 1280px; margin: 0 auto; padding: 32px 24px; display: flex; flex-direction: column; gap: 24px; }
+    .loading-state { color: #9ca3af; text-align: center; padding: 48px; }
 
-    .hero-card,
-    .toolbar-card,
-    .stat-card,
-    .state-card,
-    .contribution-card {
-      background: #ffffff;
-      border: 1px solid #f3e8e2;
-      border-radius: 24px;
-      box-shadow: 0 18px 50px rgba(17, 24, 39, 0.06);
-    }
+    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-btn { padding: 8px 16px; border: 1.5px solid #e5e7eb; border-radius: 999px; background: white; font: inherit; font-size: 0.82rem; font-weight: 600; color: #6b7280; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.15s; }
+    .filter-btn:hover { border-color: #111; color: #111; }
+    .filter-btn.active { background: #111; border-color: #111; color: white; }
+    .filter-count { background: rgba(255,255,255,0.2); padding: 1px 6px; border-radius: 999px; font-size: 0.7rem; }
+    .filter-btn:not(.active) .filter-count { background: #f3f4f6; color: #6b7280; }
 
-    .hero-card {
-      padding: 24px;
-      background:
-        radial-gradient(circle at top right, rgba(255, 179, 71, 0.16), transparent 28%),
-        radial-gradient(circle at bottom left, rgba(255, 122, 89, 0.10), transparent 32%),
-        linear-gradient(135deg, #fff7f2, #ffffff 58%);
-    }
+    .empty-block { background: white; border: 1.5px solid #f3f4f6; border-radius: 20px; padding: 48px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .empty-icon { font-size: 2.5rem; }
+    .empty-block p { color: #9ca3af; margin: 0; }
+    .btn-yellow { background: #FFD700; color: #000; padding: 10px 22px; border-radius: 10px; text-decoration: none; font-weight: 800; font-size: 0.88rem; }
 
-    .hero-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-    }
-
-    .eyebrow,
-    .section-kicker {
-      color: #ea580c;
-      font-size: 0.78rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .hero-card h1 {
-      margin: 8px 0 10px;
-      font-size: clamp(2rem, 4vw, 2.8rem);
-      line-height: 1.1;
-      letter-spacing: -0.03em;
-      color: #111827;
-    }
-
-    .subtitle {
-      margin: 0;
-      color: #4b5563;
-      line-height: 1.7;
-      max-width: 760px;
-    }
-
-    .back-link {
-      text-decoration: none;
-      color: #ea580c;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .back-link:hover {
-      color: #c2410c;
-    }
-
-    .hero-summary {
-      margin-top: 22px;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .hero-summary-card {
-      border-radius: 22px;
-      padding: 18px;
-      border: 1px solid #f3e8e2;
-      background: white;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .hero-summary-card-accent {
-      background: linear-gradient(135deg, #fff1e8, #ffffff);
-    }
-
-    .hero-summary-label {
-      color: #6b7280;
-      font-size: 0.9rem;
-    }
-
-    .hero-summary-value {
-      font-size: 1.7rem;
-      line-height: 1.15;
-      color: #111827;
-    }
-
-    .hero-summary-help {
-      color: #6b7280;
-      font-size: 0.92rem;
-    }
-
-    .toolbar-card {
-      padding: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: end;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .toolbar-copy h2 {
-      margin: 4px 0 0;
-      font-size: 1.25rem;
-      color: #111827;
-    }
-
-    .toolbar {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .toolbar label {
-      font-weight: 700;
-      color: #374151;
-    }
-
-    .toolbar select {
-      min-width: 240px;
-      padding: 11px 13px;
-      border: 1px solid #e5d7cf;
-      border-radius: 14px;
-      background: white;
-      color: #111827;
-      font: inherit;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-    }
-
-    .stat-card {
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      min-height: 120px;
-      justify-content: center;
-    }
-
-    .stat-label {
-      color: #6b7280;
-      font-size: 14px;
-    }
-
-    .stat-value {
-      font-size: 1.7rem;
-      line-height: 1.2;
-      color: #111827;
-    }
-
-    .state-card {
-      padding: 18px 20px;
-    }
-
-    .state-card.error {
-      border-color: #fecaca;
-      background: #fff7f7;
-    }
-
-    .state-title {
-      font-weight: 700;
-      color: #111827;
-      margin-bottom: 4px;
-    }
-
-    .state-text {
-      color: #6b7280;
-      line-height: 1.6;
-    }
-
-    .contributions-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .contribution-card {
-      padding: 22px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      background: linear-gradient(180deg, #fffdfc 0%, #ffffff 100%);
-    }
-
-    .card-top {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: flex-start;
-    }
-
-    .card-main h2 {
-      margin: 0 0 6px;
-      font-size: 1.2rem;
-      color: #111827;
-    }
-
-    .event-name {
-      margin: 0;
-      color: #6b7280;
-    }
-
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 14px;
-    }
-
-    .info-block {
-      border: 1px solid #f3e8e2;
-      border-radius: 16px;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      background: #fffaf7;
-    }
-
-    .info-label {
-      font-size: 13px;
-      color: #6b7280;
-    }
-
-    .payment-cta {
-      display: flex;
-      justify-content: flex-end;
-    }
-
-    .extra-lines {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .extra-lines p {
-      margin: 0;
-      color: #374151;
-      line-height: 1.6;
-    }
-
-    .muted {
-      color: #6b7280;
-      font-weight: 700;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 7px 11px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .badge-confirmed {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .badge-awaiting {
-      background: #fef3c7;
-      color: #92400e;
-    }
-
-    .badge-failed,
-    .badge-cancelled {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .badge-refunded {
-      background: #e0f2fe;
-      color: #075985;
-    }
-
-    .badge-default {
-      background: #e5e7eb;
-      color: #374151;
-    }
-
-    .btn {
-      border: 0;
-      border-radius: 14px;
-      padding: 11px 16px;
-      cursor: pointer;
-      font: inherit;
-      font-weight: 700;
-      transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
-    }
-
-    .btn:hover:not(:disabled) {
-      transform: translateY(-1px);
-    }
-
-    .btn:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #ff7a59, #ffb347);
-      color: white;
-      box-shadow: 0 14px 28px rgba(255, 122, 89, 0.18);
-    }
-
-    @media (max-width: 900px) {
-      .hero-top,
-      .toolbar-card,
-      .card-top {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .hero-summary {
-        grid-template-columns: 1fr;
-      }
-
-      .payment-cta {
-        justify-content: stretch;
-      }
-
-      .payment-cta .btn {
-        width: 100%;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .hero-card,
-      .toolbar-card,
-      .stat-card,
-      .state-card,
-      .contribution-card {
-        border-radius: 20px;
-      }
-
-      .hero-card,
-      .toolbar-card,
-      .state-card,
-      .contribution-card {
-        padding: 18px;
-      }
-
-      .toolbar select {
-        min-width: 0;
-        width: 100%;
-      }
-    }
+    .contrib-list { display: flex; flex-direction: column; gap: 12px; }
+    .contrib-card { background: white; border: 1.5px solid #f3f4f6; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px; transition: 0.2s; }
+    .contrib-card:hover { border-color: #e5e7eb; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+    .contrib-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .contrib-item-name { font-weight: 700; color: #111; font-size: 0.95rem; }
+    .status-badge { padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+    .s-confirmed { background: #dcfce7; color: #166534; }
+    .s-awaiting { background: #fef3c7; color: #92400e; }
+    .s-failed, .s-cancelled { background: #fee2e2; color: #991b1b; }
+    .s-refunded { background: #ede9fe; color: #6d28d9; }
+    .s-default { background: #f3f4f6; color: #6b7280; }
+    .contrib-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 0.82rem; color: #6b7280; flex-wrap: wrap; }
+    .contrib-event { display: flex; align-items: center; gap: 6px; }
+    .contrib-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid #f3f4f6; }
+    .contrib-amount { font-size: 1.1rem; font-weight: 900; color: #111; }
+    .currency { font-size: 0.75rem; font-weight: 600; color: #9ca3af; }
+    .contrib-link { color: #6b7280; font-size: 0.82rem; font-weight: 700; text-decoration: none; }
+    .contrib-link:hover { color: #111; }
   `],
 })
 export class MyContributionsPageComponent implements OnInit {
-  private readonly myContributionsService = inject(MyContributionsService);
-  private readonly router = inject(Router);
+  private readonly service = inject(MyContributionsService);
 
-  loading = true;
-  error = '';
-  data: MyContributionsResponse | null = null;
+  readonly data = signal<MyContributionsResponse | null>(null);
+  readonly loading = signal(true);
+  readonly activeFilter = signal<Filter>('ALL');
 
-  selectedStatus: ContributionFilter = 'ALL';
-  defaultCurrency = 'FCFA';
+  readonly filters = [
+    { label: 'Toutes', value: 'ALL' as Filter },
+    { label: 'En attente', value: 'AWAITING_PAYMENT' as Filter },
+    { label: 'Confirmées', value: 'CONFIRMED' as Filter },
+    { label: 'Échouées', value: 'FAILED' as Filter },
+    { label: 'Annulées', value: 'CANCELLED' as Filter },
+    { label: 'Remboursées', value: 'REFUNDED' as Filter },
+  ];
 
-  items: MyContributionItem[] = [];
-  totalCount = 0;
-  confirmedCount = 0;
-  awaitingPaymentCount = 0;
-  confirmedAmount = 0;
+  readonly filtered = computed(() => {
+    const f = this.activeFilter();
+    const items = this.data()?.items ?? [];
+    if (f === 'ALL') return items;
+    return items.filter(c => c.status === f);
+  });
 
-  ngOnInit(): void {
-    this.loadContributions();
+  readonly confirmedAmount = computed(() =>
+    (this.data()?.items ?? []).filter(c => c.status === 'CONFIRMED').reduce((s, c) => s + Number(c.amount), 0)
+  );
+
+  readonly pendingCount = computed(() =>
+    (this.data()?.items ?? []).filter(c => c.status === 'AWAITING_PAYMENT').length
+  );
+
+  getCount(f: Filter): number {
+    const items = this.data()?.items ?? [];
+    if (f === 'ALL') return items.length;
+    return items.filter(c => c.status === f).length;
   }
 
-  loadContributions(): void {
-    this.loading = true;
-    this.error = '';
-
-    this.myContributionsService.getMine(this.selectedStatus).subscribe({
-      next: (response) => {
-        this.data = response;
-        this.items = response?.items ?? [];
-        this.computeSummaryFromItems(this.items);
-        this.loading = false;
-      },
-      error: () => {
-        this.error = 'Impossible de charger vos contributions.';
-        this.loading = false;
-      },
+  ngOnInit(): void {
+    this.service.getMine().subscribe({
+      next: (d: MyContributionsResponse) => { this.data.set(d); this.loading.set(false); },
+      error: () => this.loading.set(false),
     });
   }
 
-  goToPayment(paymentId: number): void {
-    this.router.navigate(['/app/payments', paymentId]);
+  getStatusLabel(s: string): string {
+    const m: Record<string, string> = { CONFIRMED: 'Confirmée', AWAITING_PAYMENT: 'En attente', FAILED: 'Échouée', CANCELLED: 'Annulée', REFUNDED: 'Remboursée' };
+    return m[s] ?? s;
   }
 
-  toNumber(value: unknown): number {
-    const parsed = Number(value ?? 0);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-
-  formatStatus(status: string): string {
-    switch (status) {
-      case 'CONFIRMED':
-        return 'Confirmée';
-      case 'AWAITING_PAYMENT':
-        return 'En attente de paiement';
-      case 'FAILED':
-        return 'Échouée';
-      case 'CANCELLED':
-        return 'Annulée';
-      case 'REFUNDED':
-        return 'Remboursée';
-      default:
-        return status || '—';
-    }
-  }
-
-  formatPaymentStatus(status?: string): string {
-    switch (status) {
-      case 'PENDING':
-        return 'En attente';
-      case 'SUCCESS':
-      case 'SUCCEEDED':
-        return 'Réussi';
-      case 'FAILED':
-        return 'Échoué';
-      case 'CANCELLED':
-        return 'Annulé';
-      case 'REFUNDED':
-        return 'Remboursé';
-      case 'INITIATED':
-        return 'Initié';
-      default:
-        return status || '—';
-    }
-  }
-
-  getStatusClass(status: string): string {
-    switch (status) {
-      case 'CONFIRMED':
-        return 'badge-confirmed';
-      case 'AWAITING_PAYMENT':
-        return 'badge-awaiting';
-      case 'FAILED':
-        return 'badge-failed';
-      case 'CANCELLED':
-        return 'badge-cancelled';
-      case 'REFUNDED':
-        return 'badge-refunded';
-      default:
-        return 'badge-default';
-    }
-  }
-
-  private computeSummaryFromItems(items: MyContributionItem[]): void {
-    this.totalCount = items.length;
-
-    this.confirmedCount = items.filter(
-      (item) => item.status === 'CONFIRMED'
-    ).length;
-
-    this.awaitingPaymentCount = items.filter(
-      (item) => item.status === 'AWAITING_PAYMENT'
-    ).length;
-
-    this.confirmedAmount = items
-      .filter((item) => item.status === 'CONFIRMED')
-      .reduce((sum, item) => sum + this.toNumber(item.amount), 0);
-
-    const firstCurrency = items.find((item) => item.currencyCode)?.currencyCode;
-    if (firstCurrency) {
-      this.defaultCurrency = firstCurrency;
-    }
+  getStatusClass(s: string): string {
+    const m: Record<string, string> = { CONFIRMED: 's-confirmed', AWAITING_PAYMENT: 's-awaiting', FAILED: 's-failed', CANCELLED: 's-cancelled', REFUNDED: 's-refunded' };
+    return m[s] ?? 's-default';
   }
 }

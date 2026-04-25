@@ -2,14 +2,11 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
-import { EventUserHeaderCardComponent } from './components/event-user-header-card.component';
 import { EventWishlistSectionComponent } from './components/event-wishlist-section.component';
 import { WishlistItemDetailModalComponent } from './components/wishlist-item-detail-modal.component';
 import { EventParticipantsModalComponent } from './components/event-participants-modal.component';
 import { EventDeleteModalComponent } from './components/event-delete-modal.component';
 import { EventContributionModalComponent } from './components/event-contribution-modal.component';
-
 import { EventUserDetailFacade } from './event-user-detail.facade';
 import { formatAmount } from './components/event-ui.utils';
 
@@ -20,8 +17,6 @@ import { formatAmount } from './components/event-ui.utils';
   imports: [
     CommonModule,
     RouterLink,
-    EmptyStateComponent,
-    EventUserHeaderCardComponent,
     EventWishlistSectionComponent,
     WishlistItemDetailModalComponent,
     EventParticipantsModalComponent,
@@ -29,362 +24,374 @@ import { formatAmount } from './components/event-ui.utils';
     EventContributionModalComponent,
   ],
   template: `
-    <section class="page">
-      <app-event-user-header-card
-        *ngIf="vm().data && !vm().loading"
-        [data]="vm().data!"
-        [isManager]="isManager()"
-        [inviteLink]="vm().inviteLink"
-        [copySuccess]="vm().copySuccess"
-        [inviteError]="vm().inviteError"
-        (openCatalog)="facade.openCatalog()"
-        (openProductRequests)="facade.openProductRequestsPage()"
-        (openParticipants)="facade.openParticipantsModal()"
-        (generateInviteLink)="facade.generateInviteLink()"
-        (copyInviteLink)="facade.copyInviteLink()"
-      />
+    <div class="detail-page">
 
-      <ng-container *ngIf="!vm().data || vm().loading">
-        <div class="page-header">
-          <div>
-            <a routerLink="/app/events" class="back-link">← Retour à mes événements</a>
-            <h1>Détail événement</h1>
-            <p class="subtitle" *ngIf="vm().data">{{ vm().data?.event?.title }}</p>
+      <!-- LOADING -->
+      <div class="loading-screen" *ngIf="vm().loading">
+        <div class="loading-inner">
+          <div class="loading-spinner"></div>
+          <p>Chargement de l'événement...</p>
+        </div>
+      </div>
+
+      <!-- ERREUR -->
+      <div class="error-screen" *ngIf="vm().error && !vm().loading">
+        <div class="error-inner">
+          <div class="error-icon">⚠️</div>
+          <h2>Impossible de charger cet événement</h2>
+          <p>{{ vm().error }}</p>
+          <a routerLink="/app/events" class="btn-back">← Retour à mes événements</a>
+        </div>
+      </div>
+
+      <!-- CONTENU -->
+      <ng-container *ngIf="vm().data && !vm().loading">
+
+        <!-- HERO HEADER -->
+        <div class="event-hero">
+          <div class="event-hero-inner">
+
+            <div class="hero-top-bar">
+              <a routerLink="/app/events" class="back-link">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M12 4L6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                Mes événements
+              </a>
+              <div class="hero-top-actions" *ngIf="isManager()">
+                <button class="btn-action-ghost" (click)="facade.openCatalog()">
+                  <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 4h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Catalogue
+                </button>
+                <button class="btn-action-ghost" (click)="facade.openParticipantsModal()">
+                  <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a4 4 0 00-4-4h-.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                  Participants
+                </button>
+                <button class="btn-action-danger" *ngIf="canDeleteEvent()" (click)="facade.openDeleteModal()">
+                  <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M8 6V4h4v2M7 6v9a1 1 0 001 1h4a1 1 0 001-1V6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                  Supprimer
+                </button>
+              </div>
+            </div>
+
+            <div class="hero-content">
+              <div class="hero-main">
+                <div class="hero-badges">
+                  <span class="role-badge" [ngClass]="getRoleBadgeClass(vm().data!.accessRole)">
+                    {{ formatRoleLabel(vm().data!.accessRole) }}
+                  </span>
+                  <span class="event-date-badge">
+                    <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 2v4M14 2v4M2 9h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    {{ formatDate(vm().data!.event.eventDate) }}
+                  </span>
+                </div>
+                <h1>{{ vm().data!.event.title }}</h1>
+                <p class="hero-desc" *ngIf="vm().data!.event.description">{{ vm().data!.event.description }}</p>
+                <p class="hero-desc muted" *ngIf="!vm().data!.event.description">Aucune description renseignée.</p>
+                <div class="organizer-tag" *ngIf="!isManager() && vm().data!.event.organizer">
+                  <div class="org-avatar">{{ getInitials(vm().data!.event.organizer!.name) }}</div>
+                  <div>
+                    <div class="org-label">Organisé par</div>
+                    <div class="org-name">{{ vm().data!.event.organizer!.name }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stats en grille horizontale -->
+            <div class="hero-stats-row">
+              <div class="stat-block">
+                <div class="stat-label">Collecté</div>
+                <div class="stat-value accent">{{ fmt(vm().data!.summary.totalFundedAmount) }}</div>
+                <div class="stat-sub">sur {{ fmt(vm().data!.summary.totalTargetAmount) }}</div>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-block">
+                <div class="stat-label">Reste à financer</div>
+                <div class="stat-value">{{ fmt(vm().data!.summary.totalRemainingAmount) }}</div>
+                <div class="stat-sub">à collecter</div>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-block">
+                <div class="stat-label">Items</div>
+                <div class="stat-value">{{ vm().data!.summary.totalItems }}</div>
+                <div class="stat-sub">dans la wishlist</div>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-block">
+                <div class="stat-label">Participants</div>
+                <div class="stat-value">{{ vm().data!.summary.participantsCount }}</div>
+                <div class="stat-sub">invités</div>
+              </div>
+            </div>
+
+            <!-- Barre progression globale -->
+            <div class="global-progress" *ngIf="vm().data!.summary.totalTargetAmount > 0">
+              <div class="progress-header">
+                <span>Progression globale</span>
+                <span class="progress-pct">{{ globalPercent() }}%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" [style.width]="globalPercent() + '%'"></div>
+              </div>
+            </div>
+
+            <!-- Invitation (organisateur) -->
+            <div class="invite-section" *ngIf="isManager()">
+              <div class="invite-left">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span>Lien d'invitation</span>
+              </div>
+              <div class="invite-right">
+                <div class="invite-link-box" *ngIf="vm().inviteLink">
+                  <input class="invite-input" [value]="vm().inviteLink" readonly />
+                  <button class="btn-copy" (click)="facade.copyInviteLink()">
+                    {{ vm().copySuccess ? '✓ Copié !' : 'Copier' }}
+                  </button>
+                </div>
+                <button class="btn-generate" (click)="facade.generateInviteLink()">
+                  {{ vm().inviteLink ? 'Regénérer' : 'Générer le lien' }}
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
+
+        <!-- BODY -->
+        <div class="event-body">
+          <div class="event-body-inner">
+
+            <!-- Feedback paiement -->
+            <div class="payment-feedback success" *ngIf="vm().paymentFeedbackVisible && vm().paymentFeedbackStatus === 'SUCCESS'">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 10l2.5 2.5 4.5-4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              {{ vm().paymentFeedbackMessage }}
+            </div>
+            <div class="payment-feedback pending" *ngIf="vm().paymentFeedbackVisible && vm().paymentFeedbackStatus === 'PENDING'">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v5M10 13.5v.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              {{ vm().paymentFeedbackMessage }}
+            </div>
+            <div class="payment-feedback failed" *ngIf="vm().paymentFeedbackVisible && vm().paymentFeedbackStatus === 'FAILED'">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M7 13l6-6M13 13L7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              {{ vm().paymentFeedbackMessage }}
+            </div>
+
+            <!-- Wishlist (composant inchangé, vrais inputs/outputs) -->
+            <app-event-wishlist-section
+              [data]="vm().data"
+              [filteredWishlist]="filteredWishlist()"
+              [wishlistSearch]="vm().wishlistSearch"
+              [selectedFilter]="vm().selectedFilter"
+              [selectedSort]="vm().selectedSort"
+              [contributionError]="vm().contributionError"
+              [reservationError]="vm().reservationError"
+              [contributionLoading]="vm().contributionLoading"
+              [reservationLoading]="vm().reservationLoading"
+              (wishlistSearchChange)="facade.setWishlistSearch($event)"
+              (selectedFilterChange)="facade.setSelectedFilter($event)"
+              (selectedSortChange)="facade.setSelectedSort($event)"
+              (openItemDetail)="facade.openItemDetail($event)"
+              (handleContribution)="facade.handleContributionAction($event)"
+              (reserveItem)="facade.reserveItem($event)"
+            />
+
+          </div>
+        </div>
+
       </ng-container>
 
-      <div *ngIf="vm().loading" class="state-card">
-        Chargement de l’événement...
-      </div>
+      <!-- MODALS (vrais inputs/outputs de chaque composant) -->
 
-      <div *ngIf="vm().error && !vm().loading" class="state-card error">
-        {{ vm().error }}
-      </div>
+      <app-wishlist-item-detail-modal
+        [show]="vm().showItemDetailModal"
+        [selectedItem]="vm().selectedItem"
+        [isManager]="isManager()"
+        [deleteItemLoading]="vm().deleteItemLoading"
+        [canDeleteSelectedItem]="canDeleteSelectedItem()"
+        [deleteSelectedItemBlockedReason]="deleteSelectedItemBlockedReason()"
+        [contributionLoading]="vm().contributionLoading"
+        [reservationLoading]="vm().reservationLoading"
+        (close)="facade.closeItemDetailModal()"
+        (contribute)="facade.handleContributionAction($event)"
+        (reserve)="facade.reserveItem($event)"
+        (delete)="facade.openDeleteItemModal()"
+      />
 
-      <ng-container *ngIf="vm().data && !vm().loading">
-        <section class="content-single-column">
-          <section
-            class="payment-feedback-banner"
-            *ngIf="vm().paymentFeedbackVisible && vm().paymentFeedbackStatus"
-            [ngClass]="{
-              'payment-feedback-success': vm().paymentFeedbackStatus === 'SUCCESS',
-              'payment-feedback-pending': vm().paymentFeedbackStatus === 'PENDING',
-              'payment-feedback-failed': vm().paymentFeedbackStatus === 'FAILED'
-            }"
-          >
-            <div class="payment-feedback-icon">
-              <span *ngIf="vm().paymentFeedbackStatus === 'SUCCESS'">✓</span>
-              <span *ngIf="vm().paymentFeedbackStatus === 'PENDING'">⏳</span>
-              <span *ngIf="vm().paymentFeedbackStatus === 'FAILED'">!</span>
-            </div>
+      <app-event-participants-modal
+        [show]="vm().showParticipantsModal"
+        [participants]="vm().participants"
+        [participantsLoading]="vm().participantsLoading"
+        [participantsError]="vm().participantsError"
+        [accessRole]="vm().data?.accessRole ?? null"
+        (close)="facade.closeParticipantsModal()"
+        (changeRole)="facade.changeParticipantRole($event.participantId, $event.role)"
+      />
 
-            <div class="payment-feedback-content">
-              <div class="payment-feedback-eyebrow">Retour paiement</div>
-              <h2 class="payment-feedback-title">{{ facade.getPaymentFeedbackTitle() }}</h2>
-              <p class="payment-feedback-text">{{ facade.getPaymentFeedbackMessage() }}</p>
+      <app-event-delete-modal
+        [show]="vm().showDeleteModal"
+        [deleteLoading]="vm().deleteLoading"
+        [title]="vm().data?.event?.title ?? ''"
+        [mode]="'event'"
+        (close)="facade.closeDeleteModal()"
+        (confirm)="facade.deleteEvent()"
+      />
 
-              <div class="payment-feedback-meta" *ngIf="vm().paymentFeedbackItemId">
-                Paiement #{{ vm().paymentFeedbackItemId }}
-              </div>
-            </div>
+      <app-event-delete-modal
+        [show]="vm().showDeleteItemModal"
+        [deleteLoading]="vm().deleteItemLoading"
+        [title]="vm().selectedItem?.name ?? ''"
+        [mode]="'item'"
+        (close)="facade.closeDeleteItemModal()"
+        (confirm)="facade.confirmDeleteSelectedItem()"
+      />
 
-            <div class="payment-feedback-actions">
-              <button
-                type="button"
-                class="btn btn-secondary"
-                *ngIf="vm().paymentFeedbackStatus === 'FAILED' && vm().contributionModalItem"
-                (click)="facade.retryContributionAfterFailure()"
-              >
-                Réessayer
-              </button>
+      <app-event-contribution-modal
+        [show]="vm().showContributionModal"
+        [item]="vm().contributionModalItem"
+        [contributionAmount]="vm().contributionAmount"
+        [contributionMessage]="vm().contributionMessage"
+        [contributionAnonymous]="vm().contributionAnonymous"
+        [contributionLoading]="vm().contributionLoading"
+        [contributionError]="vm().contributionError"
+        (close)="facade.closeContributionModal()"
+        (contributionAmountChange)="facade.setContributionAmount($event)"
+        (contributionMessageChange)="facade.setContributionMessage($event)"
+        (contributionAnonymousChange)="facade.setContributionAnonymous($event)"
+        (submit)="facade.submitContribution($event)"
+      />
 
-              <button
-                type="button"
-                class="btn btn-secondary"
-                *ngIf="vm().paymentFeedbackItemId"
-                (click)="facade.openPaymentDetails()"
-              >
-                Voir mes paiements
-              </button>
-
-              <button
-                type="button"
-                class="btn btn-ghost-detail"
-                (click)="facade.dismissPaymentFeedback()"
-              >
-                Fermer
-              </button>
-            </div>
-          </section>
-
-          <app-event-wishlist-section
-            [data]="vm().data!"
-            [filteredWishlist]="filteredWishlist()"
-            [wishlistSearch]="vm().wishlistSearch"
-            [selectedFilter]="vm().selectedFilter"
-            [selectedSort]="vm().selectedSort"
-            [contributionError]="vm().contributionError"
-            [reservationError]="vm().reservationError"
-            [contributionLoading]="vm().contributionLoading"
-            [reservationLoading]="vm().reservationLoading"
-            (wishlistSearchChange)="facade.setWishlistSearch($event)"
-            (selectedFilterChange)="facade.setSelectedFilter($event)"
-            (selectedSortChange)="facade.setSelectedSort($event)"
-            (openItemDetail)="facade.openItemDetail($event)"
-            (handleContribution)="facade.handleContributionAction($event)"
-            (reserveItem)="facade.reserveItem($event)"
-          />
-
-          <section class="stats-row stats-row-bottom">
-            <article class="stat-card">
-              <span class="stat-label">Items</span>
-              <strong class="stat-value">{{ vm().data?.summary?.totalItems }}</strong>
-            </article>
-
-            <article class="stat-card">
-              <span class="stat-label">Montant cible</span>
-              <strong class="stat-value">{{ formatAmount(vm().data?.summary?.totalTargetAmount) }}</strong>
-            </article>
-
-            <article class="stat-card">
-              <span class="stat-label">Montant financé</span>
-              <strong class="stat-value">{{ formatAmount(vm().data?.summary?.totalFundedAmount) }}</strong>
-            </article>
-
-            <article class="stat-card">
-              <span class="stat-label">Reste à financer</span>
-              <strong class="stat-value">{{ formatAmount(vm().data?.summary?.totalRemainingAmount) }}</strong>
-            </article>
-          </section>
-
-          <section
-            class="card section-card danger-zone"
-            *ngIf="vm().data?.accessRole === 'ORGANIZER'"
-          >
-            <div class="section-header">
-              <div>
-                <div class="section-kicker">Zone dangereuse</div>
-                <h2>Supprimer l’événement</h2>
-              </div>
-            </div>
-
-            <p class="section-description">
-              Cette action est irréversible. Elle supprime l’événement et les données liées
-              uniquement si aucun paiement déjà effectué n’existe.
-            </p>
-
-            <p class="error-text" *ngIf="!canDeleteEvent()">
-              {{ deleteBlockedReason() }}
-            </p>
-
-            <button
-              type="button"
-              class="btn btn-danger"
-              [disabled]="!canDeleteEvent()"
-              [title]="!canDeleteEvent() ? deleteBlockedReason() : 'Supprimer l’événement'"
-              (click)="facade.openDeleteModal()"
-            >
-              Supprimer l’événement
-            </button>
-          </section>
-        </section>
-      </ng-container>
-    </section>
-
-    <app-wishlist-item-detail-modal
-      [show]="vm().showItemDetailModal"
-      [selectedItem]="vm().selectedItem"
-      [isManager]="isManager()"
-      [deleteItemLoading]="vm().deleteItemLoading"
-      [canDeleteSelectedItem]="canDeleteSelectedItem()"
-      [deleteSelectedItemBlockedReason]="deleteSelectedItemBlockedReason()"
-      [contributionLoading]="vm().contributionLoading"
-      [reservationLoading]="vm().reservationLoading"
-      (close)="facade.closeItemDetailModal()"
-      (contribute)="facade.handleContributionAction($event)"
-      (reserve)="facade.reserveItem($event)"
-      (delete)="facade.openDeleteItemModal()"
-    />
-
-    <app-event-participants-modal
-      [show]="vm().showParticipantsModal"
-      [participants]="vm().participants"
-      [participantsLoading]="vm().participantsLoading"
-      [participantsError]="vm().participantsError"
-      [accessRole]="vm().data?.accessRole ?? null"
-      (close)="facade.closeParticipantsModal()"
-      (changeRole)="facade.changeParticipantRole($event.participantId, $event.role)"
-    />
-
-    <app-event-delete-modal
-      [show]="vm().showDeleteModal"
-      [deleteLoading]="vm().deleteLoading"
-      [title]="vm().data?.event?.title ?? ''"
-      [mode]="'event'"
-      (close)="facade.closeDeleteModal()"
-      (confirm)="facade.deleteEvent()"
-    />
-
-    <app-event-delete-modal
-      [show]="vm().showDeleteItemModal"
-      [deleteLoading]="vm().deleteItemLoading"
-      [title]="vm().selectedItem?.name ?? ''"
-      [mode]="'item'"
-      (close)="facade.closeDeleteItemModal()"
-      (confirm)="facade.confirmDeleteSelectedItem()"
-    />
-
-    <app-event-contribution-modal
-      [show]="vm().showContributionModal"
-      [item]="vm().contributionModalItem"
-      [contributionAmount]="vm().contributionAmount"
-      [contributionMessage]="vm().contributionMessage"
-      [contributionAnonymous]="vm().contributionAnonymous"
-      [contributionLoading]="vm().contributionLoading"
-      [contributionError]="vm().contributionError"
-      (close)="facade.closeContributionModal()"
-      (contributionAmountChange)="facade.setContributionAmount($event)"
-      (contributionMessageChange)="facade.setContributionMessage($event)"
-      (contributionAnonymousChange)="facade.setContributionAnonymous($event)"
-      (submit)="facade.submitContribution($event)"
-    />
+    </div>
   `,
   styles: [`
     :host { display: block; }
-    .page { display: flex; flex-direction: column; gap: 24px; color: #111827; }
-    .page-header h1 { margin: 8px 0 6px; font-size: clamp(1.8rem, 3vw, 2.2rem); color: #111827; }
-    .back-link { color: #ea580c; text-decoration: none; font-weight: 700; }
-    .subtitle { margin: 0; color: #6b7280; }
+    .detail-page { background: #f9fafb; min-height: calc(100vh - 64px); }
 
-    .card, .state-card, .stat-card, .payment-feedback-banner {
-      background: #ffffff;
-      border: 1px solid #f3e8e2;
-      border-radius: 24px;
-      box-shadow: 0 18px 50px rgba(17, 24, 39, 0.06);
+    .loading-screen { min-height: calc(100vh - 64px); display: flex; align-items: center; justify-content: center; background: #000; }
+    .loading-inner { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .loading-spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #FFD700; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-inner p { color: rgba(255,255,255,0.5); font-size: 0.9rem; }
+
+    .error-screen { min-height: calc(100vh - 64px); display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .error-inner { text-align: center; max-width: 400px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .error-icon { font-size: 3rem; }
+    .error-inner h2 { font-size: 1.3rem; font-weight: 800; color: #111; margin: 0; }
+    .error-inner p { color: #6b7280; margin: 0; }
+    .btn-back { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; background: #111; color: white; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 0.88rem; }
+
+    .event-hero { background: #000; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .event-hero-inner { max-width: 1280px; margin: 0 auto; padding: 28px 24px; display: flex; flex-direction: column; gap: 24px; }
+
+    .hero-top-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: color 0.2s; }
+    .back-link:hover { color: white; }
+    .hero-top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-action-ghost { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px solid rgba(255,255,255,0.15); border-radius: 9px; background: transparent; color: rgba(255,255,255,0.7); font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn-action-ghost:hover { border-color: rgba(255,255,255,0.4); color: white; }
+    .btn-action-danger { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px solid rgba(239,68,68,0.3); border-radius: 9px; background: rgba(239,68,68,0.1); color: #f87171; font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn-action-danger:hover { background: rgba(239,68,68,0.2); }
+
+    .hero-content { display: flex; flex-direction: column; gap: 12px; }
+    .hero-main { display: flex; flex-direction: column; gap: 10px; }
+    .hero-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+    .role-badge { padding: 4px 12px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+    .role-organizer { background: rgba(255,215,0,0.2); color: #FFD700; border: 1px solid rgba(255,215,0,0.3); }
+    .role-co-organizer { background: rgba(168,85,247,0.2); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+    .role-guest { background: rgba(99,102,241,0.2); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
+    .event-date-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 999px; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6); font-size: 0.78rem; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); }
+    .hero-main h1 { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 900; color: white; margin: 0; letter-spacing: -0.02em; line-height: 1.1; }
+    .hero-desc { color: rgba(255,255,255,0.5); font-size: 0.9rem; line-height: 1.6; margin: 0; max-width: 640px; }
+    .hero-desc.muted { color: rgba(255,255,255,0.25); font-style: italic; }
+    .organizer-tag { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; align-self: flex-start; }
+    .org-avatar { width: 28px; height: 28px; border-radius: 8px; background: #FFD700; color: #000; font-weight: 900; font-size: 0.72rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .org-label { font-size: 0.7rem; color: rgba(255,255,255,0.4); }
+    .org-name { font-size: 0.85rem; font-weight: 700; color: white; }
+
+    /* Stats horizontales */
+    .hero-stats-row {
+      display: flex; align-items: stretch; gap: 0;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; overflow: hidden;
     }
+    .stat-block { flex: 1; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px; }
+    .stat-divider { width: 1px; background: rgba(255,255,255,0.08); flex-shrink: 0; margin: 12px 0; }
+    .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.4); font-weight: 700; }
+    .stat-value { font-size: 1.3rem; font-weight: 900; color: white; }
+    .stat-value.accent { color: #FFD700; }
+    .stat-sub { font-size: 0.72rem; color: rgba(255,255,255,0.3); }
 
-    .card, .state-card { padding: 20px; }
-    .section-card { padding: 22px; }
-    .state-card.error, .error-text { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
-    .content-single-column { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+    .global-progress { display: flex; flex-direction: column; gap: 8px; }
+    .progress-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: rgba(255,255,255,0.4); }
+    .progress-pct { color: #FFD700; font-weight: 800; }
+    .progress-track { height: 4px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #FFD700, #FFA500); border-radius: 999px; transition: width 0.6s ease; max-width: 100%; }
 
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 14px;
-      align-items: stretch;
+    .invite-section { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; flex-wrap: wrap; }
+    .invite-left { display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.6); font-size: 0.85rem; font-weight: 600; }
+    .invite-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .invite-link-box { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 6px 6px 6px 12px; }
+    .invite-input { background: transparent; border: 0; color: rgba(255,255,255,0.7); font: inherit; font-size: 0.8rem; outline: 0; min-width: 0; width: 240px; font-family: monospace; }
+    .btn-copy { display: flex; align-items: center; gap: 5px; padding: 6px 12px; background: rgba(255,255,255,0.08); border: 0; border-radius: 7px; color: white; font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+    .btn-copy:hover { background: rgba(255,255,255,0.15); }
+    .btn-generate { padding: 8px 16px; border: 1px solid rgba(255,215,0,0.3); border-radius: 10px; background: rgba(255,215,0,0.1); color: #FFD700; font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+    .btn-generate:hover { background: rgba(255,215,0,0.2); }
+
+    .event-body { padding: 32px 0; }
+    .event-body-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; flex-direction: column; gap: 20px; }
+
+    .payment-feedback { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-radius: 14px; font-size: 0.88rem; font-weight: 600; }
+    .payment-feedback.success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .payment-feedback.pending { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+    .payment-feedback.failed { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+    @media (max-width: 900px) {
+      .hero-stats-row { flex-wrap: wrap; }
+      .stat-block { flex: 1; min-width: 120px; }
+      .stat-divider { display: none; }
+      .invite-section { flex-direction: column; align-items: flex-start; }
+      .invite-input { width: 160px; }
     }
-
-    .stat-card {
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      min-height: 108px;
-      justify-content: center;
-    }
-
-    .stat-label { color: #6b7280; font-size: 14px; }
-    .stat-value { font-size: 1.35rem; line-height: 1.2; color: #111827; word-break: break-word; }
-
-    .payment-feedback-banner {
-      padding: 20px;
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 18px;
-      align-items: center;
-    }
-
-    .payment-feedback-success { border-color: #bbf7d0; background: linear-gradient(135deg, #f0fdf4, #ffffff); }
-    .payment-feedback-pending { border-color: #fde68a; background: linear-gradient(135deg, #fffbea, #ffffff); }
-    .payment-feedback-failed { border-color: #fecaca; background: linear-gradient(135deg, #fef2f2, #ffffff); }
-
-    .payment-feedback-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: 999px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      font-weight: 800;
-      flex-shrink: 0;
-      background: rgba(255,255,255,0.9);
-      border: 1px solid rgba(0,0,0,0.05);
-    }
-
-    .payment-feedback-success .payment-feedback-icon { color: #15803d; }
-    .payment-feedback-pending .payment-feedback-icon { color: #a16207; }
-    .payment-feedback-failed .payment-feedback-icon { color: #b91c1c; }
-
-    .payment-feedback-eyebrow {
-      color: #6b7280;
-      font-size: 0.78rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 4px;
-    }
-
-    .payment-feedback-title { margin: 0 0 6px; font-size: 1.2rem; color: #111827; }
-    .payment-feedback-text { margin: 0; color: #4b5563; line-height: 1.6; }
-    .payment-feedback-meta { margin-top: 8px; font-size: 0.9rem; font-weight: 700; color: #6b7280; }
-    .payment-feedback-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; align-items: center; }
-
-    .btn {
-      border: 0;
-      border-radius: 14px;
-      padding: 11px 16px;
-      cursor: pointer;
-      font: inherit;
-      font-weight: 700;
-    }
-
-    .btn-secondary { background: #fff7f3; color: #9a3412; border: 1px solid #f3dfd4; }
-    .btn-danger { background: #dc2626; color: #ffffff; }
-    .btn-ghost-detail { background: #ffffff; color: #374151; border: 1px solid #e5e7eb; }
-
-    .danger-zone { border-color: #fecaca; background: linear-gradient(180deg, #fff7f7 0%, #ffffff 100%); }
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-
-    .section-header h2 { margin: 4px 0 0; font-size: 1.3rem; line-height: 1.2; }
-    .section-kicker { color: #ea580c; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; }
-    .section-description { margin: 0; color: #4b5563; line-height: 1.7; }
-
-    @media (max-width: 960px) {
-      .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .payment-feedback-banner { grid-template-columns: 1fr; }
-      .payment-feedback-actions { justify-content: flex-start; }
-    }
-
     @media (max-width: 640px) {
-      .stats-row { grid-template-columns: 1fr; }
-      .payment-feedback-actions { flex-direction: column; align-items: stretch; }
+      .hero-stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: rgba(255,255,255,0.08); border-radius: 16px; overflow: hidden; }
+      .stat-block { background: rgba(255,255,255,0.04); }
     }
   `],
 })
 export class EventUserDetailPageComponent implements OnInit {
   readonly facade = inject(EventUserDetailFacade);
-
   readonly vm = this.facade.state;
-  readonly filteredWishlist = this.facade.filteredWishlist;
   readonly isManager = this.facade.isManager;
   readonly canDeleteEvent = this.facade.canDeleteEvent;
-  readonly deleteBlockedReason = this.facade.deleteBlockedReason;
   readonly canDeleteSelectedItem = this.facade.canDeleteSelectedItem;
   readonly deleteSelectedItemBlockedReason = this.facade.deleteSelectedItemBlockedReason;
-
-  readonly formatAmount = formatAmount;
+  readonly filteredWishlist = this.facade.filteredWishlist;
 
   ngOnInit(): void {
     this.facade.init();
+  }
+
+  readonly globalPercent = computed(() => {
+    const d = this.vm().data;
+    if (!d || !d.summary.totalTargetAmount) return 0;
+    return Math.min(100, Math.round((d.summary.totalFundedAmount / d.summary.totalTargetAmount) * 100));
+  });
+
+  fmt(amount: number): string { return formatAmount(amount); }
+
+  formatDate(dateStr: string): string {
+    return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  formatRoleLabel(role: string): string {
+    const map: Record<string, string> = { ORGANIZER: 'Organisateur', CO_ORGANIZER: 'Co-organisateur', GUEST: 'Invité' };
+    return map[role] ?? role;
+  }
+
+  getRoleBadgeClass(role: string): string {
+    if (role === 'ORGANIZER') return 'role-badge role-organizer';
+    if (role === 'CO_ORGANIZER') return 'role-badge role-co-organizer';
+    return 'role-badge role-guest';
+  }
+
+  getInitials(name: string): string {
+    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   }
 }

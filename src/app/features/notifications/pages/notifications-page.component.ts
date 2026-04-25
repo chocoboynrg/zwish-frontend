@@ -1,741 +1,164 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-
-import { NotificationsService } from '../services/notifications.service';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { NotificationCenterService } from '../services/notification-center.service';
+import { NotificationsService } from '../services/notifications.service';
 import { AppNotification } from '../models/notification.model';
-import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
-import { ToastService } from '../../../core/services/toast.service';
-
-type NotificationPayload = {
-  paymentId?: number;
-  eventId?: number;
-  wishlistItemId?: number;
-  contributionId?: number;
-};
 
 @Component({
   selector: 'app-notifications-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, EmptyStateComponent],
+  imports: [CommonModule],
   template: `
-    <section class="page">
-      <header class="hero-card">
-        <div class="hero-top">
+    <div class="page-wrap">
+
+      <div class="page-hero">
+        <div class="page-hero-inner">
           <div>
-            <span class="eyebrow">Espace utilisateur</span>
+            <div class="page-eyebrow">Mon espace</div>
             <h1>Notifications</h1>
-            <p class="subtitle">
-              Retrouvez ici vos notifications récentes, vos actions à effectuer
-              et les informations importantes liées à vos événements.
-            </p>
+            <p>Toutes vos alertes et mises à jour en un seul endroit.</p>
           </div>
-
-          <div class="hero-actions">
-            <a routerLink="/app" class="back-link">← Retour au tableau de bord</a>
-
-            <button
-              type="button"
-              class="btn btn-primary"
-              [disabled]="markAllLoading || unreadCount() === 0"
-              (click)="markAllAsRead()"
-            >
-              {{ markAllLoading ? 'Traitement...' : 'Tout marquer comme lu' }}
+          <div class="hero-right">
+            <div class="unread-pill" *ngIf="unreadCount() > 0">
+              {{ unreadCount() }} non lue(s)
+            </div>
+            <button class="btn-mark-all" (click)="markAll()" [disabled]="markLoading() || unreadCount() === 0">
+              {{ markLoading() ? '...' : 'Tout marquer lu' }}
             </button>
           </div>
         </div>
+      </div>
 
-        <div class="hero-summary" *ngIf="!loading()">
-          <div class="hero-summary-card hero-summary-card-accent">
-            <span class="hero-summary-label">Total notifications</span>
-            <strong class="hero-summary-value">
-              {{ notifications().length }}
-            </strong>
-            <span class="hero-summary-help">Historique récent</span>
-          </div>
+      <div class="page-body">
 
-          <div class="hero-summary-card">
-            <span class="hero-summary-label">Non lues</span>
-            <strong
-              class="hero-summary-value"
-              [ngClass]="getUnreadTextClass(unreadCount())"
-            >
-              {{ unreadCount() }}
-            </strong>
-            <span class="hero-summary-help">
-              {{ unreadCount() > 0 ? 'Actions à consulter' : 'Tout est à jour' }}
-            </span>
-          </div>
+        <!-- Filtres -->
+        <div class="filter-row">
+          <button class="filter-btn" [class.active]="showUnreadOnly() === false" (click)="showUnreadOnly.set(false)">
+            Toutes <span class="filter-count">{{ notifications().length }}</span>
+          </button>
+          <button class="filter-btn" [class.active]="showUnreadOnly() === true" (click)="showUnreadOnly.set(true)">
+            Non lues <span class="filter-count" *ngIf="unreadCount() > 0">{{ unreadCount() }}</span>
+          </button>
         </div>
-      </header>
 
-      <section class="stats-grid" *ngIf="!loading() && !error()">
-        <article class="stat-card">
-          <span class="stat-label">Total</span>
-          <strong class="stat-value">{{ notifications().length }}</strong>
-        </article>
+        <div class="loading-state" *ngIf="loading()">Chargement...</div>
 
-        <article class="stat-card">
-          <span class="stat-label">Non lues</span>
-          <strong class="stat-value" [ngClass]="getUnreadTextClass(unreadCount())">
-            {{ unreadCount() }}
-          </strong>
-        </article>
+        <div class="empty-block" *ngIf="!loading() && displayed().length === 0">
+          <div class="empty-icon">🔔</div>
+          <p>{{ showUnreadOnly() ? 'Aucune notification non lue.' : 'Aucune notification.' }}</p>
+        </div>
 
-        <article class="stat-card">
-          <span class="stat-label">Lues</span>
-          <strong class="stat-value">{{ readCount() }}</strong>
-        </article>
-      </section>
-
-      <div *ngIf="loading()" class="state-card">
-        <div class="state-title">Chargement des notifications...</div>
-        <div class="state-text">Préparation de vos dernières alertes.</div>
-      </div>
-
-      <div *ngIf="error() && !loading()" class="state-card error">
-        <div class="state-title">Impossible de charger les notifications</div>
-        <div class="state-text">{{ error() }}</div>
-      </div>
-
-      <ng-container *ngIf="!loading() && !error()">
-        <app-empty-state
-          *ngIf="notifications().length === 0"
-          icon="🔔"
-          title="Aucune notification"
-          description="Vos nouvelles notifications apparaîtront ici."
-        />
-
-        <div class="notifications-list" *ngIf="notifications().length > 0">
-          <article
-            class="notification-card"
-            *ngFor="let notification of notifications()"
-            [class.notification-read]="isRead(notification)"
-            [class.notification-unread]="!isRead(notification)"
-            (click)="openNotification(notification)"
+        <div class="notif-list" *ngIf="!loading() && displayed().length > 0">
+          <div
+            *ngFor="let n of displayed()"
+            class="notif-card"
+            [class.unread]="!isRead(n)"
+            (click)="markRead(n)"
           >
-            <div class="notification-accent" [ngClass]="getTypeAccentClass(notification.type)"></div>
-
-            <div class="notification-main">
-              <div class="notification-top">
-                <div class="notification-head">
-                  <div class="title-row">
-                    <h2>{{ notification.title }}</h2>
-
-                    <span
-                      class="status-badge"
-                      [class.status-read]="isRead(notification)"
-                      [class.status-unread]="!isRead(notification)"
-                    >
-                      {{ isRead(notification) ? 'Lu' : 'Non lu' }}
-                    </span>
-                  </div>
-
-                  <p class="notification-body">
-                    {{ notification.body }}
-                  </p>
-                </div>
+            <div class="notif-dot" [class.dot-visible]="!isRead(n)"></div>
+            <div class="notif-body">
+              <div class="notif-header">
+                <span class="notif-type-pill" [ngClass]="getTypeClass(n.type)">{{ formatType(n.type) }}</span>
+                <span class="notif-date">{{ n.createdAt | date:'dd MMM yyyy HH:mm' }}</span>
               </div>
-
-              <div class="notification-meta">
-                <span class="type-pill" [ngClass]="getTypePillClass(notification.type)">
-                  {{ formatType(notification.type) }}
-                </span>
-                <span>•</span>
-                <span>{{ notification.createdAt | date:'medium' }}</span>
-              </div>
+              <div class="notif-title">{{ n.title }}</div>
+              <div class="notif-text" *ngIf="n.body">{{ n.body }}</div>
             </div>
-
-            <div class="notification-actions">
-              <button
-                type="button"
-                class="btn btn-secondary"
-                *ngIf="!isRead(notification)"
-                (click)="markOneAsRead(notification, $event)"
-              >
-                Marquer comme lu
-              </button>
-
-              <button
-                type="button"
-                class="btn btn-primary"
-                (click)="openNotification(notification, $event)"
-              >
-                Ouvrir
-              </button>
-            </div>
-          </article>
+          </div>
         </div>
-      </ng-container>
-    </section>
+
+      </div>
+    </div>
   `,
   styles: [`
-    :host {
-      display: block;
-    }
-
-    .page {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-      color: #111827;
-    }
-
-    .hero-card,
-    .stat-card,
-    .state-card,
-    .notification-card {
-      background: #ffffff;
-      border: 1px solid #f3e8e2;
-      border-radius: 24px;
-      box-shadow: 0 18px 50px rgba(17, 24, 39, 0.06);
-    }
-
-    .hero-card {
-      padding: 24px;
-      background:
-        radial-gradient(circle at top right, rgba(255, 179, 71, 0.16), transparent 28%),
-        radial-gradient(circle at bottom left, rgba(255, 122, 89, 0.10), transparent 32%),
-        linear-gradient(135deg, #fff7f2, #ffffff 58%);
-    }
-
-    .state-card,
-    .notification-card {
-      padding: 20px;
-    }
-
-    .hero-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      align-items: flex-start;
-    }
-
-    .eyebrow {
-      color: #ea580c;
-      font-size: 0.78rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .hero-card h1 {
-      margin: 8px 0 10px;
-      font-size: clamp(2rem, 4vw, 2.8rem);
-      line-height: 1.1;
-      letter-spacing: -0.03em;
-      color: #111827;
-    }
-
-    .subtitle {
-      margin: 0;
-      color: #4b5563;
-      line-height: 1.7;
-      max-width: 760px;
-    }
-
-    .back-link {
-      text-decoration: none;
-      color: #ea580c;
-      font-weight: 700;
-      white-space: nowrap;
-      padding: 11px 14px;
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.82);
-      border: 1px solid #f3dfd4;
-    }
-
-    .back-link:hover {
-      color: #c2410c;
-    }
-
-    .hero-summary {
-      margin-top: 22px;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .hero-summary-card {
-      border-radius: 22px;
-      padding: 18px;
-      border: 1px solid #f3e8e2;
-      background: white;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .hero-summary-card-accent {
-      background: linear-gradient(135deg, #fff1e8, #ffffff);
-    }
-
-    .hero-summary-label {
-      color: #6b7280;
-      font-size: 0.9rem;
-    }
-
-    .hero-summary-value {
-      font-size: 1.7rem;
-      line-height: 1.15;
-      color: #111827;
-    }
-
-    .hero-summary-help {
-      color: #6b7280;
-      font-size: 0.92rem;
-    }
-
-    .unread-count-low {
-      color: #ea580c;
-    }
-
-    .unread-count-medium {
-      color: #2563eb;
-    }
-
-    .unread-count-high {
-      color: #b91c1c;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-    }
-
-    .stat-card {
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      min-height: 120px;
-      justify-content: center;
-    }
-
-    .stat-label {
-      color: #6b7280;
-      font-size: 14px;
-    }
-
-    .stat-value {
-      font-size: 1.7rem;
-      line-height: 1.2;
-      color: #111827;
-    }
-
-    .state-card.error {
-      border-color: #fecaca;
-      background: #fff7f7;
-    }
-
-    .state-title {
-      font-weight: 700;
-      color: #111827;
-      margin-bottom: 4px;
-    }
-
-    .state-text {
-      color: #6b7280;
-      line-height: 1.6;
-      margin: 0;
-    }
-
-    .notifications-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .notification-card {
-      display: grid;
-      grid-template-columns: 6px minmax(0, 1fr) auto;
-      gap: 18px;
-      align-items: stretch;
-      cursor: pointer;
-      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-      overflow: hidden;
-    }
-
-    .notification-card:hover {
-      transform: translateY(-1px);
-      border-color: #f3dfd4;
-    }
-
-    .notification-read {
-      opacity: 0.9;
-    }
-
-    .notification-unread {
-      box-shadow: 0 22px 55px rgba(255, 122, 89, 0.08);
-    }
-
-    .notification-accent {
-      border-radius: 999px;
-      min-height: 100%;
-      background: #e5e7eb;
-    }
-
-    .accent-payment {
-      background: linear-gradient(180deg, #2563eb, #60a5fa);
-    }
-
-    .accent-event {
-      background: linear-gradient(180deg, #ff7a59, #ffb347);
-    }
-
-    .accent-contribution {
-      background: linear-gradient(180deg, #7c3aed, #a78bfa);
-    }
-
-    .accent-default {
-      background: linear-gradient(180deg, #6b7280, #9ca3af);
-    }
-
-    .notification-main {
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .notification-top {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: flex-start;
-    }
-
-    .notification-head {
-      min-width: 0;
-      width: 100%;
-    }
-
-    .title-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-      margin-bottom: 6px;
-    }
-
-    .title-row h2 {
-      margin: 0;
-      font-size: 1.1rem;
-      color: #111827;
-      line-height: 1.35;
-    }
-
-    .notification-body {
-      margin: 0;
-      color: #4b5563;
-      line-height: 1.6;
-    }
-
-    .notification-meta {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 12px;
-      color: #6b7280;
-      font-size: 13px;
-      align-items: center;
-    }
-
-    .type-pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .type-payment {
-      background: #dbeafe;
-      color: #1d4ed8;
-    }
-
-    .type-event {
-      background: #fff1eb;
-      color: #e85d3e;
-    }
-
-    .type-contribution {
-      background: #ede9fe;
-      color: #6d28d9;
-    }
-
-    .type-default {
-      background: #f3f4f6;
-      color: #374151;
-    }
-
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    .status-unread {
-      background: #dbeafe;
-      color: #1d4ed8;
-    }
-
-    .status-read {
-      background: #e5e7eb;
-      color: #374151;
-    }
-
-    .notification-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      align-items: flex-end;
-      justify-content: center;
-    }
-
-    .btn {
-      border: 0;
-      border-radius: 14px;
-      padding: 11px 16px;
-      cursor: pointer;
-      font: inherit;
-      font-weight: 700;
-      transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
-      text-align: center;
-    }
-
-    .btn:hover:not(:disabled) {
-      transform: translateY(-1px);
-    }
-
-    button:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #ff7a59, #ffb347);
-      color: white;
-      box-shadow: 0 14px 28px rgba(255, 122, 89, 0.18);
-    }
-
-    .btn-secondary {
-      background: #fff7f3;
-      color: #9a3412;
-      border: 1px solid #f3dfd4;
-    }
-
-    @media (max-width: 980px) {
-      .hero-top,
-      .hero-actions {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .hero-summary {
-        grid-template-columns: 1fr;
-      }
-
-      .notification-card {
-        grid-template-columns: 6px 1fr;
-      }
-
-      .notification-actions {
-        grid-column: 2;
-        align-items: stretch;
-      }
-
-      .title-row {
-        flex-direction: column;
-        align-items: stretch;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .hero-card,
-      .stat-card,
-      .state-card,
-      .notification-card {
-        border-radius: 20px;
-      }
-
-      .hero-card,
-      .state-card,
-      .notification-card {
-        padding: 18px;
-      }
-    }
+    .page-wrap { background: #f9fafb; min-height: calc(100vh - 64px); }
+    .page-hero { background: #000; padding: 40px 0; }
+    .page-hero-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+    .page-eyebrow { color: #FFD700; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px; }
+    h1 { font-size: 2rem; font-weight: 900; color: white; margin: 0 0 8px; letter-spacing: -0.02em; }
+    .page-hero p { color: rgba(255,255,255,0.5); margin: 0; font-size: 0.9rem; }
+    .hero-right { display: flex; align-items: center; gap: 12px; }
+    .unread-pill { background: #ef4444; color: white; padding: 5px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 700; }
+    .btn-mark-all { padding: 9px 18px; border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; background: transparent; color: rgba(255,255,255,0.7); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn-mark-all:hover:not(:disabled) { border-color: white; color: white; }
+    .btn-mark-all:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .page-body { max-width: 1280px; margin: 0 auto; padding: 32px 24px; display: flex; flex-direction: column; gap: 20px; }
+    .loading-state { color: #9ca3af; text-align: center; padding: 48px; }
+
+    .filter-row { display: flex; gap: 8px; }
+    .filter-btn { padding: 8px 16px; border: 1.5px solid #e5e7eb; border-radius: 999px; background: white; font: inherit; font-size: 0.82rem; font-weight: 600; color: #6b7280; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.15s; }
+    .filter-btn.active { background: #111; border-color: #111; color: white; }
+    .filter-count { background: rgba(255,255,255,0.2); padding: 1px 6px; border-radius: 999px; font-size: 0.7rem; }
+    .filter-btn:not(.active) .filter-count { background: #f3f4f6; color: #6b7280; }
+
+    .empty-block { background: white; border: 1.5px solid #f3f4f6; border-radius: 20px; padding: 64px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .empty-icon { font-size: 3rem; }
+    .empty-block p { color: #9ca3af; margin: 0; }
+
+    .notif-list { display: flex; flex-direction: column; gap: 8px; }
+    .notif-card { background: white; border: 1.5px solid #f3f4f6; border-radius: 16px; padding: 18px 20px; display: flex; align-items: flex-start; gap: 14px; cursor: pointer; transition: 0.2s; }
+    .notif-card:hover { border-color: #e5e7eb; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+    .notif-card.unread { background: #fffbf0; border-color: #fde68a; }
+    .notif-dot { width: 8px; height: 8px; border-radius: 50%; background: transparent; margin-top: 6px; flex-shrink: 0; }
+    .dot-visible { background: #FFD700; }
+    .notif-body { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .notif-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .notif-type-pill { padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .type-payment { background: #dbeafe; color: #1d4ed8; }
+    .type-event { background: #dcfce7; color: #166534; }
+    .type-contribution { background: #ede9fe; color: #6d28d9; }
+    .type-default { background: #f3f4f6; color: #6b7280; }
+    .notif-date { font-size: 0.75rem; color: #9ca3af; }
+    .notif-title { font-weight: 700; color: #111; font-size: 0.92rem; }
+    .notif-text { font-size: 0.85rem; color: #6b7280; line-height: 1.5; }
   `],
 })
 export class NotificationsPageComponent implements OnInit {
-  private readonly notificationsService = inject(NotificationsService);
-  private readonly notificationCenter = inject(NotificationCenterService);
-  private readonly router = inject(Router);
-  private readonly toastService = inject(ToastService);
+  private readonly center = inject(NotificationCenterService);
+  private readonly service = inject(NotificationsService);
 
-  readonly loading = this.notificationCenter.loading;
-  readonly error = this.notificationCenter.error;
-  readonly notifications = this.notificationCenter.notifications;
-  readonly unreadCount = this.notificationCenter.unreadCount;
-  readonly readCount = this.notificationCenter.readCount;
+  readonly notifications = this.center.notifications;
+  readonly unreadCount = this.center.unreadCount;
+  readonly loading = signal(false);
+  readonly markLoading = signal(false);
+  readonly showUnreadOnly = signal(false);
 
-  markAllLoading = false;
+  readonly displayed = computed(() => {
+    const all = this.notifications();
+    if (this.showUnreadOnly()) return all.filter(n => !this.isRead(n));
+    return all;
+  });
 
   ngOnInit(): void {
-    this.notificationCenter.loadNotifications(true);
+    this.loading.set(true);
+    this.center.loadNotifications(true);
+    setTimeout(() => this.loading.set(false), 600);
   }
 
-  isRead(notification: AppNotification): boolean {
-    return this.notificationCenter.isRead(notification);
+  isRead(n: AppNotification): boolean { return this.center.isRead(n); }
+
+  markRead(n: AppNotification): void {
+    if (!this.isRead(n)) {
+      this.service.markAsRead(n.id).subscribe(() => this.center.loadUnreadCount());
+    }
+  }
+
+  markAll(): void {
+    this.markLoading.set(true);
+    this.service.markAllAsRead().subscribe({
+      next: () => { this.center.loadUnreadCount(); this.center.loadNotifications(true); this.markLoading.set(false); },
+      error: () => this.markLoading.set(false),
+    });
   }
 
   formatType(type: string | null | undefined): string {
-    switch (type) {
-      case 'PAYMENT':
-        return 'Paiement';
-      case 'EVENT':
-        return 'Événement';
-      case 'CONTRIBUTION':
-        return 'Contribution';
-      default:
-        return type || 'Notification';
-    }
+    const m: Record<string, string> = { PAYMENT: 'Paiement', EVENT: 'Événement', CONTRIBUTION: 'Contribution' };
+    return m[type ?? ''] ?? 'Notification';
   }
 
-  getTypePillClass(type: string | null | undefined): string {
-    switch (type) {
-      case 'PAYMENT':
-        return 'type-payment';
-      case 'EVENT':
-        return 'type-event';
-      case 'CONTRIBUTION':
-        return 'type-contribution';
-      default:
-        return 'type-default';
-    }
-  }
-
-  getTypeAccentClass(type: string | null | undefined): string {
-    switch (type) {
-      case 'PAYMENT':
-        return 'accent-payment';
-      case 'EVENT':
-        return 'accent-event';
-      case 'CONTRIBUTION':
-        return 'accent-contribution';
-      default:
-        return 'accent-default';
-    }
-  }
-
-  getUnreadTextClass(count: number): string {
-    if (count >= 10) return 'unread-count-high';
-    if (count >= 4) return 'unread-count-medium';
-    if (count >= 1) return 'unread-count-low';
-    return '';
-  }
-
-  markOneAsRead(notification: AppNotification, event?: Event): void {
-    event?.stopPropagation();
-
-    if (this.isRead(notification)) {
-      return;
-    }
-
-    this.notificationCenter.markOneAsReadLocally(notification.id);
-
-    this.notificationsService.markAsRead(notification.id).subscribe({
-      next: (updated) => {
-        this.notificationCenter.replaceNotification(updated);
-      },
-      error: () => {
-        this.notificationCenter.refreshAll();
-        this.toastService.error('Impossible de marquer la notification comme lue.');
-      },
-    });
-  }
-
-  markAllAsRead(): void {
-    if (!this.notifications().length || this.markAllLoading || this.unreadCount() === 0) {
-      return;
-    }
-
-    this.markAllLoading = true;
-    this.notificationCenter.markAllAsReadLocally();
-
-    this.notificationsService.markAllAsRead().subscribe({
-      next: () => {
-        this.markAllLoading = false;
-        this.toastService.success('Toutes les notifications ont été marquées comme lues.');
-      },
-      error: () => {
-        this.markAllLoading = false;
-        this.notificationCenter.refreshAll();
-        this.toastService.error('Impossible de marquer toutes les notifications comme lues.');
-      },
-    });
-  }
-
-  openNotification(notification: AppNotification, event?: Event): void {
-    event?.stopPropagation();
-
-    const payload = notification.dataPayload as NotificationPayload | null;
-
-    if (!this.isRead(notification)) {
-      this.notificationCenter.markOneAsReadLocally(notification.id);
-
-      this.notificationsService.markAsRead(notification.id).subscribe({
-        next: (updated) => {
-          this.notificationCenter.replaceNotification(updated);
-          this.navigateFromPayload(payload);
-        },
-        error: () => {
-          this.notificationCenter.refreshAll();
-          this.navigateFromPayload(payload);
-        },
-      });
-
-      return;
-    }
-
-    this.navigateFromPayload(payload);
-  }
-
-  private navigateFromPayload(payload: NotificationPayload | null): void {
-    if (!payload) {
-      return;
-    }
-
-    if (payload.paymentId) {
-      this.router.navigate(['/app/payments', payload.paymentId]);
-      return;
-    }
-
-    if (payload.eventId) {
-      this.router.navigate(['/app/events', payload.eventId]);
-      return;
-    }
-
-    if (payload.contributionId) {
-      this.router.navigate(['/app/contributions']);
-      return;
-    }
+  getTypeClass(type: string | null | undefined): string {
+    const m: Record<string, string> = { PAYMENT: 'type-payment', EVENT: 'type-event', CONTRIBUTION: 'type-contribution' };
+    return m[type ?? ''] ?? 'type-default';
   }
 }
