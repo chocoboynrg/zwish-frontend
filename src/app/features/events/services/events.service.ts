@@ -38,6 +38,8 @@ export interface UserEventSummary {
   wishlistId?: number | null;
   canDelete?: boolean;
   deleteBlockedReason?: string | null;
+  isArchived: boolean;
+  archivedAt: string | null;
 }
 
 export interface UserEventWishlistItem {
