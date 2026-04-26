@@ -40,10 +40,10 @@ import { NotificationCenterService } from '../features/notifications/services/no
           <!-- Actions droite -->
           <div class="topbar-actions">
             <!-- Notifications -->
-            <button class="action-btn notif-btn" (click)="notifOpen.set(!notifOpen())" [class.has-badge]="unreadCount() > 0">
+            <a routerLink="/app/notifications" class="action-btn notif-btn" title="Notifications">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
               <span class="notif-badge" *ngIf="unreadCount() > 0">{{ unreadCount() > 9 ? '9+' : unreadCount() }}</span>
-            </button>
+            </a>
 
             <!-- Créer un événement -->
             <a routerLink="/app/events/new" class="btn-new-event">
@@ -104,7 +104,7 @@ import { NotificationCenterService } from '../features/notifications/services/no
       </header>
 
       <!-- Overlay profil -->
-      <div class="overlay" *ngIf="profileOpen() || notifOpen()" (click)="profileOpen.set(false); notifOpen.set(false)"></div>
+      <div class="overlay" *ngIf="profileOpen()" (click)="profileOpen.set(false)"></div>
 
       <!-- MAIN CONTENT -->
       <main class="app-main">
@@ -210,7 +210,6 @@ export class UserLayoutComponent {
   readonly unreadCount = this.notifService.unreadCount;
   readonly scrolled = signal(false);
   readonly profileOpen = signal(false);
-  readonly notifOpen = signal(false);
   readonly mobileOpen = signal(false);
 
   @HostListener('window:scroll')

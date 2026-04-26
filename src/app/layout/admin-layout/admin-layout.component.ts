@@ -2,6 +2,8 @@ import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { CommonModule } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NotificationCenterService } from '../../features/notifications/services/notification-center.service';
 
 @Component({
   selector: 'app-admin-layout',
@@ -29,35 +31,38 @@ import { CommonModule } from '@angular/common';
             Paiements
           </a>
           <a routerLink="/admin/reconciliation" routerLinkActive="active">
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-            <path d="M10 2a8 8 0 100 16A8 8 0 0010 2z" stroke="currentColor" stroke-width="1.6"/>
-            <path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Réconciliation
-        </a>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M4 10h8M4 14h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            Réconciliation
+          </a>
           <a routerLink="/admin/events" routerLinkActive="active">
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M6 2v4M14 2v4M2 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
             Événements
           </a>
           <a routerLink="/admin/catalog" routerLinkActive="active">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 4h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Catalogue
           </a>
           <a routerLink="/admin/product-requests" routerLinkActive="active">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M9 2H4a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9m-9-7l7 7m-7-7v7h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M12 3H6a1 1 0 00-1 1v12a1 1 0 001 1h8a1 1 0 001-1V7l-3-4z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 3v4h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 11h4M8 14h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
             Demandes produit
           </a>
-          <a routerLink="/admin/notifications" routerLinkActive="active">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2.5a6.5 6.5 0 016.5 6.5v3l1.5 2H2l1.5-2V9A6.5 6.5 0 0110 2.5zM8 16a2 2 0 004 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-            Notifications
-          </a>
           <a routerLink="/admin/audit" routerLinkActive="active">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <path d="M9 2H4a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-              <path d="M9 2v7h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-              <path d="M5 12h6M5 15h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-            </svg>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M14 2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M5 12h6M5 15h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
             Audit Logs
+          </a>
+
+          <!-- Séparateur -->
+          <div class="nav-sep"></div>
+
+          <!-- Notifications avec badge -->
+          <a routerLink="/admin/notifications" routerLinkActive="active" class="nav-notif-link">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M15 18H9M18 16V11C18 7.686 15.314 5 12 5S6 7.686 6 11v5l-1.5 1.5V18h15v-.5L18 16z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Notifications
+            <span class="notif-badge" *ngIf="unreadCount() > 0">
+              {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+            </span>
           </a>
         </nav>
 
@@ -87,32 +92,66 @@ import { CommonModule } from '@angular/common';
     .brand { display: flex; align-items: center; gap: 10px; padding: 24px 20px; font-size: 1.1rem; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.06); }
     .brand-mark { width: 32px; height: 32px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 900; flex-shrink: 0; }
     .nav { display: flex; flex-direction: column; gap: 2px; padding: 16px 12px; flex: 1; }
-    .nav a { display: flex; align-items: center; gap: 10px; color: #94a3b8; text-decoration: none; padding: 10px 12px; border-radius: 10px; font-weight: 500; font-size: 0.92rem; transition: 0.15s; }
+
+    .nav a {
+      display: flex; align-items: center; gap: 10px;
+      color: #94a3b8; text-decoration: none;
+      padding: 10px 12px; border-radius: 10px;
+      font-weight: 500; font-size: 0.92rem; transition: 0.15s;
+      position: relative;
+    }
     .nav a:hover { background: rgba(255,255,255,0.06); color: white; }
-    .nav a.active { background: rgba(99,102,241,0.2); color: #a5b4fc; }
-    .nav a svg { flex-shrink: 0; opacity: 0.7; }
-    .nav a.active svg { opacity: 1; }
+    .nav a.active { background: rgba(99,102,241,0.15); color: white; }
+    .nav a.active svg { color: #818cf8; }
+
+    /* Séparateur */
+    .nav-sep { height: 1px; background: rgba(255,255,255,0.06); margin: 8px 0; }
+
+    /* Lien notifications avec badge */
+    .nav-notif-link { justify-content: flex-start; }
+    .notif-badge {
+      margin-left: auto;
+      background: #ef4444; color: white;
+      min-width: 20px; height: 20px;
+      border-radius: 999px; font-size: 0.68rem; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 5px;
+      animation: notif-pulse 2s infinite;
+    }
+    @keyframes notif-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+      50% { box-shadow: 0 0 0 4px rgba(239,68,68,0); }
+    }
+
     .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 10px; }
-    .current-user { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.05); }
-    .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; flex-shrink: 0; }
-    .user-meta { display: flex; flex-direction: column; min-width: 0; }
-    .user-name { font-size: 0.85rem; font-weight: 600; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .user-role { font-size: 0.72rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
-    .logout-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; border: 0; border-radius: 10px; background: rgba(239,68,68,0.12); color: #fca5a5; font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: 0.15s; }
-    .logout-btn:hover { background: rgba(239,68,68,0.2); color: #f87171; }
-    .content { padding: 28px; min-width: 0; }
-    @media (max-width: 900px) { .admin-shell { grid-template-columns: 1fr; } .sidebar { display: none; } .content { padding: 16px; } }
+    .current-user { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(255,255,255,0.04); border-radius: 10px; }
+    .user-avatar { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.82rem; flex-shrink: 0; }
+    .user-meta { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .user-name { font-size: 0.85rem; font-weight: 700; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-role { font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .logout-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 12px; border: 0; border-radius: 9px; background: rgba(239,68,68,0.1); color: #f87171; font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.15s; }
+    .logout-btn:hover { background: rgba(239,68,68,0.2); }
+
+    .content { overflow: auto; min-height: 100vh; }
   `],
 })
 export class AdminLayoutComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
-  readonly currentUser = () => this.authService.getCurrentUserSnapshot();
+  private readonly notificationCenter = inject(NotificationCenterService);
+
+  readonly currentUser = toSignal(this.authService.currentUser$, {
+    initialValue: this.authService.getCurrentUserSnapshot(),
+  });
+
+  readonly unreadCount = this.notificationCenter.unreadCount;
+
   getInitials(name: string): string {
-    return name.split(' ').filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('');
+    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   }
+
   logout(): void {
     this.authService.logout();
-    this.router.navigateByUrl('/login');
+    this.router.navigateByUrl('/');
   }
 }

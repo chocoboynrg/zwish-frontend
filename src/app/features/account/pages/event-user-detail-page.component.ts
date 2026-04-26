@@ -195,101 +195,97 @@ import { ToastService } from '../../../core/services/toast.service';
               (reserveItem)="facade.reserveItem($event)"
             />
 
-            <!-- ============================= -->
-            <!-- SECTION ARCHIVAGE             -->
-            <!-- ============================= -->
-            <div class="action-card archive-card" *ngIf="isManager()">
-              <div class="action-card-left">
-                <div class="action-card-icon">📦</div>
-                <div class="action-card-text">
-                  <div class="action-card-title">
-                    {{ vm().data!.event.isArchived ? 'Événement archivé' : 'Archiver cet événement' }}
-                  </div>
-                  <div class="action-card-desc" *ngIf="!vm().data!.event.isArchived">
-                    L'archivage <strong>conserve toutes les données</strong> — contributions, paiements, participants, wishlist — mais masque l'événement de votre liste active. Vous pourrez le désarchiver à tout moment.
-                  </div>
-                  <div class="action-card-desc archived-notice" *ngIf="vm().data!.event.isArchived">
-                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v5M10 13.5v.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                    Cet événement est archivé. Il est masqué de votre liste active mais toutes ses données sont intactes.
-                  </div>
+            <!-- ═══════════════════════════════ -->
+            <!-- BOUTON DEMANDE PRODUIT          -->
+            <!-- ═══════════════════════════════ -->
+            <div class="request-product-banner" *ngIf="vm().data?.wishlist">
+              <div class="rpb-left">
+                <div class="rpb-icon">📦</div>
+                <div>
+                  <div class="rpb-title">Vous ne trouvez pas le produit dans le catalogue ?</div>
+                  <div class="rpb-desc">Proposez-le — notre équipe l'examinera et l'ajoutera à votre wishlist.</div>
                 </div>
               </div>
-              <div class="action-card-right">
-                <button
-                  *ngIf="!vm().data!.event.isArchived"
-                  class="btn-archive"
-                  (click)="archiveEvent()"
-                  [disabled]="archiveLoading()"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 8v13H3V8M23 3H1v5h22V3zM10 12h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  {{ archiveLoading() ? 'Archivage...' : 'Archiver' }}
+              <button class="btn-request-product" (click)="facade.openProductRequestsPage()">
+                <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                Demander un produit
+              </button>
+            </div>
+
+            <!-- ═══════════════════════════════ -->
+            <!-- ARCHIVAGE                       -->
+            <!-- ═══════════════════════════════ -->
+            <div class="mgmt-section" *ngIf="isManager()">
+              <div class="mgmt-section-title">Gestion de l'événement</div>
+
+              <div class="mgmt-card archive-mgmt-card">
+                <div class="mgmt-card-left">
+                  <div class="mgmt-icon">📦</div>
+                  <div class="mgmt-text">
+                    <div class="mgmt-card-title">{{ vm().data!.event.isArchived ? 'Événement archivé' : 'Archiver cet événement' }}</div>
+                    <div class="mgmt-card-desc" *ngIf="!vm().data!.event.isArchived">
+                      Conserve <strong>toutes les données</strong> (contributions, paiements, participants, wishlist) mais masque l'événement de votre liste active. Réversible à tout moment.
+                    </div>
+                    <div class="mgmt-card-desc archived-notice" *ngIf="vm().data!.event.isArchived">
+                      Cet événement est archivé. Toutes les données sont conservées — il est simplement masqué de votre liste principale.
+                    </div>
+                  </div>
+                </div>
+                <button *ngIf="!vm().data!.event.isArchived" class="btn-mgmt btn-archive" (click)="archiveEvent()" [disabled]="archiveLoading()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 8v13H3V8M23 3H1v5h22V3zM10 12h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  {{ archiveLoading() ? '...' : 'Archiver' }}
                 </button>
-                <button
-                  *ngIf="vm().data!.event.isArchived"
-                  class="btn-unarchive"
-                  (click)="unarchiveEvent()"
-                  [disabled]="archiveLoading()"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 8v13H3V8M23 3H1v5h22V3zM10 12h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <button *ngIf="vm().data!.event.isArchived" class="btn-mgmt btn-unarchive" (click)="unarchiveEvent()" [disabled]="archiveLoading()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 8v13H3V8M23 3H1v5h22V3zM10 12h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   {{ archiveLoading() ? '...' : 'Désarchiver' }}
                 </button>
               </div>
-            </div>
 
-            <!-- ============================= -->
-            <!-- ZONE DANGER — SUPPRESSION     -->
-            <!-- ============================= -->
-            <div class="danger-zone" *ngIf="isManager() && vm().data!.accessRole === 'ORGANIZER'">
-
-              <div class="danger-zone-header">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/></svg>
-                <span>Zone dangereuse</span>
-              </div>
-
-              <div class="danger-zone-body">
-                <div class="danger-zone-title">Supprimer définitivement cet événement</div>
-                <div class="danger-zone-subtitle">Cette action est irréversible et ne peut pas être annulée.</div>
-
-                <!-- Conséquences -->
-                <div class="danger-consequences">
-                  <div class="consequence-item bad">
-                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M7 13l6-6M13 13L7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                    L'événement et <strong>tous ses items wishlist</strong> sont effacés définitivement
-                  </div>
-                  <div class="consequence-item bad">
-                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M7 13l6-6M13 13L7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                    L'historique des <strong>contributions et participants</strong> est perdu
-                  </div>
-                  <div class="consequence-item bad">
-                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M7 13l6-6M13 13L7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                    Tous les <strong>liens de partage</strong> envoyés à vos invités deviennent invalides
-                  </div>
-                  <!-- État de blocage -->
-                  <div class="consequence-item ok" *ngIf="canDeleteEvent()">
-                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M4.5 10l4 4 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                    Aucun paiement validé — suppression autorisée
-                  </div>
-                  <div class="consequence-item blocked" *ngIf="!canDeleteEvent()">
-                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v5M10 13.5v.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                    <strong>Suppression bloquée :</strong> {{ deleteBlockedReason() }}
-                  </div>
+              <!-- ═══════════════════════════════ -->
+              <!-- ZONE DANGER                     -->
+              <!-- ═══════════════════════════════ -->
+              <div class="danger-section" *ngIf="vm().data!.accessRole === 'ORGANIZER'">
+                <div class="danger-section-header">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/></svg>
+                  Zone dangereuse — Suppression définitive
                 </div>
 
-                <!-- Conseil archivage -->
-                <div class="danger-tip">
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#92400e" stroke-width="1.5"/><path d="M10 6v5M10 13.5v.5" stroke="#92400e" stroke-width="1.8" stroke-linecap="round"/></svg>
-                  <span>Vous souhaitez juste cacher cet événement ? Utilisez plutôt <strong>l'archivage</strong> ci-dessus — toutes vos données seront conservées.</span>
-                </div>
+                <div class="danger-section-body">
+                  <div class="danger-consequences">
+                    <div class="dc-item dc-bad">
+                      <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M7 13l6-6M13 13L7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                      L'événement et tous ses items wishlist sont <strong>effacés définitivement</strong>
+                    </div>
+                    <div class="dc-item dc-bad">
+                      <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M7 13l6-6M13 13L7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                      L'historique des contributions et participants est <strong>perdu</strong>
+                    </div>
+                    <div class="dc-item dc-bad">
+                      <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M7 13l6-6M13 13L7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                      Tous les <strong>liens de partage</strong> deviennent invalides
+                    </div>
+                    <div class="dc-item dc-ok" *ngIf="canDeleteEvent()">
+                      <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M4.5 10l4 4 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                      Aucun paiement validé — suppression autorisée
+                    </div>
+                    <div class="dc-item dc-warn" *ngIf="!canDeleteEvent()">
+                      <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.4"/><path d="M10 6v5M10 13.5v.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                      <strong>Bloquée :</strong> {{ deleteBlockedReason() }}
+                    </div>
+                  </div>
 
-                <!-- Bouton supprimer -->
-                <button
-                  class="btn-delete-final"
-                  [disabled]="!canDeleteEvent() || vm().deleteLoading"
-                  (click)="facade.openDeleteModal()"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6M9 6V4h6v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  {{ vm().deleteLoading ? 'Suppression...' : 'Supprimer définitivement' }}
-                </button>
+                  <div class="danger-tip">
+                    <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#92400e" stroke-width="1.4"/><path d="M10 6v5M10 13.5v.5" stroke="#92400e" stroke-width="1.7" stroke-linecap="round"/></svg>
+                    Préférez l'<strong>archivage</strong> — vos données seront conservées et l'événement restera accessible.
+                  </div>
+
+                  <div class="danger-footer">
+                    <button class="btn-delete-final" [disabled]="!canDeleteEvent() || vm().deleteLoading" (click)="facade.openDeleteModal()">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6M9 6V4h6v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      {{ vm().deleteLoading ? 'Suppression...' : 'Supprimer définitivement' }}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -443,87 +439,69 @@ import { ToastService } from '../../../core/services/toast.service';
     .payment-feedback.pending { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
     .payment-feedback.failed { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 
-    /* ========================== */
-    /* SECTION ARCHIVAGE          */
-    /* ========================== */
-    .action-card {
-      background: white; border: 1.5px solid #f3f4f6; border-radius: 20px;
-      padding: 24px; display: flex; align-items: center; justify-content: space-between;
-      gap: 24px; flex-wrap: wrap;
+    /* ═══════════════════════════ */
+    /* DEMANDE PRODUIT BANNER     */
+    /* ═══════════════════════════ */
+    .request-product-banner {
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+      padding: 20px 24px; background: white;
+      border: 1.5px solid #e0e7ff; border-radius: 16px; flex-wrap: wrap;
     }
-    .archive-card { border-color: #e0e7ff; background: #f5f3ff; }
-    .action-card-left { display: flex; align-items: flex-start; gap: 16px; flex: 1; min-width: 0; }
-    .action-card-icon { font-size: 2rem; flex-shrink: 0; }
-    .action-card-text { display: flex; flex-direction: column; gap: 6px; }
-    .action-card-title { font-size: 1rem; font-weight: 800; color: #111; }
-    .action-card-desc { font-size: 0.88rem; color: #6b7280; line-height: 1.6; }
-    .action-card-desc strong { color: #374151; }
-    .archived-notice { display: flex; align-items: flex-start; gap: 6px; color: #6d28d9; }
-    .action-card-right { flex-shrink: 0; }
+    .rpb-left { display: flex; align-items: center; gap: 14px; flex: 1; }
+    .rpb-icon { font-size: 1.8rem; flex-shrink: 0; }
+    .rpb-title { font-size: 0.92rem; font-weight: 800; color: #111; }
+    .rpb-desc { font-size: 0.8rem; color: #6b7280; margin-top: 3px; }
+    .btn-request-product {
+      display: flex; align-items: center; gap: 7px; padding: 11px 20px;
+      border: 0; border-radius: 12px; background: #6d28d9; color: white;
+      font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: 0.2s; white-space: nowrap; flex-shrink: 0;
+    }
+    .btn-request-product:hover { background: #5b21b6; }
 
-    .btn-archive {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 11px 22px; border: 0; border-radius: 12px;
-      background: #6d28d9; color: white; font: inherit; font-size: 0.88rem;
-      font-weight: 700; cursor: pointer; transition: 0.2s;
-    }
+    /* ═══════════════════════════ */
+    /* GESTION (archivage + zone) */
+    /* ═══════════════════════════ */
+    .mgmt-section { background: white; border: 1.5px solid #f3f4f6; border-radius: 20px; overflow: hidden; }
+    .mgmt-section-title { padding: 16px 24px 0; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; }
+
+    /* Card archivage */
+    .mgmt-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 24px; border-bottom: 1px solid #f3f4f6; flex-wrap: wrap; }
+    .archive-mgmt-card { background: #faf5ff; border-bottom-color: #ede9fe; }
+    .mgmt-card-left { display: flex; align-items: flex-start; gap: 14px; flex: 1; min-width: 0; }
+    .mgmt-icon { font-size: 1.6rem; flex-shrink: 0; }
+    .mgmt-text { flex: 1; }
+    .mgmt-card-title { font-size: 0.95rem; font-weight: 800; color: #111; }
+    .mgmt-card-desc { font-size: 0.82rem; color: #6b7280; line-height: 1.6; margin-top: 4px; }
+    .mgmt-card-desc strong { color: #374151; }
+    .archived-notice { color: #6d28d9; }
+    .btn-mgmt { display: inline-flex; align-items: center; gap: 7px; padding: 10px 18px; border-radius: 11px; font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s; border: 0; white-space: nowrap; flex-shrink: 0; }
+    .btn-archive { background: #6d28d9; color: white; }
     .btn-archive:hover:not(:disabled) { background: #5b21b6; }
     .btn-archive:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .btn-unarchive {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 11px 22px; border: 1.5px solid #6d28d9; border-radius: 12px;
-      background: white; color: #6d28d9; font: inherit; font-size: 0.88rem;
-      font-weight: 700; cursor: pointer; transition: 0.2s;
-    }
-    .btn-unarchive:hover:not(:disabled) { background: #f5f3ff; }
+    .btn-unarchive { background: white; color: #6d28d9; border: 1.5px solid #6d28d9 !important; }
+    .btn-unarchive:hover:not(:disabled) { background: #faf5ff; }
     .btn-unarchive:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* ========================== */
-    /* ZONE DANGER                */
-    /* ========================== */
-    .danger-zone {
-      border: 2px solid #fecaca; border-radius: 20px;
-      overflow: hidden;
-    }
-    .danger-zone-header {
-      display: flex; align-items: center; gap: 10px;
-      padding: 14px 24px; background: #fef2f2;
-      border-bottom: 1px solid #fecaca;
-      font-size: 0.88rem; font-weight: 800; color: #ef4444;
-      text-transform: uppercase; letter-spacing: 0.08em;
-    }
-    .danger-zone-body { padding: 24px; background: white; display: flex; flex-direction: column; gap: 20px; }
-    .danger-zone-title { font-size: 1rem; font-weight: 800; color: #111; }
-    .danger-zone-subtitle { font-size: 0.85rem; color: #9ca3af; margin-top: -12px; }
+    /* Danger section */
+    .danger-section { background: white; }
+    .danger-section-header { display: flex; align-items: center; gap: 9px; padding: 16px 24px 12px; font-size: 0.78rem; font-weight: 800; color: #ef4444; text-transform: uppercase; letter-spacing: 0.06em; border-top: 1px solid #fecaca; background: #fef2f2; }
+    .danger-section-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
 
-    .danger-consequences { display: flex; flex-direction: column; gap: 10px; }
-    .consequence-item {
-      display: flex; align-items: flex-start; gap: 10px;
-      font-size: 0.88rem; line-height: 1.5; padding: 10px 14px;
-      border-radius: 10px;
-    }
-    .consequence-item.bad { background: #fef2f2; color: #7f1d1d; }
-    .consequence-item.bad svg { color: #ef4444; flex-shrink: 0; margin-top: 2px; }
-    .consequence-item.ok { background: #f0fdf4; color: #166534; }
-    .consequence-item.ok svg { color: #22c55e; flex-shrink: 0; margin-top: 2px; }
-    .consequence-item.blocked { background: #fffbeb; color: #92400e; }
-    .consequence-item.blocked svg { color: #f59e0b; flex-shrink: 0; margin-top: 2px; }
+    .danger-consequences { display: flex; flex-direction: column; gap: 8px; }
+    .dc-item { display: flex; align-items: flex-start; gap: 10px; font-size: 0.85rem; line-height: 1.5; padding: 9px 12px; border-radius: 9px; }
+    .dc-bad { background: #fef2f2; color: #7f1d1d; }
+    .dc-bad svg { color: #ef4444; flex-shrink: 0; margin-top: 1px; }
+    .dc-ok { background: #f0fdf4; color: #166534; }
+    .dc-ok svg { color: #22c55e; flex-shrink: 0; margin-top: 1px; }
+    .dc-warn { background: #fffbeb; color: #92400e; }
+    .dc-warn svg { color: #f59e0b; flex-shrink: 0; margin-top: 1px; }
 
-    .danger-tip {
-      display: flex; align-items: flex-start; gap: 10px;
-      padding: 14px 16px; background: #fffbeb; border: 1px solid #fde68a;
-      border-radius: 12px; font-size: 0.85rem; color: #92400e; line-height: 1.6;
-    }
+    .danger-tip { display: flex; align-items: flex-start; gap: 9px; padding: 12px 14px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 11px; font-size: 0.82rem; color: #92400e; line-height: 1.6; }
     .danger-tip svg { flex-shrink: 0; margin-top: 1px; }
     .danger-tip strong { color: #78350f; }
 
-    .btn-delete-final {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 13px 24px; border: 0; border-radius: 12px;
-      background: #ef4444; color: white; font: inherit; font-size: 0.9rem;
-      font-weight: 800; cursor: pointer; transition: 0.2s; align-self: flex-start;
-    }
+    .danger-footer { border-top: 1px solid #f3f4f6; padding-top: 16px; }
+    .btn-delete-final { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border: 0; border-radius: 11px; background: #ef4444; color: white; font: inherit; font-size: 0.88rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
     .btn-delete-final:hover:not(:disabled) { background: #dc2626; }
     .btn-delete-final:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
 

@@ -36,6 +36,7 @@ import { PaymentsAdminPageComponent } from './features/payments/pages/payments-a
 import { PaymentDetailAdminPageComponent } from './features/payments/pages/payment-detail-admin-page.component';
 import { AuditLogsAdminPageComponent } from './features/audit/pages/audit-logs-admin-page.component';
 import { ReconciliationAdminPageComponent } from './features/payments/pages/reconciliation-admin-page.component';
+import { NotificationsAdminPageComponent } from './features/notifications/pages/notifications-admin-page.component';
 
 export const routes: Routes = [
   {
@@ -145,8 +146,8 @@ export const routes: Routes = [
         component: ProductRequestsAdminPageComponent,
       },
       {
-        path: 'notifications',
-        component: NotificationsPageComponent,
+        path: 'admin/notifications', 
+        component: NotificationsAdminPageComponent,
       }, 
       {
         path: 'users',
