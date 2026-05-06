@@ -25,14 +25,7 @@ const KNOWN_ACTIONS = [
   'RESERVATION_EXPIRED',
 ];
 
-const KNOWN_ENTITY_TYPES = [
-  'User',
-  'Payment',
-  'Contribution',
-  'Event',
-  'Reservation',
-  'AuditLog',
-];
+const KNOWN_ENTITY_TYPES = ['User', 'Payment', 'Contribution', 'Event', 'Reservation', 'AuditLog'];
 
 @Component({
   selector: 'app-audit-logs-admin-page',
@@ -40,7 +33,6 @@ const KNOWN_ENTITY_TYPES = [
   imports: [CommonModule, FormsModule],
   template: `
     <div class="page">
-
       <!-- Header -->
       <div class="page-header">
         <div>
@@ -49,7 +41,13 @@ const KNOWN_ENTITY_TYPES = [
         </div>
         <button class="btn-export" (click)="exportCsv()" [disabled]="exporting()">
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-            <path d="M10 3v10M6 9l4 4 4-4M4 17h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M10 3v10M6 9l4 4 4-4M4 17h12"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
           {{ exporting() ? 'Export...' : 'Export CSV' }}
         </button>
@@ -68,12 +66,16 @@ const KNOWN_ENTITY_TYPES = [
 
           <select [(ngModel)]="actionFilter" (ngModelChange)="onFilterChange()">
             <option value="">Toutes les actions</option>
-            <option *ngFor="let a of knownActions" [value]="a">{{ a }}</option>
+            @for (a of knownActions; track a) {
+              <option [value]="a">{{ a }}</option>
+            }
           </select>
 
           <select [(ngModel)]="entityTypeFilter" (ngModelChange)="onFilterChange()">
             <option value="">Tous les types</option>
-            <option *ngFor="let t of knownEntityTypes" [value]="t">{{ t }}</option>
+            @for (t of knownEntityTypes; track t) {
+              <option [value]="t">{{ t }}</option>
+            }
           </select>
         </div>
 
@@ -102,392 +104,578 @@ const KNOWN_ENTITY_TYPES = [
 
           <div class="filter-group">
             <label>Du</label>
-            <input
-              type="date"
-              [(ngModel)]="fromFilter"
-              (ngModelChange)="onFilterChange()"
-            />
+            <input type="date" [(ngModel)]="fromFilter" (ngModelChange)="onFilterChange()" />
           </div>
 
           <div class="filter-group">
             <label>Au</label>
-            <input
-              type="date"
-              [(ngModel)]="toFilter"
-              (ngModelChange)="onFilterChange()"
-            />
+            <input type="date" [(ngModel)]="toFilter" (ngModelChange)="onFilterChange()" />
           </div>
 
-          <button class="btn-reset" (click)="resetFilters()" *ngIf="hasActiveFilters()">
-            Réinitialiser
-          </button>
+          @if (hasActiveFilters()) {
+            <button class="btn-reset" (click)="resetFilters()">Réinitialiser</button>
+          }
         </div>
       </div>
 
       <!-- Table -->
       <div class="table-card">
-        <div class="loading-bar" *ngIf="loading()"></div>
+        @if (loading()) {
+          <div class="loading-bar"></div>
+        }
 
-        <p class="empty-state" *ngIf="!loading() && logs().length === 0">
-          Aucun log trouvé avec ces filtres.
-        </p>
+        @if (!loading() && logs().length === 0) {
+          <p class="empty-state">Aucun log trouvé avec ces filtres.</p>
+        }
 
-        <div class="table-wrapper" *ngIf="logs().length > 0">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Action</th>
-                <th>Type</th>
-                <th>Entity ID</th>
-                <th>User ID</th>
-                <th>IP</th>
-                <th>Date</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let log of logs()" (click)="openDetail(log)" class="row-clickable">
-                <td class="id-cell">#{{ log.id }}</td>
-                <td>
-                  <span class="action-badge" [ngClass]="getActionClass(log.action)">
-                    {{ log.action }}
-                  </span>
-                </td>
-                <td>
-                  <span class="entity-badge" *ngIf="log.entityType">{{ log.entityType }}</span>
-                  <span class="muted" *ngIf="!log.entityType">—</span>
-                </td>
-                <td class="muted">{{ log.entityId ?? '—' }}</td>
-                <td class="muted">{{ log.userId ?? '—' }}</td>
-                <td class="muted ip-cell">{{ log.ip ?? '—' }}</td>
-                <td class="date-cell">{{ log.createdAt | date:'dd/MM/yy HH:mm' }}</td>
-                <td>
-                  <button class="btn-detail" (click)="openDetail(log); $event.stopPropagation()">
-                    Détail
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        @if (logs().length > 0) {
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Action</th>
+                  <th>Type</th>
+                  <th>Entity ID</th>
+                  <th>User ID</th>
+                  <th>IP</th>
+                  <th>Date</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (log of logs(); track log) {
+                  <tr (click)="openDetail(log)" class="row-clickable">
+                    <td class="id-cell">#{{ log.id }}</td>
+                    <td>
+                      <span class="action-badge" [ngClass]="getActionClass(log.action)">
+                        {{ log.action }}
+                      </span>
+                    </td>
+                    <td>
+                      @if (log.entityType) {
+                        <span class="entity-badge">{{ log.entityType }}</span>
+                      }
+                      @if (!log.entityType) {
+                        <span class="muted">—</span>
+                      }
+                    </td>
+                    <td class="muted">{{ log.entityId ?? '—' }}</td>
+                    <td class="muted">{{ log.userId ?? '—' }}</td>
+                    <td class="muted ip-cell">{{ log.ip ?? '—' }}</td>
+                    <td class="date-cell">{{ log.createdAt | date: 'dd/MM/yy HH:mm' }}</td>
+                    <td>
+                      <button
+                        class="btn-detail"
+                        (click)="openDetail(log); $event.stopPropagation()"
+                      >
+                        Détail
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
 
         <!-- Pagination -->
-        <div class="pagination" *ngIf="totalPages() > 1">
-          <button (click)="goToPage(page() - 1)" [disabled]="page() === 1">←</button>
-          <span>Page {{ page() }} / {{ totalPages() }}</span>
-          <button (click)="goToPage(page() + 1)" [disabled]="page() === totalPages()">→</button>
-        </div>
+        @if (totalPages() > 1) {
+          <div class="pagination">
+            <button (click)="goToPage(page() - 1)" [disabled]="page() === 1">←</button>
+            <span>Page {{ page() }} / {{ totalPages() }}</span>
+            <button (click)="goToPage(page() + 1)" [disabled]="page() === totalPages()">→</button>
+          </div>
+        }
       </div>
 
       <!-- Modal détail -->
-      <div class="modal-backdrop" *ngIf="selectedLog()" (click)="closeDetail()">
-        <div class="modal" (click)="$event.stopPropagation()">
-          <div class="modal-header">
-            <div>
-              <h2>Log #{{ selectedLog()?.id }}</h2>
-              <span class="action-badge" [ngClass]="getActionClass(selectedLog()?.action ?? '')">
-                {{ selectedLog()?.action }}
-              </span>
+      @if (selectedLog()) {
+        <div class="modal-backdrop" (click)="closeDetail()">
+          <div class="modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <div>
+                <h2>Log #{{ selectedLog()?.id }}</h2>
+                <span class="action-badge" [ngClass]="getActionClass(selectedLog()?.action ?? '')">
+                  {{ selectedLog()?.action }}
+                </span>
+              </div>
+              <button class="btn-close" (click)="closeDetail()">✕</button>
             </div>
-            <button class="btn-close" (click)="closeDetail()">✕</button>
-          </div>
-
-          <div class="detail-grid" *ngIf="selectedLog() as log">
-            <div class="detail-item">
-              <span class="detail-label">Type</span>
-              <span class="detail-value">{{ log.entityType ?? '—' }}</span>
+            @if (selectedLog(); as log) {
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <span class="detail-label">Type</span>
+                  <span class="detail-value">{{ log.entityType ?? '—' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Entity ID</span>
+                  <span class="detail-value">{{ log.entityId ?? '—' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">User ID</span>
+                  <span class="detail-value">{{ log.userId ?? '—' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">IP</span>
+                  <span class="detail-value">{{ log.ip ?? '—' }}</span>
+                </div>
+                <div class="detail-item full">
+                  <span class="detail-label">User Agent</span>
+                  <span class="detail-value small">{{ log.userAgent ?? '—' }}</span>
+                </div>
+                <div class="detail-item full">
+                  <span class="detail-label">Date</span>
+                  <span class="detail-value">{{
+                    log.createdAt | date: 'dd/MM/yyyy HH:mm:ss'
+                  }}</span>
+                </div>
+              </div>
+            }
+            <!-- Metadata JSON -->
+            @if (selectedLog()?.metadata) {
+              <div class="metadata-section">
+                <div class="metadata-label">Metadata</div>
+                <pre class="metadata-json">{{ selectedLog()?.metadata | json }}</pre>
+              </div>
+            }
+            <div class="modal-footer">
+              <button class="btn-filter-from-log" (click)="filterByLog(selectedLog()!)">
+                Filtrer par cet utilisateur
+              </button>
+              <button class="btn-cancel" (click)="closeDetail()">Fermer</button>
             </div>
-            <div class="detail-item">
-              <span class="detail-label">Entity ID</span>
-              <span class="detail-value">{{ log.entityId ?? '—' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">User ID</span>
-              <span class="detail-value">{{ log.userId ?? '—' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">IP</span>
-              <span class="detail-value">{{ log.ip ?? '—' }}</span>
-            </div>
-            <div class="detail-item full">
-              <span class="detail-label">User Agent</span>
-              <span class="detail-value small">{{ log.userAgent ?? '—' }}</span>
-            </div>
-            <div class="detail-item full">
-              <span class="detail-label">Date</span>
-              <span class="detail-value">{{ log.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</span>
-            </div>
-          </div>
-
-          <!-- Metadata JSON -->
-          <div class="metadata-section" *ngIf="selectedLog()?.metadata">
-            <div class="metadata-label">Metadata</div>
-            <pre class="metadata-json">{{ selectedLog()?.metadata | json }}</pre>
-          </div>
-
-          <div class="modal-footer">
-            <button class="btn-filter-from-log" (click)="filterByLog(selectedLog()!)">
-              Filtrer par cet utilisateur
-            </button>
-            <button class="btn-cancel" (click)="closeDetail()">Fermer</button>
           </div>
         </div>
-      </div>
-
+      }
     </div>
   `,
-  styles: [`
-    .page { padding: 0; }
+  styles: [
+    `
+      .page {
+        padding: 32px 24px;
+      }
 
-    .page-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-    h1 { margin: 0 0 4px; font-size: 1.8rem; font-weight: 800; color: #111827; }
-    .subtitle { margin: 0; color: #6b7280; font-size: 0.95rem; }
+      .page-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #111827;
+      }
+      .subtitle {
+        margin: 0;
+        color: #6b7280;
+        font-size: 0.95rem;
+      }
 
-    .btn-export {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 10px 18px; border: 1.5px solid #d1d5db; border-radius: 10px;
-      background: white; color: #374151; font: inherit; font-weight: 600;
-      cursor: pointer; transition: 0.15s; white-space: nowrap;
-    }
-    .btn-export:hover:not(:disabled) { background: #f9fafb; }
-    .btn-export:disabled { opacity: 0.5; cursor: not-allowed; }
+      .btn-export {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border: 1.5px solid #d1d5db;
+        border-radius: 10px;
+        background: white;
+        color: #374151;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.15s;
+        white-space: nowrap;
+      }
+      .btn-export:hover:not(:disabled) {
+        background: #f9fafb;
+      }
+      .btn-export:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
 
-    /* Filtres */
-    .filters-card {
-      background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .filters-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: flex-end;
-    }
-    .search-input {
-      flex: 1;
-      min-width: 200px;
-      padding: 10px 14px;
-      border: 1.5px solid #d1d5db;
-      border-radius: 10px;
-      font: inherit;
-      font-size: 0.95rem;
-    }
-    .search-input:focus { outline: none; border-color: #6366f1; }
-    select {
-      padding: 10px 14px;
-      border: 1.5px solid #d1d5db;
-      border-radius: 10px;
-      font: inherit;
-      background: white;
-      color: #374151;
-      cursor: pointer;
-      min-width: 160px;
-    }
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      min-width: 120px;
-    }
-    .filter-group label {
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .filter-group input {
-      padding: 9px 12px;
-      border: 1.5px solid #d1d5db;
-      border-radius: 10px;
-      font: inherit;
-      font-size: 0.9rem;
-    }
-    .filter-group input:focus { outline: none; border-color: #6366f1; }
-    .btn-reset {
-      padding: 9px 16px;
-      border: 1.5px solid #fde68a;
-      border-radius: 10px;
-      background: #fffbeb;
-      color: #92400e;
-      font: inherit;
-      font-weight: 600;
-      cursor: pointer;
-      align-self: flex-end;
-      white-space: nowrap;
-    }
+      /* Filtres */
+      .filters-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .filters-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+      }
+      .search-input {
+        flex: 1;
+        min-width: 200px;
+        padding: 10px 14px;
+        border: 1.5px solid #d1d5db;
+        border-radius: 10px;
+        font: inherit;
+        font-size: 0.95rem;
+      }
+      .search-input:focus {
+        outline: none;
+        border-color: #6366f1;
+      }
+      select {
+        padding: 10px 14px;
+        border: 1.5px solid #d1d5db;
+        border-radius: 10px;
+        font: inherit;
+        background: white;
+        color: #374151;
+        cursor: pointer;
+        min-width: 160px;
+      }
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        min-width: 120px;
+      }
+      .filter-group label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .filter-group input {
+        padding: 9px 12px;
+        border: 1.5px solid #d1d5db;
+        border-radius: 10px;
+        font: inherit;
+        font-size: 0.9rem;
+      }
+      .filter-group input:focus {
+        outline: none;
+        border-color: #6366f1;
+      }
+      .btn-reset {
+        padding: 9px 16px;
+        border: 1.5px solid #fde68a;
+        border-radius: 10px;
+        background: #fffbeb;
+        color: #92400e;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        align-self: flex-end;
+        white-space: nowrap;
+      }
 
-    /* Table */
-    .table-card {
-      background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 16px;
-      overflow: hidden;
-    }
-    .loading-bar {
-      height: 3px;
-      background: linear-gradient(90deg, #6366f1, #8b5cf6, #6366f1);
-      background-size: 200%;
-      animation: shimmer 1.2s infinite;
-    }
-    @keyframes shimmer { 0% { background-position: -200% } 100% { background-position: 200% } }
-    .empty-state { text-align: center; color: #9ca3af; padding: 48px; margin: 0; }
-    .table-wrapper { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; }
-    thead { background: #f9fafb; }
-    th {
-      padding: 11px 14px;
-      text-align: left;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      white-space: nowrap;
-    }
-    td { padding: 12px 14px; border-top: 1px solid #f3f4f6; vertical-align: middle; }
-    tr.row-clickable { cursor: pointer; }
-    tr.row-clickable:hover td { background: #f9fafb; }
+      /* Table */
+      .table-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        overflow: hidden;
+      }
+      .loading-bar {
+        height: 3px;
+        background: linear-gradient(90deg, #6366f1, #8b5cf6, #6366f1);
+        background-size: 200%;
+        animation: shimmer 1.2s infinite;
+      }
+      @keyframes shimmer {
+        0% {
+          background-position: -200%;
+        }
+        100% {
+          background-position: 200%;
+        }
+      }
+      .empty-state {
+        text-align: center;
+        color: #9ca3af;
+        padding: 48px;
+        margin: 0;
+      }
+      .table-wrapper {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      thead {
+        background: #f9fafb;
+      }
+      th {
+        padding: 11px 14px;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+      }
+      td {
+        padding: 12px 14px;
+        border-top: 1px solid #f3f4f6;
+        vertical-align: middle;
+      }
+      tr.row-clickable {
+        cursor: pointer;
+      }
+      tr.row-clickable:hover td {
+        background: #f9fafb;
+      }
 
-    .id-cell { color: #9ca3af; font-size: 0.85rem; font-family: monospace; }
-    .muted { color: #9ca3af; font-size: 0.88rem; }
-    .ip-cell { font-family: monospace; font-size: 0.82rem; }
-    .date-cell { color: #6b7280; font-size: 0.85rem; white-space: nowrap; }
+      .id-cell {
+        color: #9ca3af;
+        font-size: 0.85rem;
+        font-family: monospace;
+      }
+      .muted {
+        color: #9ca3af;
+        font-size: 0.88rem;
+      }
+      .ip-cell {
+        font-family: monospace;
+        font-size: 0.82rem;
+      }
+      .date-cell {
+        color: #6b7280;
+        font-size: 0.85rem;
+        white-space: nowrap;
+      }
 
-    /* Action badges */
-    .action-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 3px 10px;
-      border-radius: 999px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      white-space: nowrap;
-      letter-spacing: 0.02em;
-    }
-    .action-danger { background: #fee2e2; color: #991b1b; }
-    .action-warn { background: #fef3c7; color: #92400e; }
-    .action-success { background: #dcfce7; color: #166534; }
-    .action-info { background: #dbeafe; color: #1d4ed8; }
-    .action-neutral { background: #f3f4f6; color: #374151; }
+      /* Action badges */
+      .action-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        white-space: nowrap;
+        letter-spacing: 0.02em;
+      }
+      .action-danger {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .action-warn {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .action-success {
+        background: #dcfce7;
+        color: #166534;
+      }
+      .action-info {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+      .action-neutral {
+        background: #f3f4f6;
+        color: #374151;
+      }
 
-    .entity-badge {
-      display: inline-flex;
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      background: #ede9fe;
-      color: #6d28d9;
-    }
+      .entity-badge {
+        display: inline-flex;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: #ede9fe;
+        color: #6d28d9;
+      }
 
-    .btn-detail {
-      padding: 5px 12px;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      background: white;
-      font: inherit;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      color: #374151;
-      white-space: nowrap;
-    }
-    .btn-detail:hover { background: #f9fafb; }
+      .btn-detail {
+        padding: 5px 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: white;
+        font: inherit;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: #374151;
+        white-space: nowrap;
+      }
+      .btn-detail:hover {
+        background: #f9fafb;
+      }
 
-    /* Pagination */
-    .pagination {
-      display: flex; align-items: center; justify-content: center;
-      gap: 16px; padding: 16px; border-top: 1px solid #f3f4f6;
-      color: #6b7280; font-size: 0.9rem;
-    }
-    .pagination button {
-      padding: 8px 14px; border: 1px solid #d1d5db; border-radius: 8px;
-      background: white; cursor: pointer; font: inherit;
-    }
-    .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+      /* Pagination */
+      .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        padding: 16px;
+        border-top: 1px solid #f3f4f6;
+        color: #6b7280;
+        font-size: 0.9rem;
+      }
+      .pagination button {
+        padding: 8px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: white;
+        cursor: pointer;
+        font: inherit;
+      }
+      .pagination button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
 
-    /* Modal */
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 100; padding: 16px;
-    }
-    .modal {
-      background: white; border-radius: 20px; padding: 28px;
-      width: min(560px, 100%); display: flex; flex-direction: column; gap: 20px;
-      max-height: 90vh; overflow-y: auto;
-    }
-    .modal-header {
-      display: flex; align-items: flex-start;
-      justify-content: space-between; gap: 12px;
-    }
-    .modal-header h2 { margin: 0 0 8px; font-size: 1.2rem; color: #111827; }
-    .btn-close {
-      border: 0; background: #f3f4f6; border-radius: 8px;
-      width: 32px; height: 32px; cursor: pointer; font-size: 1rem;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
+      /* Modal */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        padding: 16px;
+      }
+      .modal {
+        background: white;
+        border-radius: 20px;
+        padding: 28px;
+        width: min(560px, 100%);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      .modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .modal-header h2 {
+        margin: 0 0 8px;
+        font-size: 1.2rem;
+        color: #111827;
+      }
+      .btn-close {
+        border: 0;
+        background: #f3f4f6;
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
 
-    .detail-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-    }
-    .detail-item {
-      display: flex; flex-direction: column; gap: 4px;
-      padding: 12px; background: #f9fafb; border-radius: 10px;
-    }
-    .detail-item.full { grid-column: 1 / -1; }
-    .detail-label {
-      font-size: 0.72rem; font-weight: 700; color: #9ca3af;
-      text-transform: uppercase; letter-spacing: 0.05em;
-    }
-    .detail-value { font-size: 0.9rem; color: #111827; font-weight: 500; }
-    .detail-value.small { font-size: 0.78rem; word-break: break-all; color: #6b7280; }
+      .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 12px;
+        background: #f9fafb;
+        border-radius: 10px;
+      }
+      .detail-item.full {
+        grid-column: 1 / -1;
+      }
+      .detail-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .detail-value {
+        font-size: 0.9rem;
+        color: #111827;
+        font-weight: 500;
+      }
+      .detail-value.small {
+        font-size: 0.78rem;
+        word-break: break-all;
+        color: #6b7280;
+      }
 
-    .metadata-section { display: flex; flex-direction: column; gap: 8px; }
-    .metadata-label {
-      font-size: 0.78rem; font-weight: 700; color: #6b7280;
-      text-transform: uppercase; letter-spacing: 0.05em;
-    }
-    .metadata-json {
-      background: #0f172a; color: #a5b4fc; padding: 16px; border-radius: 12px;
-      font-size: 0.78rem; line-height: 1.6; overflow-x: auto;
-      margin: 0; white-space: pre-wrap; word-break: break-all;
-    }
+      .metadata-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .metadata-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .metadata-json {
+        background: #0f172a;
+        color: #a5b4fc;
+        padding: 16px;
+        border-radius: 12px;
+        font-size: 0.78rem;
+        line-height: 1.6;
+        overflow-x: auto;
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
 
-    .modal-footer {
-      display: flex; gap: 10px; justify-content: flex-end;
-      padding-top: 4px; border-top: 1px solid #f3f4f6;
-    }
-    .btn-cancel {
-      padding: 10px 18px; border: 1px solid #d1d5db; border-radius: 10px;
-      background: white; font: inherit; font-weight: 600; cursor: pointer;
-    }
-    .btn-filter-from-log {
-      padding: 10px 18px; border: 0; border-radius: 10px;
-      background: #ede9fe; color: #6d28d9; font: inherit;
-      font-weight: 700; cursor: pointer;
-    }
+      .modal-footer {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        padding-top: 4px;
+        border-top: 1px solid #f3f4f6;
+      }
+      .btn-cancel {
+        padding: 10px 18px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        background: white;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn-filter-from-log {
+        padding: 10px 18px;
+        border: 0;
+        border-radius: 10px;
+        background: #ede9fe;
+        color: #6d28d9;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
 
-    @media (max-width: 768px) {
-      .detail-grid { grid-template-columns: 1fr; }
-    }
-  `],
+      @media (max-width: 768px) {
+        .detail-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    `,
+  ],
 })
 export class AuditLogsAdminPageComponent implements OnInit {
   private readonly auditService = inject(AuditAdminService);
@@ -537,14 +725,23 @@ export class AuditLogsAdminPageComponent implements OnInit {
     if (this.toFilter) query.to = this.toFilter + 'T23:59:59';
 
     this.auditService.getLogs(query).subscribe({
-      next: (r) => { this.response.set(r); this.loading.set(false); },
-      error: () => { this.loading.set(false); this.toast.error('Impossible de charger les logs.'); },
+      next: (r) => {
+        this.response.set(r);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.toast.error('Impossible de charger les logs.');
+      },
     });
   }
 
   onSearchChange(): void {
     if (this.searchTimer) clearTimeout(this.searchTimer);
-    this.searchTimer = setTimeout(() => { this.page.set(1); this.loadLogs(); }, 400);
+    this.searchTimer = setTimeout(() => {
+      this.page.set(1);
+      this.loadLogs();
+    }, 400);
   }
 
   onFilterChange(): void {
@@ -558,8 +755,15 @@ export class AuditLogsAdminPageComponent implements OnInit {
   }
 
   hasActiveFilters(): boolean {
-    return !!(this.search || this.actionFilter || this.entityTypeFilter ||
-      this.userIdFilter || this.entityIdFilter || this.fromFilter || this.toFilter);
+    return !!(
+      this.search ||
+      this.actionFilter ||
+      this.entityTypeFilter ||
+      this.userIdFilter ||
+      this.entityIdFilter ||
+      this.fromFilter ||
+      this.toFilter
+    );
   }
 
   resetFilters(): void {
@@ -611,17 +815,34 @@ export class AuditLogsAdminPageComponent implements OnInit {
         URL.revokeObjectURL(url);
         this.exporting.set(false);
       },
-      error: () => { this.exporting.set(false); this.toast.error('Erreur lors de l\'export.'); },
+      error: () => {
+        this.exporting.set(false);
+        this.toast.error("Erreur lors de l'export.");
+      },
     });
   }
 
   getActionClass(action: string): string {
     if (!action) return 'action-neutral';
     const a = action.toUpperCase();
-    if (a.includes('SUSPEND') || a.includes('FAIL') || a.includes('EXPIRED') || a.includes('REFUND')) return 'action-danger';
+    if (
+      a.includes('SUSPEND') ||
+      a.includes('FAIL') ||
+      a.includes('EXPIRED') ||
+      a.includes('REFUND')
+    )
+      return 'action-danger';
     if (a.includes('EXPORT') || a.includes('ROLE')) return 'action-warn';
-    if (a.includes('LOGIN') || a.includes('REGISTER') || a.includes('VERIFIED') || a.includes('SUCCEEDED') || a.includes('CONFIRMED')) return 'action-success';
-    if (a.includes('CREATED') || a.includes('UPDATED') || a.includes('LOADED')) return 'action-info';
+    if (
+      a.includes('LOGIN') ||
+      a.includes('REGISTER') ||
+      a.includes('VERIFIED') ||
+      a.includes('SUCCEEDED') ||
+      a.includes('CONFIRMED')
+    )
+      return 'action-success';
+    if (a.includes('CREATED') || a.includes('UPDATED') || a.includes('LOADED'))
+      return 'action-info';
     return 'action-neutral';
   }
 }

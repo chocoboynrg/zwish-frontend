@@ -6,29 +6,76 @@ import { Component, Input, OnInit, OnDestroy, signal, computed } from '@angular/
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="countdown" [ngClass]="urgencyClass()" *ngIf="visible()">
-      <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
-        <path d="M10 6v4l3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-      </svg>
-      <span>{{ label() }}</span>
-    </div>
-    <div class="expired" *ngIf="!visible() && showExpired">
-      <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
-        <path d="M7 13l6-6M13 13L7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-      </svg>
-      Expiré
-    </div>
+    @if (visible()) {
+      <div class="countdown" [ngClass]="urgencyClass()">
+        <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
+          <path d="M10 6v4l3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+        <span>{{ label() }}</span>
+      </div>
+    }
+    @if (!visible() && showExpired) {
+      <div class="expired">
+        <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
+          <path
+            d="M7 13l6-6M13 13L7 7"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+          />
+        </svg>
+        Expiré
+      </div>
+    }
   `,
-  styles: [`
-    .countdown { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; }
-    .urgent { background: #fee2e2; color: #991b1b; animation: blink 1s infinite; }
-    .warning { background: #fef3c7; color: #92400e; }
-    .normal { background: #f0fdf4; color: #166534; }
-    @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.6} }
-    .expired { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; background: #f3f4f6; color: #9ca3af; }
-  `],
+  styles: [
+    `
+      .countdown {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 800;
+      }
+      .urgent {
+        background: #fee2e2;
+        color: #991b1b;
+        animation: blink 1s infinite;
+      }
+      .warning {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .normal {
+        background: #f0fdf4;
+        color: #166534;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.6;
+        }
+      }
+      .expired {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        background: #f3f4f6;
+        color: #9ca3af;
+      }
+    `,
+  ],
 })
 export class CountdownTimerComponent implements OnInit, OnDestroy {
   @Input({ required: true }) expiresAt!: string | null;
@@ -41,8 +88,8 @@ export class CountdownTimerComponent implements OnInit, OnDestroy {
 
   readonly urgencyClass = computed(() => {
     const s = this.remaining();
-    if (s <= 60) return 'countdown urgent';       // < 1 min
-    if (s <= 300) return 'countdown warning';     // < 5 min
+    if (s <= 60) return 'countdown urgent'; // < 1 min
+    if (s <= 300) return 'countdown warning'; // < 5 min
     return 'countdown normal';
   });
 
@@ -69,7 +116,10 @@ export class CountdownTimerComponent implements OnInit, OnDestroy {
   }
 
   private tick(): void {
-    if (!this.expiresAt) { this.remaining.set(0); return; }
+    if (!this.expiresAt) {
+      this.remaining.set(0);
+      return;
+    }
     const diff = Math.max(0, Math.floor((new Date(this.expiresAt).getTime() - Date.now()) / 1000));
     this.remaining.set(diff);
   }

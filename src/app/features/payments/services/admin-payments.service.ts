@@ -97,6 +97,7 @@ export interface AdminPaymentsQuery {
   limit?: number;
   status?: string;
   provider?: string;
+  search?: string;
   payerUserId?: number;
   eventId?: number;
   sortBy?: string;
@@ -114,6 +115,8 @@ export interface AdminPaymentsResponse {
     pendingCount: number;
     failedCount: number;
     refundedCount: number;
+    totalSucceededAmount?: number;
+    currencyCode?: string;
   };
 }
 
@@ -146,6 +149,7 @@ export class AdminPaymentsService {
     if (query.limit) params = params.set('limit', query.limit);
     if (query.status) params = params.set('status', query.status);
     if (query.provider) params = params.set('provider', query.provider);
+    if (query.search) params = params.set('search', query.search);
     if (query.payerUserId) params = params.set('payerUserId', query.payerUserId);
     if (query.eventId) params = params.set('eventId', query.eventId);
     if (query.sortBy) params = params.set('sortBy', query.sortBy);

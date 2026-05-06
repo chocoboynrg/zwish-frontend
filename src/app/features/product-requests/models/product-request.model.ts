@@ -28,6 +28,13 @@ export interface ProductRequestWishlist {
   description?: string | null;
 }
 
+export interface ProductRequestReviewer {
+  id: number;
+  name: string;
+  email: string;
+  platformRole?: string;
+}
+
 export interface ProductRequest {
   id: number;
   event: ProductRequestEvent;
@@ -42,6 +49,7 @@ export interface ProductRequest {
   estimatedPrice: number;
   currencyCode: string;
   status: ProductRequestStatus;
+  reviewedBy: ProductRequestReviewer | null;
   reviewComment: string | null;
   reviewedAt: string | null;
   createdAt: string;

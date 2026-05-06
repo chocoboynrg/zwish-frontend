@@ -1,301 +1,454 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { EventsService } from '../services/events.service';
-import { CreateEventPayload } from '../models/event.model';
-import { ToastService } from '../../../core/services/toast.service';
+import { FormsModule } from '@angular/forms';
+import { EventsService, AdminEventFull } from '../services/events.service';
 
-type AdminEventItem = {
-  id: number;
-  title: string;
-  eventDate: string;
-  description: string | null;
-  organizer?: {
-    id: number;
-    name: string;
-    email?: string | null;
-  } | null;
-  shareToken?: string | null;
-};
+type StatusTab = 'all' | 'upcoming' | 'past' | 'archived';
 
 @Component({
   selector: 'app-events-admin-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule],
+  imports: [CommonModule, RouterLink, FormsModule],
   template: `
     <div class="page">
+
+      <!-- Header -->
       <div class="page-header">
         <div>
           <h1>Événements</h1>
-          <p>Création et gestion des événements</p>
+          <p class="subtitle">
+            {{ filtered().length }} événement(s)
+            @if (search().trim()) { correspondant à <em>"{{ search() }}"</em> }
+          </p>
         </div>
-
-        <button type="button" (click)="loadEvents()">Actualiser</button>
+        <button class="btn-refresh" (click)="load()" [disabled]="loading()">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+            <path d="M4 10a6 6 0 1 0 1.6-4M4 6v4h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Actualiser
+        </button>
       </div>
 
-      <section class="card">
-        <h2>Créer un événement</h2>
-
-        <form [formGroup]="eventForm" (ngSubmit)="submitEvent()">
-          <div class="form-group">
-            <label>Titre</label>
-            <input type="text" formControlName="title" />
-          </div>
-
-          <div class="form-group">
-            <label>Date événement</label>
-            <input type="datetime-local" formControlName="eventDate" />
-          </div>
-
-          <div class="form-group">
-            <label>Description</label>
-            <textarea rows="3" formControlName="description"></textarea>
-          </div>
-
-          <button type="submit" [disabled]="createLoading">
-            {{ createLoading ? 'Création...' : 'Créer l’événement' }}
-          </button>
-        </form>
-
-        <p class="success" *ngIf="createSuccess">{{ createSuccess }}</p>
-        <p class="error" *ngIf="createError">{{ createError }}</p>
-      </section>
-
-      <p class="error" *ngIf="errorMessage()">{{ errorMessage() }}</p>
-      <p *ngIf="loading()">Chargement...</p>
-
-      <section class="card" *ngIf="!loading()">
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Titre</th>
-                <th>Date</th>
-                <th>Organisateur</th>
-                <th>Description</th>
-                <th>Share token</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let event of events()">
-                <td>{{ event.id }}</td>
-                <td>{{ event.title }}</td>
-                <td>{{ event.eventDate | date:'medium' }}</td>
-                <td>{{ event.organizer?.name || '—' }}</td>
-                <td>{{ event.description || '—' }}</td>
-                <td>{{ event.shareToken || '—' }}</td>
-                <td>
-                  <a [routerLink]="['/admin/events', event.id]">Voir détail</a>
-                </td>
-              </tr>
-
-              <tr *ngIf="events().length === 0">
-                <td colspan="7">Aucun événement</td>
-              </tr>
-            </tbody>
-          </table>
+      <!-- Search + tabs -->
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" class="search-icon">
+            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Rechercher par titre ou organisateur…"
+            [(ngModel)]="searchVal"
+            (ngModelChange)="search.set($event)"
+          />
+          @if (search().trim()) {
+            <button class="search-clear" (click)="search.set(''); searchVal = ''">✕</button>
+          }
         </div>
-      </section>
+        <div class="tabs">
+          @for (t of tabs; track t.value) {
+            <button
+              class="tab"
+              [class.active]="statusTab() === t.value"
+              (click)="statusTab.set(t.value)"
+            >
+              {{ t.label }}
+              <span class="tab-count">{{ getTabCount(t.value) }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Loading -->
+      @if (loading()) {
+        <div class="loading-bar"></div>
+      }
+
+      <!-- Error -->
+      @if (error() && !loading()) {
+        <div class="alert-error">{{ error() }}</div>
+      }
+
+      <!-- Empty -->
+      @if (!loading() && filtered().length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">📅</div>
+          <p>Aucun événement trouvé.</p>
+        </div>
+      }
+
+      <!-- Event cards -->
+      @if (!loading() && filtered().length > 0) {
+        <div class="events-list">
+          @for (ev of filtered(); track ev.id) {
+            <div class="event-card" [class.archived]="ev.isArchived">
+
+              <!-- Left: main info -->
+              <div class="card-left">
+                <!-- Status badge + title -->
+                <div class="card-title-row">
+                  <span class="status-badge" [ngClass]="getStatusClass(ev)">{{ getStatusLabel(ev) }}</span>
+                  <h3 class="card-title">{{ ev.title }}</h3>
+                  <span class="card-id muted">#{{ ev.id }}</span>
+                </div>
+
+                <!-- Date -->
+                <div class="card-date">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/>
+                    <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                  </svg>
+                  {{ ev.eventDate | date:'EEEE d MMMM yyyy, HH:mm' }}
+                </div>
+
+                <!-- Organizer -->
+                @if (ev.organizer) {
+                  <div class="organizer-row">
+                    <div class="org-avatar">{{ initials(ev.organizer.name) }}</div>
+                    <div class="org-info">
+                      <span class="org-name">{{ ev.organizer.name }}</span>
+                      <div class="org-contacts">
+                        <a [href]="'mailto:' + ev.organizer.email" class="contact-link email-link" (click)="$event.stopPropagation()">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                            <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/>
+                            <path d="M2 8l10 7 10-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                          </svg>
+                          {{ ev.organizer.email }}
+                        </a>
+                        @if (ev.organizer.phoneNumber) {
+                          <a [href]="'tel:' + ev.organizer.phoneNumber" class="contact-link phone-link" (click)="$event.stopPropagation()">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                              <path d="M6.6 10.8a15.2 15.2 0 006.6 6.6l2.2-2.2a1 1 0 011-.24 11.4 11.4 0 003.57.57A1 1 0 0121 16.5V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 .93c.06 1.23.28 2.43.57 3.57a1 1 0 01-.25 1L6.6 10.8z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                            </svg>
+                            {{ ev.organizer.phoneNumber }}
+                          </a>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- Right: stats + progress -->
+              <div class="card-right">
+                <!-- Stats chips -->
+                <div class="stats-row">
+                  <div class="stat-chip">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.6"/>
+                      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                    </svg>
+                    <span>{{ ev.stats.participantsCount }}</span>
+                    <span class="stat-label">participants</span>
+                  </div>
+                  <div class="stat-chip">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                      <rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/>
+                      <path d="M16 7V5a2 2 0 00-8 0v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                    </svg>
+                    <span>{{ ev.stats.itemsCount }}</span>
+                    <span class="stat-label">items</span>
+                  </div>
+                  <div class="stat-chip" [class.chip-funded]="ev.stats.fundedItemsCount > 0">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                      <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>{{ ev.stats.fundedItemsCount }}</span>
+                    <span class="stat-label">financés</span>
+                  </div>
+                </div>
+
+                <!-- Progress -->
+                @if (ev.stats.itemsCount > 0) {
+                  <div class="progress-wrap">
+                    <div class="progress-amounts">
+                      <span class="funded-amount">{{ ev.stats.totalFunded | number }} XOF</span>
+                      <span class="target-amount">/ {{ ev.stats.totalTarget | number }} XOF</span>
+                      <span class="progress-pct" [class.pct-full]="ev.stats.progressPercent === 100">
+                        {{ ev.stats.progressPercent }}%
+                      </span>
+                    </div>
+                    <div class="progress-bar">
+                      <div
+                        class="progress-fill"
+                        [style.width.%]="ev.stats.progressPercent"
+                        [class.fill-full]="ev.stats.progressPercent === 100"
+                        [class.fill-partial]="ev.stats.progressPercent > 0 && ev.stats.progressPercent < 100"
+                      ></div>
+                    </div>
+                  </div>
+                }
+
+                <a [routerLink]="['/admin/events', ev.id]" class="btn-detail">
+                  Voir le détail
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </a>
+              </div>
+
+            </div>
+          }
+        </div>
+      }
     </div>
   `,
-  styles: [
-    `
-      .page {
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-      }
+  styles: [`
+    .page { padding: 32px 24px; display: flex; flex-direction: column; gap: 20px; }
 
-      .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 16px;
-      }
+    .page-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap;
+    }
+    h1 { margin: 0 0 4px; font-size: 1.8rem; font-weight: 800; color: #111827; }
+    .subtitle { margin: 0; color: #6b7280; font-size: 0.9rem; }
+    .subtitle em { color: #111; font-style: normal; font-weight: 600; }
 
-      .page-header h1 {
-        margin: 0 0 6px;
-      }
+    .btn-refresh {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 16px; border: 1.5px solid #d1d5db; border-radius: 10px;
+      background: white; color: #374151; font: inherit; font-weight: 600;
+      font-size: 0.86rem; cursor: pointer; transition: 0.15s; white-space: nowrap;
+    }
+    .btn-refresh:hover:not(:disabled) { background: #f9fafb; }
+    .btn-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
 
-      .page-header p {
-        margin: 0;
-        color: #6b7280;
-      }
+    /* Toolbar */
+    .toolbar { display: flex; flex-direction: column; gap: 12px; }
+    .search-wrap {
+      position: relative; display: flex; align-items: center;
+      background: white; border: 1.5px solid #e5e7eb; border-radius: 12px;
+      padding: 0 14px; transition: 0.15s;
+    }
+    .search-wrap:focus-within { border-color: #111827; }
+    .search-icon { color: #9ca3af; flex-shrink: 0; }
+    .search-input {
+      flex: 1; border: 0; outline: 0; padding: 11px 10px;
+      font: inherit; font-size: 0.9rem; background: transparent;
+    }
+    .search-clear {
+      background: none; border: 0; cursor: pointer; color: #9ca3af;
+      font-size: 0.85rem; padding: 4px; border-radius: 4px;
+    }
+    .search-clear:hover { color: #374151; }
 
-      .card {
-        background: white;
-        border-radius: 16px;
-        padding: 20px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-      }
+    .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tab {
+      display: flex; align-items: center; gap: 7px;
+      padding: 8px 14px; border: 1.5px solid #e5e7eb; border-radius: 999px;
+      background: white; font: inherit; font-size: 0.82rem; font-weight: 600;
+      color: #6b7280; cursor: pointer; transition: 0.15s;
+    }
+    .tab:hover { border-color: #111827; color: #111827; }
+    .tab.active { background: #111827; border-color: #111827; color: white; }
+    .tab-count {
+      background: rgba(0,0,0,0.08); color: inherit;
+      font-size: 0.7rem; font-weight: 800;
+      padding: 1px 6px; border-radius: 999px;
+    }
+    .tab.active .tab-count { background: rgba(255,255,255,0.2); }
 
-      .form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        margin-bottom: 14px;
-      }
+    /* Loading */
+    .loading-bar {
+      height: 3px; border-radius: 2px;
+      background: linear-gradient(90deg, #111827 25%, #6b7280 50%, #111827 75%);
+      background-size: 200%; animation: shimmer 1.2s infinite;
+    }
+    @keyframes shimmer { 0% { background-position: -200%; } 100% { background-position: 200%; } }
 
-      input,
-      textarea,
-      button {
-        font: inherit;
-      }
-
-      input,
-      textarea {
-        width: 100%;
-        box-sizing: border-box;
-        border: 1px solid #d1d5db;
-        border-radius: 10px;
-        padding: 10px 12px;
-      }
-
-      button {
-        border: 0;
-        border-radius: 10px;
-        padding: 10px 14px;
-        background: #1d4ed8;
-        color: white;
-        cursor: pointer;
-      }
-
-      button:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-      }
-
-      .table-wrapper {
-        overflow-x: auto;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-
-      th,
-      td {
-        padding: 12px 10px;
-        border-bottom: 1px solid #e5e7eb;
-        text-align: left;
-        vertical-align: top;
-      }
-
-      th {
-        color: #6b7280;
-        font-size: 13px;
-      }
-
-      a {
-        color: #1d4ed8;
-        text-decoration: none;
-        font-weight: 600;
-      }
-
-      .success {
-        color: #15803d;
-      }
-
-      .error {
-        color: #b91c1c;
-      }
-    `,
-  ],
-})
-export class EventsAdminPageComponent implements OnInit {
-  private readonly fb = inject(FormBuilder);
-  private readonly eventsService = inject(EventsService);
-  private readonly toastService = inject(ToastService);
-
-  readonly events = signal<AdminEventItem[]>([]);
-  readonly loading = signal(false);
-  readonly errorMessage = signal('');
-
-  createLoading = false;
-  createSuccess = '';
-  createError = '';
-
-  readonly eventForm = this.fb.group({
-    title: ['', [Validators.required]],
-    eventDate: ['', [Validators.required]],
-    description: [''],
-  });
-
-  ngOnInit(): void {
-    this.loadEvents();
-  }
-
-  loadEvents(): void {
-    this.loading.set(true);
-    this.errorMessage.set('');
-
-    this.eventsService.getEvents().subscribe({
-      next: (events) => {
-        const normalized: AdminEventItem[] = events.map((event) => ({
-          id: event.id,
-          title: event.title,
-          eventDate: event.eventDate,
-          description: event.description ?? null,
-          organizer: event.organizer ?? null,
-          shareToken: event.shareToken ?? null,
-        }));
-
-        this.events.set(normalized);
-        this.loading.set(false);
-      },
-      error: (error) => {
-        this.errorMessage.set(
-          error?.error?.message || 'Impossible de charger les événements',
-        );
-        this.loading.set(false);
-      },
-    });
-  }
-
-  submitEvent(): void {
-    if (this.eventForm.invalid || this.createLoading) {
-      this.eventForm.markAllAsTouched();
-      return;
+    .alert-error {
+      padding: 14px 18px; background: #fef2f2; border: 1px solid #fecaca;
+      border-radius: 12px; color: #991b1b; font-size: 0.88rem;
     }
 
-    this.createLoading = true;
-    this.createSuccess = '';
-    this.createError = '';
+    .empty-state {
+      text-align: center; padding: 64px 20px;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      color: #9ca3af;
+    }
+    .empty-icon { font-size: 2.8rem; }
 
-    const raw = this.eventForm.getRawValue();
+    /* Event cards */
+    .events-list { display: flex; flex-direction: column; gap: 12px; }
 
-    const payload: CreateEventPayload = {
-      title: raw.title ?? '',
-      eventDate: this.toIsoDate(raw.eventDate ?? ''),
-      description: raw.description ?? '',
-    };
+    .event-card {
+      background: white; border: 1.5px solid #e5e7eb; border-radius: 16px;
+      padding: 20px 24px; display: grid; grid-template-columns: 1fr auto;
+      gap: 24px; align-items: start; transition: 0.15s;
+    }
+    .event-card:hover { border-color: #d1d5db; box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+    .event-card.archived { opacity: 0.65; background: #f9fafb; }
 
-    this.eventsService.createEvent(payload).subscribe({
-      next: () => {
-        this.createLoading = false;
-        this.createSuccess = 'Événement créé avec succès';
-        this.toastService.success('Événement créé.');
-        this.eventForm.reset({
-          title: '',
-          eventDate: '',
-          description: '',
-        });
-        this.loadEvents();
-      },
-      error: (error) => {
-        this.createLoading = false;
-        this.createError =
-          error?.error?.message || 'Impossible de créer l’événement';
-      },
+    /* Card left */
+    .card-left { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+    .card-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .card-title {
+      margin: 0; font-size: 1.05rem; font-weight: 800; color: #111827;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .card-id { font-size: 0.75rem; font-family: monospace; }
+
+    .status-badge {
+      padding: 3px 9px; border-radius: 999px;
+      font-size: 0.68rem; font-weight: 800; white-space: nowrap;
+      text-transform: uppercase; letter-spacing: 0.06em; flex-shrink: 0;
+    }
+    .badge-upcoming { background: #dbeafe; color: #1d4ed8; }
+    .badge-past     { background: #f3f4f6; color: #6b7280; }
+    .badge-archived { background: #fef3c7; color: #92400e; }
+
+    .card-date {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.82rem; color: #6b7280;
+    }
+    .card-date svg { flex-shrink: 0; color: #9ca3af; }
+
+    /* Organizer */
+    .organizer-row { display: flex; align-items: flex-start; gap: 10px; }
+    .org-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #f3f4f6; color: #374151;
+      font-size: 0.72rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; border: 1.5px solid #e5e7eb;
+    }
+    .org-info { display: flex; flex-direction: column; gap: 4px; }
+    .org-name { font-size: 0.88rem; font-weight: 700; color: #111827; }
+    .org-contacts { display: flex; flex-wrap: wrap; gap: 8px; }
+    .contact-link {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.78rem; font-weight: 600; text-decoration: none;
+      padding: 3px 8px; border-radius: 6px; transition: 0.12s;
+    }
+    .email-link { color: #1d4ed8; background: #eff6ff; }
+    .email-link:hover { background: #dbeafe; }
+    .phone-link { color: #166534; background: #f0fdf4; }
+    .phone-link:hover { background: #dcfce7; }
+
+    /* Card right */
+    .card-right {
+      display: flex; flex-direction: column; gap: 12px;
+      align-items: flex-end; flex-shrink: 0; min-width: 220px;
+    }
+
+    .stats-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .stat-chip {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 10px; border: 1px solid #f0f1f3; border-radius: 8px;
+      background: #f9fafb; font-size: 0.78rem; color: #374151;
+    }
+    .stat-chip span:not(.stat-label) { font-weight: 800; }
+    .stat-label { color: #9ca3af; }
+    .chip-funded { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
+    .chip-funded .stat-label { color: #15803d; }
+
+    /* Progress */
+    .progress-wrap { width: 100%; display: flex; flex-direction: column; gap: 5px; }
+    .progress-amounts { display: flex; align-items: baseline; gap: 5px; font-size: 0.82rem; }
+    .funded-amount { font-weight: 800; color: #111827; }
+    .target-amount { color: #9ca3af; }
+    .progress-pct { margin-left: auto; font-weight: 800; font-size: 0.88rem; color: #6366f1; }
+    .pct-full { color: #16a34a; }
+    .progress-bar { height: 7px; background: #f3f4f6; border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 4px; background: #e5e7eb; transition: width 0.4s; }
+    .fill-partial { background: #6366f1; }
+    .fill-full { background: #22c55e; }
+
+    .btn-detail {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border: 1.5px solid #e5e7eb; border-radius: 10px;
+      background: white; color: #374151; text-decoration: none;
+      font-size: 0.82rem; font-weight: 700; transition: 0.15s; white-space: nowrap;
+    }
+    .btn-detail:hover { border-color: #111827; color: #111827; background: #f9fafb; }
+
+    .muted { color: #9ca3af; }
+
+    @media (max-width: 760px) {
+      .event-card { grid-template-columns: 1fr; }
+      .card-right { align-items: flex-start; }
+      .stats-row { justify-content: flex-start; }
+    }
+  `],
+})
+export class EventsAdminPageComponent implements OnInit {
+  private readonly eventsService = inject(EventsService);
+
+  readonly events = signal<AdminEventFull[]>([]);
+  readonly loading = signal(false);
+  readonly error = signal('');
+  readonly statusTab = signal<StatusTab>('all');
+  readonly search = signal('');
+  searchVal = '';
+
+  readonly tabs: { label: string; value: StatusTab }[] = [
+    { label: 'Tous',     value: 'all' },
+    { label: 'À venir',  value: 'upcoming' },
+    { label: 'Passés',   value: 'past' },
+    { label: 'Archivés', value: 'archived' },
+  ];
+
+  readonly filtered = computed(() => {
+    const term = this.search().trim().toLowerCase();
+    const tab = this.statusTab();
+    const now = new Date();
+
+    return this.events().filter(ev => {
+      const matchesSearch = !term ||
+        ev.title.toLowerCase().includes(term) ||
+        (ev.organizer?.name ?? '').toLowerCase().includes(term) ||
+        (ev.organizer?.email ?? '').toLowerCase().includes(term);
+
+      const matchesTab = (() => {
+        if (tab === 'archived') return ev.isArchived;
+        if (ev.isArchived) return false;
+        if (tab === 'upcoming') return new Date(ev.eventDate) >= now;
+        if (tab === 'past')     return new Date(ev.eventDate) < now;
+        return true;
+      })();
+
+      return matchesSearch && matchesTab;
+    });
+  });
+
+  ngOnInit(): void { this.load(); }
+
+  load(): void {
+    this.loading.set(true);
+    this.error.set('');
+    this.eventsService.getAdminEventsList().subscribe({
+      next: evs => { this.events.set(evs); this.loading.set(false); },
+      error: e => { this.error.set(e?.error?.message ?? 'Erreur chargement'); this.loading.set(false); },
     });
   }
 
-  private toIsoDate(value: string): string {
-    const date = new Date(value);
-    return date.toISOString();
+  getTabCount(tab: StatusTab): number {
+    const now = new Date();
+    return this.events().filter(ev => {
+      if (tab === 'all')      return true;
+      if (tab === 'archived') return ev.isArchived;
+      if (ev.isArchived)      return false;
+      if (tab === 'upcoming') return new Date(ev.eventDate) >= now;
+      if (tab === 'past')     return new Date(ev.eventDate) < now;
+      return true;
+    }).length;
+  }
+
+  getStatusLabel(ev: AdminEventFull): string {
+    if (ev.isArchived) return 'Archivé';
+    return new Date(ev.eventDate) >= new Date() ? 'À venir' : 'Passé';
+  }
+
+  getStatusClass(ev: AdminEventFull): string {
+    if (ev.isArchived) return 'status-badge badge-archived';
+    return new Date(ev.eventDate) >= new Date() ? 'status-badge badge-upcoming' : 'status-badge badge-past';
+  }
+
+  initials(name: string): string {
+    return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   }
 }

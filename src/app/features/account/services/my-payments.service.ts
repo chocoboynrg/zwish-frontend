@@ -70,4 +70,10 @@ export class MyPaymentsService {
       .get<ApiResponse<MyPaymentItem>>(`${this.apiUrl}/payments/${id}`)
       .pipe(map((response) => response.data));
   }
+
+  mockSucceed(id: number): Observable<MyPaymentItem> {
+    return this.http
+      .post<ApiResponse<{ item: MyPaymentItem }>>(`${this.apiUrl}/payments/${id}/mock-succeed`, {})
+      .pipe(map((response) => response.data.item));
+  }
 }

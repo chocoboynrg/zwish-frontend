@@ -147,11 +147,13 @@ export class AuthService {
 
   hasAdminRole(): boolean {
     const user = this.getCurrentUserSnapshot();
-
     if (!user) return false;
+    return user.platformRole === 'ADMIN' || user.platformRole === 'SUPER_ADMIN';
+  }
 
-    return (
-      user.platformRole === 'ADMIN' || user.platformRole === 'SUPER_ADMIN'
-    );
+  hasSuperAdminRole(): boolean {
+    const user = this.getCurrentUserSnapshot();
+    if (!user) return false;
+    return user.platformRole === 'SUPER_ADMIN';
   }
 }

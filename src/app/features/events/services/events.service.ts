@@ -46,6 +46,7 @@ export interface UserEventWishlistItem {
   id: number;
   name: string;
   imageUrl?: string | null;
+  price: number | null;
   quantity: number;
   targetAmount: number;
   fundedAmount: number;
@@ -80,6 +81,7 @@ export interface CreateEventPayload {
   title: string;
   eventDate: string;
   description?: string;
+  deliveryDecider?: 'ORGANIZER' | 'CONTRIBUTOR';
 }
 
 export interface CreateEventResult {
@@ -196,4 +198,88 @@ export class EventsService {
       .delete<ApiResponse<null>>(`${this.apiUrl}/${eventId}`)
       .pipe(map(() => undefined));
   }
+
+  getAdminEventsList(): Observable<AdminEventFull[]> {
+    return this.http
+      .get<ApiResponse<{ items: AdminEventFull[] }>>(`${this.apiUrl}/admin-list`)
+      .pipe(map(r => r.data.items ?? []));
+  }
+
+  getAdminEventDetail(eventId: number): Observable<AdminEventDetail> {
+    return this.http
+      .get<ApiResponse<AdminEventDetail>>(`${this.apiUrl}/${eventId}/admin-detail`)
+      .pipe(map(r => r.data));
+  }
+}
+
+export interface AdminEventOrganizer {
+  id: number;
+  name: string;
+  email: string;
+  phoneNumber: string | null;
+  createdAt?: string;
+}
+
+export interface AdminEventFull {
+  id: number;
+  title: string;
+  eventDate: string;
+  description: string | null;
+  isArchived: boolean;
+  archivedAt: string | null;
+  shareToken: string | null;
+  organizer: AdminEventOrganizer | null;
+  stats: {
+    participantsCount: number;
+    itemsCount: number;
+    fundedItemsCount: number;
+    totalTarget: number;
+    totalFunded: number;
+    progressPercent: number;
+  };
+}
+
+export interface AdminEventDetailItem {
+  id: number;
+  name: string;
+  imageUrl: string | null;
+  quantity: number;
+  targetAmount: number;
+  fundedAmount: number;
+  remainingAmount: number;
+  fundingStatus: 'FUNDED' | 'PARTIALLY_FUNDED' | 'NOT_FUNDED';
+  progressPercent: number;
+}
+
+export interface AdminEventParticipant {
+  id: number;
+  role: string;
+  status: string;
+  joinedAt: string | null;
+  user: { id: number; name: string; email: string; phoneNumber: string | null } | null;
+}
+
+export interface AdminEventDetail {
+  event: {
+    id: number;
+    title: string;
+    eventDate: string;
+    description: string | null;
+    isArchived: boolean;
+    archivedAt: string | null;
+    shareToken: string | null;
+    organizer: AdminEventOrganizer | null;
+  };
+  summary: {
+    participantsCount: number;
+    itemsCount: number;
+    fundedItemsCount: number;
+    partiallyFundedItemsCount: number;
+    totalTarget: number;
+    totalFunded: number;
+    totalRemaining: number;
+    progressPercent: number;
+  };
+  participants: AdminEventParticipant[];
+  wishlistItems: AdminEventDetailItem[];
 }

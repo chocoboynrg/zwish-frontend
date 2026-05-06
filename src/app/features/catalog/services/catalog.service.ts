@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
+import { SKIP_GLOBAL_ERROR_TOAST } from '../../../core/http/http-context-tokens';
 
 import { environment } from '../../../../environments/environment';
 import {
@@ -15,13 +16,33 @@ import {
   CatalogProductStatus,
 } from '../models/catalog-product.model';
 import { CatalogCategory } from '../models/catalog-category.model';
+import { CatalogTheme } from '../models/catalog-theme.model';
 
 export interface CatalogProductsQuery {
   search?: string;
   categoryId?: number | null;
+  themeId?: number | null;
   page?: number;
   limit?: number;
   status?: CatalogProductStatus | null;
+}
+
+export interface CreateCatalogThemePayload {
+  name: string;
+  slug: string;
+  emoji?: string;
+  description?: string;
+  color?: string;
+  isActive?: boolean;
+}
+
+export interface UpdateCatalogThemePayload {
+  name?: string;
+  slug?: string;
+  emoji?: string;
+  description?: string;
+  color?: string;
+  isActive?: boolean;
 }
 
 export interface CreateCatalogProductPayload {
@@ -32,6 +53,10 @@ export interface CreateCatalogProductPayload {
   referenceUrl?: string;
   brand?: string;
   estimatedPrice: number;
+  realPrice?: number | null;
+  sellingPrice?: number | null;
+  promoPrice?: number | null;
+  promoEndsAt?: string | null;
   currencyCode?: string;
   status?: CatalogProductStatus;
   categoryId?: number | null;
@@ -45,9 +70,44 @@ export interface UpdateCatalogProductPayload {
   referenceUrl?: string;
   brand?: string;
   estimatedPrice?: number;
+  realPrice?: number | null;
+  sellingPrice?: number | null;
+  promoPrice?: number | null;
+  promoEndsAt?: string | null;
   currencyCode?: string;
   status?: CatalogProductStatus;
   categoryId?: number | null;
+}
+
+export interface SalesReportProduct {
+  productId: number;
+  productName: string;
+  realPrice: number | null;
+  sellingPrice: number | null;
+  currencyCode: string;
+  totalItems: number;
+  completedItems: number;
+  totalCollected: number;
+  totalRealCost: number;
+  totalGain: number;
+}
+
+export interface SalesReportMonthly {
+  month: string;
+  completedItems: number;
+  totalCollected: number;
+  totalRealCost: number;
+  totalGain: number;
+}
+
+export interface SalesReport {
+  products: SalesReportProduct[];
+  monthly: SalesReportMonthly[];
+  summary: {
+    totalCompleted: number;
+    totalCollected: number;
+    totalGain: number;
+  };
 }
 
 export interface CreateCatalogCategoryPayload {
@@ -78,6 +138,7 @@ export class CatalogService {
   private readonly baseUrl = `${environment.apiBaseUrl}/catalog`;
   private readonly productsUrl = `${this.baseUrl}/products`;
   private readonly categoriesUrl = `${this.baseUrl}/categories`;
+  private readonly themesUrl = `${this.baseUrl}/themes`;
 
   getProducts(
     search?: string,
@@ -94,7 +155,10 @@ export class CatalogService {
     }
 
     return this.http
-      .get<ApiResponse<ListPayload<CatalogProduct>>>(this.productsUrl, { params })
+      .get<ApiResponse<ListPayload<CatalogProduct>>>(this.productsUrl, {
+        params,
+        context: new HttpContext().set(SKIP_GLOBAL_ERROR_TOAST, true),
+      })
       .pipe(map((response) => response.data.items ?? []));
   }
 
@@ -107,6 +171,10 @@ export class CatalogService {
 
     if (query?.categoryId != null) {
       params = params.set('categoryId', String(query.categoryId));
+    }
+
+    if (query?.themeId != null) {
+      params = params.set('themeId', String(query.themeId));
     }
 
     if (query?.page != null) {
@@ -181,6 +249,41 @@ export class CatalogService {
       );
   }
 
+  setProductThemes(productId: number, themeIds: number[]): Observable<CatalogProduct> {
+    return this.http
+      .patch<ApiResponse<ItemPayload<CatalogProduct>>>(`${this.productsUrl}/${productId}/themes`, { themeIds })
+      .pipe(map((r) => r.data.item));
+  }
+
+  getThemes(activeOnly = false): Observable<CatalogTheme[]> {
+    let params = new HttpParams();
+    if (activeOnly) params = params.set('activeOnly', 'true');
+    return this.http
+      .get<ApiResponse<ListPayload<CatalogTheme>>>(this.themesUrl, {
+        params,
+        context: new HttpContext().set(SKIP_GLOBAL_ERROR_TOAST, true),
+      })
+      .pipe(map((r) => r.data.items ?? []));
+  }
+
+  createTheme(payload: CreateCatalogThemePayload): Observable<CatalogTheme> {
+    return this.http
+      .post<ApiResponse<ItemPayload<CatalogTheme>>>(this.themesUrl, payload)
+      .pipe(map((r) => r.data.item));
+  }
+
+  updateTheme(id: number, payload: UpdateCatalogThemePayload): Observable<CatalogTheme> {
+    return this.http
+      .patch<ApiResponse<ItemPayload<CatalogTheme>>>(`${this.themesUrl}/${id}`, payload)
+      .pipe(map((r) => r.data.item));
+  }
+
+  deleteTheme(id: number): Observable<unknown> {
+    return this.http
+      .delete<ActionResponse>(`${this.themesUrl}/${id}`)
+      .pipe(map((r) => r.data));
+  }
+
   getCategories(): Observable<CatalogCategory[]> {
     return this.http
       .get<ApiResponse<ListPayload<CatalogCategory>>>(this.categoriesUrl)
@@ -206,5 +309,25 @@ export class CatalogService {
     return this.http
       .delete<ActionResponse>(`${this.categoriesUrl}/${categoryId}`)
       .pipe(map((response) => response.data));
+  }
+
+  getSalesReport(): Observable<SalesReport> {
+    return this.http
+      .get<{ success: boolean; data: SalesReport }>(`${this.baseUrl}/sales-report`)
+      .pipe(map((r) => r.data));
+  }
+
+  getProductDeliveryOptions(productId: number): Observable<{ id: number; label: string; type: string; price: number }[]> {
+    return this.http
+      .get<{ success: boolean; data: { items: { id: number; label: string; type: string; price: number }[] } }>(
+        `${this.baseUrl}/products/${productId}/delivery-options`,
+      )
+      .pipe(map((r) => r.data.items));
+  }
+
+  setProductDeliveryOptions(productId: number, optionIds: number[]): Observable<void> {
+    return this.http
+      .patch<{ success: boolean }>(`${this.baseUrl}/products/${productId}/delivery-options`, { optionIds })
+      .pipe(map(() => undefined));
   }
 }

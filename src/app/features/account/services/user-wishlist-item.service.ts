@@ -10,6 +10,7 @@ export interface CreateWishlistItemPayload {
   price: number;
   quantity: number;
   imageUrl?: string;
+  catalogProductId?: number;
 }
 
 @Injectable({

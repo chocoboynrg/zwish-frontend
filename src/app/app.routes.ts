@@ -7,13 +7,17 @@ import { VerifyEmailPageComponent } from './features/auth/verify-email-page.comp
 import { AdminLayoutComponent } from './layout/admin-layout/admin-layout.component';
 import { AdminDashboardPageComponent } from './features/dashboard/admin-dashboard-page.component';
 import { CatalogAdminPageComponent } from './features/catalog/pages/catalog-admin-page.component';
+import { CatalogSalesAdminPageComponent } from './features/catalog/pages/catalog-sales-admin-page.component';
+import { WishlistTrackerAdminPageComponent } from './features/events/pages/wishlist-tracker-admin-page.component';
 import { ProductRequestsAdminPageComponent } from './features/product-requests/pages/product-requests-admin-page.component';
+import { ProductRequestsAssignmentPageComponent } from './features/product-requests/pages/product-requests-assignment-page.component';
 import { NotificationsPageComponent } from './features/notifications/pages/notifications-page.component';
 import { EventsAdminPageComponent } from './features/events/pages/events-admin-page.component';
 import { EventDetailAdminPageComponent } from './features/events/pages/event-detail-admin-page.component';
 
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
+import { superAdminGuard } from './core/guards/super-admin.guard';
 
 import { MyDashboardPageComponent } from './features/account/pages/my-dashboard-page.component';
 import { MyContributionsPageComponent } from './features/account/pages/my-contributions-page.component';
@@ -37,6 +41,16 @@ import { PaymentDetailAdminPageComponent } from './features/payments/pages/payme
 import { AuditLogsAdminPageComponent } from './features/audit/pages/audit-logs-admin-page.component';
 import { ReconciliationAdminPageComponent } from './features/payments/pages/reconciliation-admin-page.component';
 import { NotificationsAdminPageComponent } from './features/notifications/pages/notifications-admin-page.component';
+import { JackpotPublicPageComponent } from './features/jackpot/pages/jackpot-public-page.component';
+import { JackpotListPublicPageComponent } from './features/jackpot/pages/jackpot-list-public-page.component';
+import { MyJackpotsPageComponent } from './features/jackpot/pages/my-jackpots-page.component';
+import { JackpotAdminPageComponent } from './features/jackpot/pages/jackpot-admin-page.component';
+import { MyProfilePageComponent } from './features/account/pages/my-profile-page.component';
+import { MyReservationsPageComponent } from './features/account/pages/my-reservations-page.component';
+import { PromotionsAdminPageComponent } from './features/promotions/pages/promotions-admin-page.component';
+import { PurchaseOrdersAdminPageComponent } from './features/purchase-orders/pages/purchase-orders-admin-page.component';
+import { DeliveryOptionsAdminPageComponent } from './features/delivery-options/pages/delivery-options-admin-page.component';
+import { DeliverySelectionPageComponent } from './features/delivery-options/pages/delivery-selection-page.component';
 
 export const routes: Routes = [
   {
@@ -56,27 +70,23 @@ export const routes: Routes = [
         component: PublicCatalogPageComponent,
       },
       {
-        path: 'login',
-        component: LoginPageComponent,
-      },
-      {
-        path: 'register',
-        component: RegisterPageComponent,
-      },
-      {
-        path: 'check-email',
-        component: CheckEmailPageComponent,
-      },
-      {
-        path: 'verify-email',
-        component: VerifyEmailPageComponent,
-      },
-      {
         path: 'join/:shareToken',
         component: JoinEventPageComponent,
       },
+      { 
+        path: 'jackpot/:shareToken', 
+        component: JackpotPublicPageComponent,
+      },
+      { 
+        path: 'jackpots', 
+        component: JackpotListPublicPageComponent,
+      },
     ],
   },
+  { path: 'login', component: LoginPageComponent },
+  { path: 'register', component: RegisterPageComponent },
+  { path: 'check-email', component: CheckEmailPageComponent },
+  { path: 'verify-email', component: VerifyEmailPageComponent },
   {
     path: 'app',
     component: UserLayoutComponent,
@@ -118,6 +128,22 @@ export const routes: Routes = [
         path: 'events/:id',
         component: EventUserDetailPageComponent,
       },
+      {
+        path: 'jackpot',
+        component: MyJackpotsPageComponent,
+      },
+      {
+        path: 'profile',
+        component: MyProfilePageComponent,
+      },
+      {
+        path: 'reservations',
+        component: MyReservationsPageComponent,
+      },
+      {
+        path: 'delivery/:wishlistItemId',
+        component: DeliverySelectionPageComponent,
+      },
     ],
   },
   {
@@ -142,13 +168,27 @@ export const routes: Routes = [
         component: CatalogAdminPageComponent,
       },
       {
+        path: 'catalog-sales',
+        component: CatalogSalesAdminPageComponent,
+        canActivate: [superAdminGuard],
+      },
+      {
+        path: 'wishlist-tracker',
+        component: WishlistTrackerAdminPageComponent,
+      },
+      {
+        path: 'product-requests/assignment',
+        component: ProductRequestsAssignmentPageComponent,
+        canActivate: [superAdminGuard],
+      },
+      {
         path: 'product-requests',
         component: ProductRequestsAdminPageComponent,
       },
       {
-        path: 'admin/notifications', 
+        path: 'notifications',
         component: NotificationsAdminPageComponent,
-      }, 
+      },
       {
         path: 'users',
         component: UsersAdminPageComponent,
@@ -172,6 +212,22 @@ export const routes: Routes = [
       {
         path: 'reconciliation',
         component: ReconciliationAdminPageComponent,
+      },
+      {
+        path: 'jackpot',
+        component: JackpotAdminPageComponent,
+      },
+      {
+        path: 'promotions',
+        component: PromotionsAdminPageComponent,
+      },
+      {
+        path: 'purchase-orders',
+        component: PurchaseOrdersAdminPageComponent,
+      },
+      {
+        path: 'delivery-options',
+        component: DeliveryOptionsAdminPageComponent,
       },
     ],
   },

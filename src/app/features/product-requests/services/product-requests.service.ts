@@ -1,9 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { ApiResponse } from '../../../core/types/api-response.types';
 import {
   ProductRequest,
+  ProductRequestReviewer,
   ProductRequestStatus,
 } from '../models/product-request.model';
 
@@ -69,5 +72,17 @@ export class ProductRequestsService {
     },
   ): Observable<any> {
     return this.http.patch(`${this.baseUrl}/${id}/publish`, payload);
+  }
+
+  getAdminsList(): Observable<ProductRequestReviewer[]> {
+    return this.http
+      .get<ApiResponse<{ items: ProductRequestReviewer[] }>>(`${this.baseUrl}/admins`)
+      .pipe(map((r) => r.data.items));
+  }
+
+  reassign(id: number, adminId: number): Observable<ProductRequest> {
+    return this.http
+      .patch<ApiResponse<{ item: ProductRequest }>>(`${this.baseUrl}/${id}/reassign`, { adminId })
+      .pipe(map((r) => r.data.item));
   }
 }
