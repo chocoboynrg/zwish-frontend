@@ -5,6 +5,12 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/types/api-response.types';
 
+export interface CreatePaymentPayload {
+  contributionId: number;
+  provider: string;
+  paymentMethod: string;
+}
+
 export interface MyPaymentItem {
   id: number;
   provider: string;
@@ -67,8 +73,14 @@ export class MyPaymentsService {
 
   getOne(id: number): Observable<MyPaymentItem> {
     return this.http
-      .get<ApiResponse<MyPaymentItem>>(`${this.apiUrl}/payments/${id}`)
-      .pipe(map((response) => response.data));
+      .get<ApiResponse<{ item: MyPaymentItem }>>(`${this.apiUrl}/payments/${id}`)
+      .pipe(map((response) => response.data.item));
+  }
+
+  createPayment(payload: CreatePaymentPayload): Observable<MyPaymentItem> {
+    return this.http
+      .post<ApiResponse<{ item: MyPaymentItem }>>(`${this.apiUrl}/payments`, payload)
+      .pipe(map((response) => response.data.item));
   }
 
   mockSucceed(id: number): Observable<MyPaymentItem> {

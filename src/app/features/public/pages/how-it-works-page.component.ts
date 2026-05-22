@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-how-it-works-page',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, LucideAngularModule],
   template: `
     <!-- HERO -->
     <section class="hero">
@@ -36,36 +37,15 @@ import { RouterLink } from '@angular/router';
               </p>
               <div class="step-detail-grid">
                 <div class="step-detail">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                    />
-                  </svg>
+                  <lucide-icon name="calendar" [size]="20" color="currentColor" [strokeWidth]="1.8" />
                   <span>Choisissez la date</span>
                 </div>
                 <div class="step-detail">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                    />
-                  </svg>
+                  <lucide-icon name="users" [size]="20" color="currentColor" [strokeWidth]="1.8" />
                   <span>Invitez vos proches</span>
                 </div>
                 <div class="step-detail">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                    />
-                  </svg>
+                  <lucide-icon name="shield" [size]="20" color="currentColor" [strokeWidth]="1.8" />
                   <span>Événement privé et sécurisé</span>
                 </div>
               </div>
@@ -128,20 +108,7 @@ import { RouterLink } from '@angular/router';
               </p>
               <div class="share-visual">
                 <div class="share-link">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                    />
-                    <path
-                      d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                    />
-                  </svg>
+                  <lucide-icon name="link" [size]="16" color="currentColor" [strokeWidth]="1.8" />
                   <span>zwish.app/join/mariage-marie-2026</span>
                 </div>
                 <div class="share-chips">

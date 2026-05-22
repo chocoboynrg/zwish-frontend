@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-public-home-page',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, LucideAngularModule],
   template: `
     <!-- HERO -->
     <section class="hero">
@@ -24,15 +25,7 @@ import { RouterLink } from '@angular/router';
           <div class="hero-actions">
             <a routerLink="/app/events/new" class="btn-hero-primary">
               Créer mon événement
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M4 10h12M10 4l6 6-6 6"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
+              <lucide-icon name="arrow-right" [size]="18" color="currentColor" [strokeWidth]="2" />
             </a>
             <a routerLink="/catalog" class="btn-hero-ghost">Voir le catalogue</a>
           </div>
@@ -93,19 +86,11 @@ import { RouterLink } from '@angular/router';
             </div>
           </div>
           <div class="hero-float-1">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-                fill="#FFD700"
-              />
-            </svg>
+            <lucide-icon name="heart" [size]="20" color="#FFD700" [strokeWidth]="1.8" />
             <span>Réservé !</span>
           </div>
           <div class="hero-float-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" fill="#22c55e" />
-              <path d="M8 12l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" />
-            </svg>
+            <lucide-icon name="check-circle-2" [size]="16" color="#22c55e" [strokeWidth]="2" />
             <span>Paiement confirmé</span>
           </div>
         </div>
@@ -141,15 +126,7 @@ import { RouterLink } from '@angular/router';
         <div class="features-grid">
           <div class="feature-card-dark">
             <div class="feature-icon-wrap">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-                  stroke="#FFD700"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
+              <lucide-icon name="boxes" [size]="28" color="#FFD700" [strokeWidth]="1.8" />
             </div>
             <h3>Catalogue riche</h3>
             <p>
@@ -160,15 +137,7 @@ import { RouterLink } from '@angular/router';
           <div class="feature-card-dark featured">
             <div class="feature-badge">★ Populaire</div>
             <div class="feature-icon-wrap">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"
-                  stroke="#FFD700"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
+              <lucide-icon name="users" [size]="28" color="#FFD700" [strokeWidth]="1.8" />
             </div>
             <h3>Contributions groupées</h3>
             <p>
@@ -178,30 +147,14 @@ import { RouterLink } from '@angular/router';
           </div>
           <div class="feature-card-dark">
             <div class="feature-icon-wrap">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
-                  stroke="#FFD700"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
+              <lucide-icon name="shield" [size]="28" color="#FFD700" [strokeWidth]="1.8" />
             </div>
             <h3>Paiements sécurisés</h3>
             <p>Mobile Money, carte bancaire. Chaque centime est tracé et confirmé en temps réel.</p>
           </div>
           <div class="feature-card-dark">
             <div class="feature-icon-wrap">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M22 12h-4l-3 9L9 3l-3 9H2"
-                  stroke="#FFD700"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
+              <lucide-icon name="activity" [size]="28" color="#FFD700" [strokeWidth]="1.8" />
             </div>
             <h3>Suivi en temps réel</h3>
             <p>
@@ -261,14 +214,7 @@ import { RouterLink } from '@angular/router';
           <div class="cta-actions">
             <a routerLink="/app/events/new" class="btn-hero-primary">
               Commencer gratuitement
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M4 10h12M10 4l6 6-6 6"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="arrow-right" [size]="18" color="currentColor" [strokeWidth]="2" />
             </a>
             <a routerLink="/catalog" class="btn-hero-ghost">Explorer le catalogue</a>
           </div>

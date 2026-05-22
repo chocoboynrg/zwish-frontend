@@ -5,11 +5,12 @@ import { Router } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
 import { WishlistDrawerService } from '../features/public/services/wishlist-drawer.service';
 import { WishlistDrawerComponent } from '../features/public/components/wishlist-drawer.component';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-public-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, WishlistDrawerComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, WishlistDrawerComponent, LucideAngularModule],
   template: `
     <div class="shell">
       <header class="topnav" [class.scrolled]="scrolled()">
@@ -36,15 +37,7 @@ import { WishlistDrawerComponent } from '../features/public/components/wishlist-
                 (click)="wishlistDrawer.toggle()"
                 title="Ma wishlist"
               >
-                <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
+                <lucide-icon name="star" [size]="19" color="currentColor" [strokeWidth]="1.8" />
                 @if (wishlistDrawer.totalItems() > 0) {
                   <span class="nav-wishlist-badge">
                     {{ wishlistDrawer.totalItems() > 99 ? '99+' : wishlistDrawer.totalItems() }}
@@ -59,14 +52,7 @@ import { WishlistDrawerComponent } from '../features/public/components/wishlist-
               >
                 <div class="nav-avatar">{{ initials() }}</div>
                 <span class="nav-user-name">{{ firstName() }}</span>
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                  <path
-                    d="M5 8l5 5 5-5"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                  />
-                </svg>
+                <lucide-icon name="chevron-down" [size]="14" color="currentColor" [strokeWidth]="1.8" />
                 @if (avatarOpen()) {
                   <div class="nav-dropdown">
                     <div class="nav-dropdown-user">

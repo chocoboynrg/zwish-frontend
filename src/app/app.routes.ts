@@ -9,7 +9,7 @@ import { AdminDashboardPageComponent } from './features/dashboard/admin-dashboar
 import { CatalogAdminPageComponent } from './features/catalog/pages/catalog-admin-page.component';
 import { CatalogSalesAdminPageComponent } from './features/catalog/pages/catalog-sales-admin-page.component';
 import { WishlistTrackerAdminPageComponent } from './features/events/pages/wishlist-tracker-admin-page.component';
-import { ProductRequestsAdminPageComponent } from './features/product-requests/pages/product-requests-admin-page.component';
+import { ProductRequestsAdminPageDecoupledComponent as ProductRequestsAdminPageComponent } from './features/product-requests/pages/product-requests-admin-page.decoupled.component';
 import { ProductRequestsAssignmentPageComponent } from './features/product-requests/pages/product-requests-assignment-page.component';
 import { NotificationsPageComponent } from './features/notifications/pages/notifications-page.component';
 import { EventsAdminPageComponent } from './features/events/pages/events-admin-page.component';
@@ -45,12 +45,16 @@ import { JackpotPublicPageComponent } from './features/jackpot/pages/jackpot-pub
 import { JackpotListPublicPageComponent } from './features/jackpot/pages/jackpot-list-public-page.component';
 import { MyJackpotsPageComponent } from './features/jackpot/pages/my-jackpots-page.component';
 import { JackpotAdminPageComponent } from './features/jackpot/pages/jackpot-admin-page.component';
+import { JackpotDetailAdminPageComponent } from './features/jackpot/pages/jackpot-detail-admin-page.component';
 import { MyProfilePageComponent } from './features/account/pages/my-profile-page.component';
 import { MyReservationsPageComponent } from './features/account/pages/my-reservations-page.component';
 import { PromotionsAdminPageComponent } from './features/promotions/pages/promotions-admin-page.component';
 import { PurchaseOrdersAdminPageComponent } from './features/purchase-orders/pages/purchase-orders-admin-page.component';
 import { DeliveryOptionsAdminPageComponent } from './features/delivery-options/pages/delivery-options-admin-page.component';
 import { DeliverySelectionPageComponent } from './features/delivery-options/pages/delivery-selection-page.component';
+import { PendingDeliverySelectionsPageComponent } from './features/delivery-options/pages/pending-delivery-selections-page.component';
+import { PendingAdminDeliveryDatePageComponent } from './features/delivery-options/pages/pending-admin-delivery-date-page.component';
+import { DeliveryRulesPageComponent } from './features/delivery-options/pages/delivery-rules-page.component';
 
 export const routes: Routes = [
   {
@@ -218,6 +222,10 @@ export const routes: Routes = [
         component: JackpotAdminPageComponent,
       },
       {
+        path: 'jackpot/:id',
+        component: JackpotDetailAdminPageComponent,
+      },
+      {
         path: 'promotions',
         component: PromotionsAdminPageComponent,
       },
@@ -228,6 +236,18 @@ export const routes: Routes = [
       {
         path: 'delivery-options',
         component: DeliveryOptionsAdminPageComponent,
+      },
+      {
+        path: 'delivery-pending',
+        component: PendingDeliverySelectionsPageComponent,
+      },
+      {
+        path: 'delivery-date-pending',
+        component: PendingAdminDeliveryDatePageComponent,
+      },
+      {
+        path: 'delivery-rules/:wishlistItemId',
+        component: DeliveryRulesPageComponent,
       },
     ],
   },

@@ -1,27 +1,21 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 import { CountdownTimerComponent } from '../../../shared/components/countdown-timer/countdown-timer.component';
 import { MyPaymentItem, MyPaymentsService } from '../services/my-payments.service';
 
 @Component({
   selector: 'app-payment-detail-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, CountdownTimerComponent],
+  imports: [CommonModule, RouterLink, CountdownTimerComponent, LucideAngularModule],
   template: `
     <div class="page-wrap">
       <!-- Hero -->
       <div class="page-hero" [ngClass]="getHeroClass()">
         <div class="page-hero-inner">
           <a routerLink="/app/payments" class="back-link">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M12 4L6 10l6 6"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="chevron-left" [size]="16" color="currentColor" [strokeWidth]="1.8" />
             Mes paiements
           </a>
 
@@ -53,23 +47,7 @@ import { MyPaymentItem, MyPaymentsService } from '../services/my-payments.servic
                 </div>
                 @if (payment.contribution?.event?.title) {
                   <div class="hero-event-name">
-                    <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                      <rect
-                        x="2"
-                        y="4"
-                        width="16"
-                        height="14"
-                        rx="2"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                      />
-                      <path
-                        d="M6 2v4M14 2v4M2 9h16"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                      />
-                    </svg>
+                    <lucide-icon name="calendar" [size]="13" color="currentColor" [strokeWidth]="1.8" />
                     {{ payment.contribution!.event!.title }}
                   </div>
                 }
@@ -90,15 +68,7 @@ import { MyPaymentItem, MyPaymentsService } from '../services/my-payments.servic
             @if (payment.status === 'INITIATED' && payment.paymentUrl) {
               <div class="hero-action-bar">
                 <div class="action-bar-text">
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                    <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.4" />
-                    <path
-                      d="M10 6v5M10 13.5v.5"
-                      stroke="currentColor"
-                      stroke-width="1.7"
-                      stroke-linecap="round"
-                    />
-                  </svg>
+                  <lucide-icon name="info" [size]="16" color="currentColor" [strokeWidth]="1.8" />
                   Votre paiement est en attente de finalisation.
                   @if (payment.expiresAt) {
                     <app-countdown-timer
@@ -108,18 +78,7 @@ import { MyPaymentItem, MyPaymentsService } from '../services/my-payments.servic
                   }
                 </div>
                 <a [href]="payment.paymentUrl" target="_blank" rel="noopener" class="btn-pay-now">
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                    <rect
-                      x="1"
-                      y="5"
-                      width="18"
-                      height="13"
-                      rx="2"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                    />
-                    <path d="M1 9h18" stroke="currentColor" stroke-width="1.5" />
-                  </svg>
+                  <lucide-icon name="credit-card" [size]="16" color="currentColor" [strokeWidth]="1.8" />
                   Finaliser le paiement
                 </a>
                 @if (isMockPayment()) {
@@ -131,6 +90,21 @@ import { MyPaymentItem, MyPaymentsService } from '../services/my-payments.servic
                     }
                   </button>
                 }
+              </div>
+            }
+            @if (canRetryPayment()) {
+              <div class="hero-action-bar retry-bar">
+                <div class="action-bar-text">
+                  <lucide-icon name="refresh-cw" [size]="16" color="currentColor" [strokeWidth]="1.8" />
+                  Ce paiement peut être relancé immédiatement sans attendre l’expiration.
+                </div>
+                <button class="btn-pay-now btn-retry" (click)="retryPayment()" [disabled]="recreating">
+                  @if (recreating) {
+                    ⏳ Nouvelle tentative...
+                  } @else {
+                    Reprendre le paiement
+                  }
+                </button>
               </div>
             }
           }
@@ -301,23 +275,7 @@ import { MyPaymentItem, MyPaymentsService } from '../services/my-payments.servic
                       [routerLink]="['/app/events', payment.contribution!.event!.id]"
                       class="card-link-btn"
                     >
-                      <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                        <rect
-                          x="2"
-                          y="4"
-                          width="16"
-                          height="14"
-                          rx="2"
-                          stroke="currentColor"
-                          stroke-width="1.5"
-                        />
-                        <path
-                          d="M6 2v4M14 2v4M2 9h16"
-                          stroke="currentColor"
-                          stroke-width="1.5"
-                          stroke-linecap="round"
-                        />
-                      </svg>
+                      <lucide-icon name="calendar" [size]="14" color="currentColor" [strokeWidth]="1.8" />
                       Voir l'événement
                     </a>
                   }
@@ -347,28 +305,30 @@ import { MyPaymentItem, MyPaymentsService } from '../services/my-payments.servic
                 </a>
               </div>
             }
+            @if (canRetryPayment()) {
+              <div class="pending-banner retry-banner">
+                <div class="pending-banner-left">
+                  <div class="pending-banner-icon">↻</div>
+                  <div>
+                    <div class="pending-banner-title">Relancer le paiement</div>
+                    <div class="pending-banner-desc">
+                      Une nouvelle tentative sera créée pour la même contribution, sans attendre la fin du délai actuel.
+                    </div>
+                  </div>
+                </div>
+                <button class="btn-pay-now-large btn-retry-large" (click)="retryPayment()" [disabled]="recreating">
+                  {{ recreating ? 'Création...' : 'Créer une nouvelle tentative' }}
+                </button>
+              </div>
+            }
             <!-- Retour contributions -->
             <div class="footer-nav">
               <a routerLink="/app/contributions" class="footer-nav-link">
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                  <path
-                    d="M12 4L6 10l6 6"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                  />
-                </svg>
+                <lucide-icon name="chevron-left" [size]="14" color="currentColor" [strokeWidth]="1.8" />
                 Retour à mes contributions
               </a>
               <a routerLink="/app/payments" class="footer-nav-link">
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                  <path
-                    d="M12 4L6 10l6 6"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                  />
-                </svg>
+                <lucide-icon name="chevron-left" [size]="14" color="currentColor" [strokeWidth]="1.8" />
                 Retour à mes paiements
               </a>
             </div>
@@ -620,6 +580,22 @@ import { MyPaymentItem, MyPaymentsService } from '../services/my-payments.servic
         border-color: rgba(255,255,255,0.5);
       }
       .btn-mock-succeed:disabled { opacity: 0.5; cursor: not-allowed; }
+      .retry-bar {
+        background: rgba(239, 68, 68, 0.08);
+        border-color: rgba(239, 68, 68, 0.25);
+      }
+      .retry-banner {
+        background: #fff7ed;
+        border-color: #fdba74;
+      }
+      .btn-retry {
+        border: 0;
+        cursor: pointer;
+      }
+      .btn-retry-large {
+        border: 0;
+        cursor: pointer;
+      }
 
       /* ── BODY ── */
       .page-body {
@@ -913,12 +889,14 @@ import { MyPaymentItem, MyPaymentsService } from '../services/my-payments.servic
 })
 export class PaymentDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly myPaymentsService = inject(MyPaymentsService);
 
   loading = true;
   error = '';
   payment: MyPaymentItem | null = null;
   simulating = false;
+  recreating = false;
   private paymentId = 0;
 
   ngOnInit(): void {
@@ -950,6 +928,39 @@ export class PaymentDetailPageComponent implements OnInit {
       error: (e: any) => {
         alert(e?.error?.message ?? 'Erreur simulation');
         this.simulating = false;
+      },
+    });
+  }
+
+  canRetryPayment(): boolean {
+    return !!this.payment?.contribution?.id && this.payment.status !== 'SUCCEEDED';
+  }
+
+  retryPayment(): void {
+    if (!this.payment || this.recreating || !this.payment.contribution?.id) return;
+
+    const provider = this.payment.provider || 'FEDAPAY';
+    const paymentMethod = this.payment.paymentMethod || 'MOBILE_MONEY';
+
+    this.recreating = true;
+    this.myPaymentsService.createPayment({
+      contributionId: this.payment.contribution.id,
+      provider,
+      paymentMethod,
+    }).subscribe({
+      next: (created) => {
+        this.recreating = false;
+
+        if (created.paymentUrl) {
+          window.location.href = created.paymentUrl;
+          return;
+        }
+
+        this.router.navigate(['/app/payments', created.id]);
+      },
+      error: (e: any) => {
+        this.recreating = false;
+        alert(e?.error?.message ?? 'Impossible de recréer le paiement');
       },
     });
   }

@@ -1,11 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-verify-email-page',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, LucideAngularModule],
   template: `
     <div class="auth-centered">
       <div class="verify-card">
@@ -24,15 +25,7 @@ import { AuthService } from '../../core/services/auth.service';
         @if (!loading && success) {
           <div class="verify-state">
             <div class="state-icon state-success">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M20 6L9 17l-5-5"
-                  stroke="#22c55e"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
+              <lucide-icon name="check" [size]="36" color="#22c55e" [strokeWidth]="2" />
             </div>
             <h1>Email vérifié !</h1>
             <p>
@@ -48,14 +41,7 @@ import { AuthService } from '../../core/services/auth.service';
         @if (!loading && !success && errorMessage) {
           <div class="verify-state">
             <div class="state-icon state-error">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M18 6L6 18M6 6l12 12"
-                  stroke="#ef4444"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="x" [size]="36" color="#ef4444" [strokeWidth]="2" />
             </div>
             <h1>Lien invalide</h1>
             <p>{{ errorMessage }}</p>

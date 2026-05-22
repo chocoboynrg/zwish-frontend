@@ -2,11 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CatalogService, SalesReport, SalesReportProduct } from '../services/catalog.service';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-catalog-sales-admin-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LucideAngularModule],
   template: `
     <div class="page">
       <!-- Header -->
@@ -17,10 +18,7 @@ import { CatalogService, SalesReport, SalesReportProduct } from '../services/cat
           <p class="subtitle">Contributions sur produits catalogue terminés · Gains réalisés</p>
         </div>
         <button class="btn-refresh" (click)="load()" [disabled]="loading()">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-            <path d="M17 10A7 7 0 116.23 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M14 1v5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <lucide-icon name="refresh-cw" [size]="16" color="currentColor" [strokeWidth]="1.8" />
           Actualiser
         </button>
       </div>
@@ -34,9 +32,7 @@ import { CatalogService, SalesReport, SalesReportProduct } from '../services/cat
         <div class="kpi-grid">
           <div class="kpi-card kpi-blue">
             <div class="kpi-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <lucide-icon name="check-circle-2" [size]="22" color="currentColor" [strokeWidth]="1.8" />
             </div>
             <div class="kpi-content">
               <div class="kpi-value">{{ report()!.summary.totalCompleted }}</div>
@@ -45,10 +41,7 @@ import { CatalogService, SalesReport, SalesReportProduct } from '../services/cat
           </div>
           <div class="kpi-card kpi-purple">
             <div class="kpi-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <rect x="1" y="6" width="22" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
-                <path d="M1 10h22" stroke="currentColor" stroke-width="1.8"/>
-              </svg>
+              <lucide-icon name="credit-card" [size]="22" color="currentColor" [strokeWidth]="1.8" />
             </div>
             <div class="kpi-content">
               <div class="kpi-value">{{ report()!.summary.totalCollected | number }} <span class="kpi-currency">XOF</span></div>
@@ -57,9 +50,7 @@ import { CatalogService, SalesReport, SalesReportProduct } from '../services/cat
           </div>
           <div class="kpi-card kpi-green">
             <div class="kpi-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <lucide-icon name="dollar-sign" [size]="22" color="currentColor" [strokeWidth]="1.8" />
             </div>
             <div class="kpi-content">
               <div class="kpi-value" [class.positive]="report()!.summary.totalGain >= 0" [class.negative]="report()!.summary.totalGain < 0">
@@ -70,11 +61,7 @@ import { CatalogService, SalesReport, SalesReportProduct } from '../services/cat
           </div>
           <div class="kpi-card kpi-gray">
             <div class="kpi-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M3 3h2l.4 2M7 13h10l4-8H5.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="7" cy="17" r="2" stroke="currentColor" stroke-width="1.8"/>
-                <circle cx="17" cy="17" r="2" stroke="currentColor" stroke-width="1.8"/>
-              </svg>
+              <lucide-icon name="shopping-cart" [size]="22" color="currentColor" [strokeWidth]="1.8" />
             </div>
             <div class="kpi-content">
               <div class="kpi-value">{{ report()!.products.length }}</div>
@@ -137,9 +124,7 @@ import { CatalogService, SalesReport, SalesReportProduct } from '../services/cat
           </div>
           @if (report()!.products.length === 0) {
             <div class="empty-state">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 4h14" stroke="#d1d5db" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <lucide-icon name="shopping-cart" [size]="48" color="currentColor" [strokeWidth]="1.8" />
               <p>Aucun produit catalogue lié à des ventes terminées.</p>
               <p class="empty-hint">Les ventes apparaissent ici quand des wishlist items liés à des produits du catalogue sont entièrement financés.</p>
             </div>

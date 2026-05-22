@@ -3,11 +3,12 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { CurrentUser } from '../../core/models/current-user.model';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-login-page',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, LucideAngularModule],
   template: `
     <div class="auth-page">
       <!-- Panneau gauche décoratif -->
@@ -61,29 +62,13 @@ import { CurrentUser } from '../../core/models/current-user.model';
           <!-- Erreur / Succès -->
           @if (errorMessage) {
             <div class="alert alert-error">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
-                <path
-                  d="M10 6v5M10 13.5v.5"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="alert-circle" [size]="18" color="currentColor" [strokeWidth]="1.8" />
               {{ errorMessage }}
             </div>
           }
           @if (successMessage) {
             <div class="alert alert-success">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
-                <path
-                  d="M6.5 10l2.5 2.5 4.5-4.5"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="check-circle-2" [size]="18" color="currentColor" [strokeWidth]="1.8" />
               {{ successMessage }}
             </div>
           }
@@ -123,24 +108,10 @@ import { CurrentUser } from '../../core/models/current-user.model';
                   tabindex="-1"
                 >
                   @if (!showPassword) {
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                        stroke="currentColor"
-                        stroke-width="1.6"
-                      />
-                      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" />
-                    </svg>
+                    <lucide-icon name="eye" [size]="18" color="currentColor" [strokeWidth]="1.8" />
                   }
                   @if (showPassword) {
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"
-                        stroke="currentColor"
-                        stroke-width="1.6"
-                        stroke-linecap="round"
-                      />
-                    </svg>
+                    <lucide-icon name="eye-off" [size]="18" color="currentColor" [strokeWidth]="1.8" />
                   }
                 </button>
               </div>
@@ -538,7 +509,7 @@ export class LoginPageComponent implements OnInit {
       next: (response) => {
         const user = response.user;
         this.loading = false;
-        const isVerified = (user as any).emailVerified === true;
+        const isVerified = user.emailVerified === true;
         if (!isVerified) {
           this.router.navigate(['/check-email'], {
             queryParams: { email: user.email, from: 'login' },
@@ -556,9 +527,9 @@ export class LoginPageComponent implements OnInit {
         }
         this.router.navigateByUrl('/app');
       },
-      error: (err: any) => {
+      error: (err: unknown) => {
         this.loading = false;
-        const msg = err?.error?.message ?? 'Connexion impossible';
+        const msg = this.extractErrorMessage(err, 'Connexion impossible');
         this.errorMessage = msg;
         const lower = msg.toLowerCase();
         if (lower.includes('vérifié') || lower.includes('verifie') || lower.includes('verify')) {
@@ -579,9 +550,22 @@ export class LoginPageComponent implements OnInit {
         this.successMessage = 'Email de vérification envoyé !';
         this.showResend = false;
       },
-      error: (err: any) => {
-        this.errorMessage = err?.error?.message ?? "Erreur lors de l'envoi.";
+      error: (err: unknown) => {
+        this.errorMessage = this.extractErrorMessage(err, "Erreur lors de l'envoi.");
       },
     });
+  }
+
+  private extractErrorMessage(error: unknown, fallback: string): string {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'error' in error &&
+      typeof (error as { error?: { message?: unknown } }).error?.message === 'string'
+    ) {
+      return (error as { error: { message: string } }).error.message;
+    }
+
+    return fallback;
   }
 }

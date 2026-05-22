@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { LucideAngularModule } from 'lucide-angular';
 import {
   WishlistItem,
   formatAmount,
@@ -7,10 +8,12 @@ import {
   getSuggestedAmounts,
 } from './event-ui.utils';
 
+type PaymentMethodChoice = 'MOBILE_MONEY' | 'BANK_TRANSFER' | 'CARD';
+
 @Component({
   selector: 'app-event-contribution-modal',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, LucideAngularModule],
   template: `
     @if (show) {
       <div class="overlay" (click)="closeIfAllowed()"></div>
@@ -26,14 +29,7 @@ import {
               <div class="modal-title">{{ item.name }}</div>
             </div>
             <button class="btn-close" (click)="closeIfAllowed()" [disabled]="contributionLoading">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M4 4l12 12M16 4L4 16"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="x" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             </button>
           </div>
           <!-- État financier de l'item -->
@@ -60,15 +56,7 @@ import {
           <!-- Erreur -->
           @if (contributionError) {
             <div class="alert-error">
-              <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-                <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.4" />
-                <path
-                  d="M10 6v5M10 13.5v.5"
-                  stroke="currentColor"
-                  stroke-width="1.7"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="alert-circle" [size]="15" color="currentColor" [strokeWidth]="1.8" />
               {{ contributionError }}
             </div>
           }
@@ -113,13 +101,7 @@ import {
               <!-- Preview reste après contribution -->
               @if (contributionAmount && contributionAmount > 0) {
                 <div class="amount-preview">
-                  <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M10 2l2 6h6l-5 3.5 2 6L10 14l-5 3.5 2-6L2 8h6L10 2z"
-                      stroke="currentColor"
-                      stroke-width="1.3"
-                    />
-                  </svg>
+                  <lucide-icon name="zap" [size]="13" color="currentColor" [strokeWidth]="1.8" />
                   Reste après votre contribution :
                   <strong>{{ formatAmount(getRemaining()) }}</strong>
                 </div>
@@ -154,6 +136,36 @@ import {
                 </div>
               </div>
             </label>
+            <!-- Moyen de paiement -->
+            <div class="field-group">
+              <div class="field-label">Moyen de paiement</div>
+              <div class="payment-methods">
+                <button
+                  type="button"
+                  class="method-chip"
+                  [class.active]="paymentMethod === 'MOBILE_MONEY'"
+                  (click)="paymentMethodChange.emit('MOBILE_MONEY')"
+                >
+                  Mobile Money
+                </button>
+                <button
+                  type="button"
+                  class="method-chip"
+                  [class.active]="paymentMethod === 'BANK_TRANSFER'"
+                  (click)="paymentMethodChange.emit('BANK_TRANSFER')"
+                >
+                  Orange Money
+                </button>
+                <button
+                  type="button"
+                  class="method-chip"
+                  [class.active]="paymentMethod === 'CARD'"
+                  (click)="paymentMethodChange.emit('CARD')"
+                >
+                  Carte bancaire
+                </button>
+              </div>
+            </div>
             <!-- Récap -->
             <div class="recap-card">
               <div class="recap-row">
@@ -188,14 +200,7 @@ import {
             >
               @if (!contributionLoading) {
                 <span>
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M4 10h12M10 4l6 6-6 6"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                    />
-                  </svg>
+                  <lucide-icon name="arrow-right" [size]="16" color="currentColor" [strokeWidth]="2" />
                   Confirmer la contribution
                 </span>
               }
@@ -539,6 +544,28 @@ import {
         margin-top: 1px;
       }
 
+      .payment-methods {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .method-chip {
+        border: 1px solid #d1d5db;
+        background: #fff;
+        color: #334155;
+        border-radius: 999px;
+        padding: 8px 12px;
+        font: inherit;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .method-chip.active {
+        background: #111827;
+        color: #fff;
+        border-color: #111827;
+      }
+
       /* Récap */
       .recap-card {
         background: #f9fafb;
@@ -670,6 +697,7 @@ export class EventContributionModalComponent {
   @Input() contributionAmount: number | null = null;
   @Input() contributionMessage = '';
   @Input() contributionAnonymous = false;
+  @Input() paymentMethod: PaymentMethodChoice = 'MOBILE_MONEY';
   @Input() contributionLoading = false;
   @Input() contributionError = '';
 
@@ -677,6 +705,7 @@ export class EventContributionModalComponent {
   @Output() contributionAmountChange = new EventEmitter<number | null>();
   @Output() contributionMessageChange = new EventEmitter<string>();
   @Output() contributionAnonymousChange = new EventEmitter<boolean>();
+  @Output() paymentMethodChange = new EventEmitter<PaymentMethodChoice>();
   @Output() submit = new EventEmitter<number>();
 
   readonly formatAmount = formatAmount;

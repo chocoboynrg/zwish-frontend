@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ProductRequestsService } from '../services/product-requests.service';
 import { ProductRequest, ProductRequestStatus } from '../models/product-request.model';
 import { ToastService } from '../../../core/services/toast.service';
+import { LucideAngularModule } from 'lucide-angular';
+import { ProductRequestFormPanelComponent } from '../components/product-request-form-panel.component';
 
 const STATUS_META: Record<
   string,
@@ -65,7 +67,7 @@ type Filter = 'ALL' | ProductRequestStatus;
 @Component({
   selector: 'app-product-requests-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, RouterLink, LucideAngularModule, ProductRequestFormPanelComponent],
   template: `
     <div class="page-wrap">
       <!-- ══ HERO ══ -->
@@ -73,14 +75,7 @@ type Filter = 'ALL' | ProductRequestStatus;
         <div class="hero-inner">
           <div class="hero-left">
             <a class="back-link" [routerLink]="eventId ? ['/app/events', eventId] : '/app/events'">
-              <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M12 4L6 10l6 6"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="arrow-left" [size]="15" color="currentColor" [strokeWidth]="1.8" />
               Retour à l'événement
             </a>
             <div class="eyebrow">Wishlist · Demandes produit</div>
@@ -116,15 +111,7 @@ type Filter = 'ALL' | ProductRequestStatus;
         <!-- Pas de wishlist -->
         @if (!wishlistId) {
           <div class="alert-info">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.4" />
-              <path
-                d="M10 6v5M10 13.5v.5"
-                stroke="currentColor"
-                stroke-width="1.7"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="info" [size]="16" color="currentColor" [strokeWidth]="1.8" />
             Ouvrez cette page depuis un événement pour accéder aux demandes produit.
           </div>
         }
@@ -142,14 +129,7 @@ type Filter = 'ALL' | ProductRequestStatus;
                   }
                 </div>
                 <button class="btn-new" (click)="openForm()">
-                  <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M10 4v12M4 10h12"
-                      stroke="currentColor"
-                      stroke-width="2.2"
-                      stroke-linecap="round"
-                    />
-                  </svg>
+                  <lucide-icon name="plus" [size]="13" color="currentColor" [strokeWidth]="1.8" />
                   Nouvelle demande
                 </button>
               </div>
@@ -181,14 +161,7 @@ type Filter = 'ALL' | ProductRequestStatus;
                   <div class="empty-icon">📦</div>
                   <div>Aucune demande{{ activeFilter() !== 'ALL' ? ' avec ce statut' : '' }}.</div>
                   <button class="btn-empty-new" (click)="openForm()">
-                    <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                      <path
-                        d="M10 4v12M4 10h12"
-                        stroke="currentColor"
-                        stroke-width="2.2"
-                        stroke-linecap="round"
-                      />
-                    </svg>
+                    <lucide-icon name="plus" [size]="13" color="currentColor" [strokeWidth]="1.8" />
                     Faire ma première demande
                   </button>
                 </div>
@@ -231,164 +204,13 @@ type Filter = 'ALL' | ProductRequestStatus;
             <div class="detail-col">
               <!-- FORMULAIRE -->
               @if (showForm()) {
-                <div class="form-panel">
-                  <div class="panel-header">
-                    <div class="panel-title">
-                      <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                        <path
-                          d="M10 4v12M4 10h12"
-                          stroke="currentColor"
-                          stroke-width="2.2"
-                          stroke-linecap="round"
-                        />
-                      </svg>
-                      Nouvelle demande
-                    </div>
-                    <button class="panel-close" (click)="closeForm()">
-                      <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                        <path
-                          d="M4 4l12 12M16 4L4 16"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linecap="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                  @if (submitError()) {
-                    <div class="form-error">
-                      <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                        <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.4" />
-                        <path
-                          d="M10 6v5M10 13.5v.5"
-                          stroke="currentColor"
-                          stroke-width="1.7"
-                          stroke-linecap="round"
-                        />
-                      </svg>
-                      {{ submitError() }}
-                    </div>
-                  }
-                  <form [formGroup]="form" (ngSubmit)="submit()" class="form-body" novalidate>
-                    <div class="field">
-                      <label class="field-label">Nom du produit <span class="req">*</span></label>
-                      <input
-                        type="text"
-                        formControlName="name"
-                        placeholder="Ex : PlayStation 5"
-                        [class.invalid]="isInvalid('name')"
-                        maxlength="150"
-                      />
-                      <div class="field-footer">
-                        @if (isInvalid('name')) {
-                          <span class="field-err">Obligatoire.</span>
-                        }
-                        <span class="char-count"
-                          >{{ form.get('name')?.value?.length ?? 0 }}/150</span
-                        >
-                      </div>
-                    </div>
-                    <div class="field">
-                      <label class="field-label">Prix estimé <span class="req">*</span></label>
-                      <div class="price-wrap">
-                        <input
-                          type="number"
-                          formControlName="estimatedPrice"
-                          placeholder="350 000"
-                          min="1"
-                          [class.invalid]="isInvalid('estimatedPrice')"
-                        />
-                        <span class="price-suffix">XOF</span>
-                      </div>
-                      @if (isInvalid('estimatedPrice')) {
-                        <span class="field-err">Prix obligatoire (min 1).</span>
-                      }
-                    </div>
-                    <div class="field">
-                      <label class="field-label"
-                        >Description <span class="opt">— optionnel</span></label
-                      >
-                      <textarea
-                        formControlName="description"
-                        rows="3"
-                        placeholder="Couleur, taille, version, caractéristiques..."
-                        maxlength="500"
-                      ></textarea>
-                      <div class="field-footer justify-end">
-                        <span class="char-count"
-                          >{{ form.get('description')?.value?.length ?? 0 }}/500</span
-                        >
-                      </div>
-                    </div>
-                    <div class="field">
-                      <label class="field-label">
-                        <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-                          <path
-                            d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                          />
-                          <path
-                            d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                          />
-                        </svg>
-                        Lien de référence <span class="opt">— optionnel</span>
-                      </label>
-                      <input
-                        type="url"
-                        formControlName="referenceUrl"
-                        placeholder="https://jumia.ci/..."
-                      />
-                      <span class="field-hint">Jumia, Amazon, site officiel...</span>
-                    </div>
-                    <div class="field">
-                      <label class="field-label"
-                        >URL image <span class="opt">— optionnel</span></label
-                      >
-                      <input type="url" formControlName="imageUrl" placeholder="https://..." />
-                      @if (form.get('imageUrl')?.value?.trim()) {
-                        <div class="img-preview">
-                          <img
-                            [src]="form.get('imageUrl')!.value"
-                            alt="Aperçu"
-                            (error)="onImgError($event)"
-                          />
-                        </div>
-                      }
-                    </div>
-                    <div class="form-actions">
-                      <button type="button" class="btn-cancel" (click)="closeForm()">
-                        Annuler
-                      </button>
-                      <button
-                        type="submit"
-                        class="btn-submit"
-                        [disabled]="submitLoading() || form.invalid"
-                      >
-                        @if (!submitLoading()) {
-                          <span>
-                            <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                              <path
-                                d="M4 10h12M10 4l6 6-6 6"
-                                stroke="currentColor"
-                                stroke-width="1.8"
-                                stroke-linecap="round"
-                              />
-                            </svg>
-                            Envoyer
-                          </span>
-                        }
-                        @if (submitLoading()) {
-                          <span class="dots"><span></span><span></span><span></span></span>
-                        }
-                      </button>
-                    </div>
-                  </form>
-                </div>
+                <app-product-request-form-panel
+                  [form]="form"
+                  [submitLoading]="submitLoading()"
+                  [submitError]="submitError()"
+                  (closed)="closeForm()"
+                  (submitRequested)="submit()"
+                />
               }
               <!-- DÉTAIL DEMANDE -->
               @if (!showForm() && selected(); as r) {
@@ -396,14 +218,7 @@ type Filter = 'ALL' | ProductRequestStatus;
                   <div class="panel-header">
                     <div class="panel-title">Détail de la demande</div>
                     <button class="panel-close" (click)="selected.set(null)">
-                      <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                        <path
-                          d="M4 4l12 12M16 4L4 16"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linecap="round"
-                        />
-                      </svg>
+                      <lucide-icon name="x" [size]="16" color="currentColor" [strokeWidth]="1.8" />
                     </button>
                   </div>
                   <!-- Status banner -->
@@ -456,14 +271,7 @@ type Filter = 'ALL' | ProductRequestStatus;
                     @if (r.reviewComment) {
                       <div class="detail-section">
                         <div class="ds-label">
-                          <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-                            <path
-                              d="M17 2H3a1 1 0 00-1 1v10a1 1 0 001 1h10l4 4V3a1 1 0 00-1-1z"
-                              stroke="currentColor"
-                              stroke-width="1.5"
-                              stroke-linecap="round"
-                            />
-                          </svg>
+                          <lucide-icon name="message-square" [size]="12" color="currentColor" [strokeWidth]="1.8" />
                           Commentaire de l'équipe
                         </div>
                         <div class="ds-comment">{{ r.reviewComment }}</div>
@@ -498,20 +306,7 @@ type Filter = 'ALL' | ProductRequestStatus;
                         rel="noopener"
                         class="detail-ref-link"
                       >
-                        <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                          <path
-                            d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                          />
-                          <path
-                            d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                          />
-                        </svg>
+                        <lucide-icon name="link" [size]="13" color="currentColor" [strokeWidth]="1.8" />
                         Voir la référence produit
                       </a>
                     }
@@ -525,14 +320,7 @@ type Filter = 'ALL' | ProductRequestStatus;
                   <div class="placeholder-title">Sélectionnez une demande</div>
                   <p>Cliquez sur une demande pour voir son détail, ou créez-en une nouvelle.</p>
                   <button class="btn-new-lg" (click)="openForm()">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                      <path
-                        d="M10 4v12M4 10h12"
-                        stroke="currentColor"
-                        stroke-width="2.2"
-                        stroke-linecap="round"
-                      />
-                    </svg>
+                    <lucide-icon name="plus" [size]="16" color="currentColor" [strokeWidth]="1.8" />
                     Faire une demande
                   </button>
                 </div>
@@ -553,7 +341,6 @@ type Filter = 'ALL' | ProductRequestStatus;
         min-height: calc(100vh - 64px);
       }
 
-      /* HERO */
       .page-hero {
         background: #000;
         padding: 40px 0;
@@ -633,7 +420,6 @@ type Filter = 'ALL' | ProductRequestStatus;
         margin: 0 20px;
       }
 
-      /* BODY */
       .page-body {
         max-width: 1280px;
         margin: 0 auto;
@@ -662,7 +448,6 @@ type Filter = 'ALL' | ProductRequestStatus;
         font-size: 0.88rem;
       }
 
-      /* LAYOUT 2 COLONNES */
       .two-col {
         display: grid;
         grid-template-columns: 320px 1fr;
@@ -670,7 +455,6 @@ type Filter = 'ALL' | ProductRequestStatus;
         align-items: start;
       }
 
-      /* ── COLONNE GAUCHE ── */
       .list-col {
         background: white;
         border: 1.5px solid #f3f4f6;
@@ -918,14 +702,11 @@ type Filter = 'ALL' | ProductRequestStatus;
         color: #6d28d9;
       }
 
-      /* ── COLONNE DROITE ── */
       .detail-col {
         position: sticky;
         top: 88px;
       }
 
-      /* Panel header commun */
-      .form-panel,
       .detail-panel,
       .placeholder-panel {
         background: white;
@@ -965,208 +746,6 @@ type Filter = 'ALL' | ProductRequestStatus;
         color: #111;
       }
 
-      /* Formulaire */
-      .form-error {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 20px;
-        background: #fef2f2;
-        border-bottom: 1px solid #fecaca;
-        font-size: 0.82rem;
-        color: #991b1b;
-      }
-      .form-body {
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-      .field {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-      }
-      .field-label {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 0.8rem;
-        font-weight: 700;
-        color: #374151;
-      }
-      .req {
-        color: #ef4444;
-      }
-      .opt {
-        font-weight: 500;
-        color: #9ca3af;
-      }
-      input[type='text'],
-      input[type='number'],
-      input[type='url'] {
-        padding: 10px 13px;
-        border: 1.5px solid #e5e7eb;
-        border-radius: 10px;
-        font: inherit;
-        font-size: 0.88rem;
-        outline: 0;
-        transition: 0.2s;
-        background: #f9fafb;
-        box-sizing: border-box;
-        width: 100%;
-      }
-      input:focus {
-        border-color: #6d28d9;
-        background: white;
-      }
-      input.invalid {
-        border-color: #ef4444;
-      }
-      textarea {
-        padding: 10px 13px;
-        border: 1.5px solid #e5e7eb;
-        border-radius: 10px;
-        font: inherit;
-        font-size: 0.85rem;
-        resize: vertical;
-        outline: 0;
-        transition: 0.2s;
-        background: #f9fafb;
-        box-sizing: border-box;
-        width: 100%;
-      }
-      textarea:focus {
-        border-color: #6d28d9;
-        background: white;
-      }
-      .price-wrap {
-        position: relative;
-      }
-      .price-wrap input {
-        padding-right: 50px;
-      }
-      .price-suffix {
-        position: absolute;
-        right: 11px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 0.72rem;
-        font-weight: 700;
-        color: #9ca3af;
-        pointer-events: none;
-      }
-      .field-footer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .justify-end {
-        justify-content: flex-end;
-      }
-      .field-err {
-        font-size: 0.72rem;
-        color: #ef4444;
-      }
-      .field-hint {
-        font-size: 0.72rem;
-        color: #9ca3af;
-      }
-      .char-count {
-        font-size: 0.68rem;
-        color: #9ca3af;
-      }
-      .img-preview {
-        width: 64px;
-        height: 64px;
-        border-radius: 8px;
-        overflow: hidden;
-        border: 1px solid #e5e7eb;
-        margin-top: 4px;
-      }
-      .img-preview img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-      .form-actions {
-        display: flex;
-        gap: 8px;
-        justify-content: flex-end;
-        padding-top: 4px;
-        border-top: 1px solid #f3f4f6;
-        margin-top: 4px;
-      }
-      .btn-cancel {
-        padding: 9px 16px;
-        border: 1.5px solid #e5e7eb;
-        border-radius: 9px;
-        background: white;
-        color: #6b7280;
-        font: inherit;
-        font-size: 0.85rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: 0.15s;
-      }
-      .btn-cancel:hover {
-        border-color: #111;
-        color: #111;
-      }
-      .btn-submit {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 10px 20px;
-        border: 0;
-        border-radius: 9px;
-        background: #6d28d9;
-        color: white;
-        font: inherit;
-        font-size: 0.88rem;
-        font-weight: 800;
-        cursor: pointer;
-        transition: 0.2s;
-      }
-      .btn-submit:hover:not(:disabled) {
-        background: #5b21b6;
-      }
-      .btn-submit:disabled {
-        background: #f3f4f6;
-        color: #9ca3af;
-        cursor: not-allowed;
-      }
-      .dots {
-        display: flex;
-        gap: 4px;
-      }
-      .dots span {
-        width: 5px;
-        height: 5px;
-        border-radius: 50%;
-        background: #9ca3af;
-        animation: bounce 1.2s infinite;
-      }
-      .dots span:nth-child(2) {
-        animation-delay: 0.2s;
-      }
-      .dots span:nth-child(3) {
-        animation-delay: 0.4s;
-      }
-      @keyframes bounce {
-        0%,
-        80%,
-        100% {
-          transform: scale(0.7);
-          opacity: 0.4;
-        }
-        40% {
-          transform: scale(1.1);
-          opacity: 1;
-        }
-      }
-
-      /* Détail */
       .status-banner {
         display: flex;
         align-items: center;
@@ -1335,7 +914,6 @@ type Filter = 'ALL' | ProductRequestStatus;
         color: #111;
       }
 
-      /* Placeholder */
       .placeholder-panel {
         display: flex;
         flex-direction: column;
@@ -1476,11 +1054,6 @@ export class ProductRequestsPageComponent implements OnInit {
     this.showForm.set(false);
   }
 
-  isInvalid(field: string): boolean {
-    const c = this.form.get(field);
-    return !!(c?.invalid && c.touched);
-  }
-
   submit(): void {
     if (this.form.invalid || this.submitLoading() || !this.wishlistId) {
       this.form.markAllAsTouched();
@@ -1506,7 +1079,7 @@ export class ProductRequestsPageComponent implements OnInit {
           this.form.reset();
           this.showForm.set(false);
           this.load();
-          this.selected.set(created as any);
+          this.selected.set(created);
         },
         error: (err: any) => {
           this.submitLoading.set(false);

@@ -3,6 +3,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { LucideAngularModule } from 'lucide-angular';
 import { JackpotService } from '../services/jackpot.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { PURPOSE_CATEGORIES, SUGGESTED_AMOUNTS } from '../models/jackpot.model';
@@ -10,7 +11,7 @@ import { PURPOSE_CATEGORIES, SUGGESTED_AMOUNTS } from '../models/jackpot.model';
 @Component({
   selector: 'app-jackpot-request-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
   template: `
     @if (show) {
       <div class="overlay" (click)="closeIfIdle()"></div>
@@ -26,27 +27,12 @@ import { PURPOSE_CATEGORIES, SUGGESTED_AMOUNTS } from '../models/jackpot.model';
               <div class="modal-title">Demander une jackpot</div>
             </div>
             <button class="btn-close" (click)="closeIfIdle()" [disabled]="loading()">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M4 4l12 12M16 4L4 16"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="x" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             </button>
           </div>
           <!-- Info -->
           <div class="modal-info">
-            <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.4" />
-              <path
-                d="M10 6v5M10 13.5v.5"
-                stroke="currentColor"
-                stroke-width="1.7"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="info" [size]="15" color="currentColor" [strokeWidth]="1.8" />
             Votre demande sera examinée par notre équipe sous 24h. Une fois validée, les invités de
             l'événement pourront contribuer librement.
           </div>
@@ -282,14 +268,7 @@ import { PURPOSE_CATEGORIES, SUGGESTED_AMOUNTS } from '../models/jackpot.model';
                   >
                     @if (!loading()) {
                       <span>
-                        <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-                          <path
-                            d="M4 10h12M10 4l6 6-6 6"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                          />
-                        </svg>
+                        <lucide-icon name="arrow-right" [size]="15" color="currentColor" [strokeWidth]="1.8" />
                         Soumettre la demande
                       </span>
                     }

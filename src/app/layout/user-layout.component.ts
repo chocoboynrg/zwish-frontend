@@ -7,11 +7,12 @@ import { AuthService } from '../core/services/auth.service';
 import { NotificationCenterService } from '../features/notifications/services/notification-center.service';
 import { NotificationsService } from '../features/notifications/services/notifications.service';
 import { AppNotification } from '../features/notifications/models/notification.model';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-user-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule],
   template: `
     <div class="shell">
       <!-- TOPBAR -->
@@ -27,106 +28,23 @@ import { AppNotification } from '../features/notifications/models/notification.m
               routerLinkActive="active"
               [routerLinkActiveOptions]="{ exact: true }"
             >
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                <rect
-                  x="2"
-                  y="2"
-                  width="7"
-                  height="7"
-                  rx="1"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                />
-                <rect
-                  x="11"
-                  y="2"
-                  width="7"
-                  height="7"
-                  rx="1"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                />
-                <rect
-                  x="2"
-                  y="11"
-                  width="7"
-                  height="7"
-                  rx="1"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                />
-                <rect
-                  x="11"
-                  y="11"
-                  width="7"
-                  height="7"
-                  rx="1"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                />
-              </svg>
+              <lucide-icon name="home" [size]="16" color="currentColor" [strokeWidth]="1.8" />
               Dashboard
             </a>
             <a routerLink="/app/events" routerLinkActive="active">
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                <rect
-                  x="2"
-                  y="4"
-                  width="16"
-                  height="14"
-                  rx="2"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                />
-                <path
-                  d="M6 2v4M14 2v4M2 9h16"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="calendar" [size]="16" color="currentColor" [strokeWidth]="1.8" />
               Mes événements
             </a>
             <a routerLink="/app/contributions" routerLinkActive="active">
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M10 2l2.39 4.84L18 7.64l-4 3.9.94 5.5L10 14.27l-4.94 2.77.94-5.5-4-3.9 5.61-.8L10 2z"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
+              <lucide-icon name="star" [size]="16" color="currentColor" [strokeWidth]="1.8" />
               Contributions
             </a>
             <a routerLink="/app/jackpot" routerLinkActive="active">
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M10 2c0 0-7 3.5-7 9a7 7 0 0014 0c0-5.5-7-9-7-9z"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M10 8v4M8 10h4"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="package" [size]="16" color="currentColor" [strokeWidth]="1.8" />
               Mes cagnottes
             </a>
             <a routerLink="/catalog" routerLinkActive="active">
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 4h14"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
+              <lucide-icon name="package" [size]="16" color="currentColor" [strokeWidth]="1.8" />
               Catalogue
             </a>
           </nav>
@@ -140,14 +58,7 @@ import { AppNotification } from '../features/notifications/models/notification.m
                 (click)="toggleNotif()"
                 [class.active]="notifOpen()"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                  />
-                </svg>
+                <lucide-icon name="bell" [size]="20" color="currentColor" [strokeWidth]="1.8" />
                 @if (unreadCount() > 0) {
                   <span class="notif-badge">{{ unreadCount() > 9 ? '9+' : unreadCount() }}</span>
                 }
@@ -192,8 +103,7 @@ import { AppNotification } from '../features/notifications/models/notification.m
                             </div>
                             @if (n.body) {
                               <div class="notif-preview-text">
-                                {{ n.body | slice: 0 : 80
-                                }}{{ (n.body?.length ?? 0) > 80 ? '…' : '' }}
+                                {{ n.body | slice: 0 : 80 }}{{ n.body.length > 80 ? '…' : '' }}
                               </div>
                             }
                             <div class="notif-preview-date">
@@ -223,14 +133,7 @@ import { AppNotification } from '../features/notifications/models/notification.m
 
             <!-- Créer un événement -->
             <a routerLink="/app/events/new" class="btn-new-event">
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M10 4v12M4 10h12"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="plus" [size]="14" color="currentColor" [strokeWidth]="2" />
               Créer
             </a>
 
@@ -241,14 +144,7 @@ import { AppNotification } from '../features/notifications/models/notification.m
               [class.open]="profileOpen()"
             >
               <div class="avatar">{{ getInitials(currentUser()?.name ?? '') }}</div>
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" class="avatar-chevron">
-                <path
-                  d="M5 8l5 5 5-5"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="chevron-down" [size]="14" color="currentColor" [strokeWidth]="1.8" class="avatar-chevron" />
 
               <!-- Dropdown profil -->
               @if (profileOpen()) {
@@ -262,44 +158,7 @@ import { AppNotification } from '../features/notifications/models/notification.m
                   </div>
                   <div class="dropdown-sep"></div>
                   <a routerLink="/app" class="dropdown-item" (click)="profileOpen.set(false)">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                      <rect
-                        x="2"
-                        y="2"
-                        width="7"
-                        height="7"
-                        rx="1"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                      />
-                      <rect
-                        x="11"
-                        y="2"
-                        width="7"
-                        height="7"
-                        rx="1"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                      />
-                      <rect
-                        x="2"
-                        y="11"
-                        width="7"
-                        height="7"
-                        rx="1"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                      />
-                      <rect
-                        x="11"
-                        y="11"
-                        width="7"
-                        height="7"
-                        rx="1"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                      />
-                    </svg>
+                    <lucide-icon name="home" [size]="16" color="currentColor" [strokeWidth]="1.8" />
                     Dashboard
                   </a>
                   <a
@@ -307,23 +166,7 @@ import { AppNotification } from '../features/notifications/models/notification.m
                     class="dropdown-item"
                     (click)="profileOpen.set(false)"
                   >
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                      <rect
-                        x="2"
-                        y="4"
-                        width="16"
-                        height="14"
-                        rx="2"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                      />
-                      <path
-                        d="M6 2v4M14 2v4M2 9h16"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                      />
-                    </svg>
+                    <lucide-icon name="calendar" [size]="16" color="currentColor" [strokeWidth]="1.8" />
                     Mes événements
                   </a>
                   @if (isAdmin()) {
@@ -332,9 +175,7 @@ import { AppNotification } from '../features/notifications/models/notification.m
                       class="dropdown-item dropdown-admin"
                       (click)="profileOpen.set(false)"
                     >
-                      <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                        <path d="M10 2l2.5 5.5L18 8.5l-4 4 .9 5.5L10 15.5l-4.9 2.5.9-5.5-4-4 5.5-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-                      </svg>
+                      <lucide-icon name="settings" [size]="16" color="currentColor" [strokeWidth]="1.8" />
                       Espace Admin
                     </a>
                   }
@@ -343,9 +184,7 @@ import { AppNotification } from '../features/notifications/models/notification.m
                     class="dropdown-item"
                     (click)="profileOpen.set(false)"
                   >
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                      <path d="M4 6h12M4 10h8M4 14h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                    </svg>
+                    <lucide-icon name="file-text" [size]="16" color="currentColor" [strokeWidth]="1.8" />
                     Mes réservations
                   </a>
                   <a
@@ -353,23 +192,12 @@ import { AppNotification } from '../features/notifications/models/notification.m
                     class="dropdown-item"
                     (click)="profileOpen.set(false)"
                   >
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                      <circle cx="10" cy="7" r="3.5" stroke="currentColor" stroke-width="1.5"/>
-                      <path d="M3 17c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                    </svg>
+                    <lucide-icon name="user" [size]="16" color="currentColor" [strokeWidth]="1.8" />
                     Mon profil
                   </a>
                   <div class="dropdown-sep"></div>
                   <button class="dropdown-item dropdown-logout" (click)="logout()">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                      <path
-                        d="M13 3h4a1 1 0 011 1v12a1 1 0 01-1 1h-4M9 14l4-4-4-4M3 10h10"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
+                    <lucide-icon name="log-out" [size]="16" color="currentColor" [strokeWidth]="1.8" />
                     Se déconnecter
                   </button>
                 </div>

@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 import { DeliveryOptionsService } from '../services/delivery-options.service';
 import { PaymentsService } from '../../payments/services/payments.service';
 import {
@@ -10,18 +11,17 @@ import {
   DELIVERY_OPTION_TYPE_LABELS,
 } from '../models/delivery-option.model';
 import { ToastService } from '../../../core/services/toast.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-delivery-selection-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule],
   template: `
     <div class="page-wrap">
       <div class="page-inner">
         <a routerLink="/app" class="back-link">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-            <path d="M12 4L6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
+          <lucide-icon name="chevron-left" [size]="16" color="currentColor" [strokeWidth]="2" />
           Mon espace
         </a>
 
@@ -74,6 +74,30 @@ import { ToastService } from '../../../core/services/toast.service';
             <p>Aucune option de livraison disponible pour cet article.</p>
             <a routerLink="/app" class="btn-secondary">Retour</a>
           </div>
+        } @else if (isReadOnly()) {
+          <!-- Admin / super-admin: read-only view of available options -->
+          <div class="readonly-banner">
+            <lucide-icon name="info" [size]="16" color="currentColor" [strokeWidth]="1.7" />
+            En attente de sélection par le décideur
+          </div>
+          <div class="options-list readonly">
+            @for (opt of availableOptions(); track opt.id) {
+              <div class="option-row">
+                <div class="option-content">
+                  <div class="option-top">
+                    <span class="option-label">{{ opt.label }}</span>
+                    <span class="option-price" [class.free]="opt.price === 0">
+                      {{ opt.price === 0 ? 'Gratuit' : '+' + (opt.price | number:'1.0-0') + ' ' + opt.currencyCode }}
+                    </span>
+                  </div>
+                  @if (opt.description) {
+                    <div class="option-desc">{{ opt.description }}</div>
+                  }
+                  <div class="option-type">{{ typeLabel(opt.type) }}</div>
+                </div>
+              </div>
+            }
+          </div>
         } @else {
           <div class="selection-area">
             <p class="intro">Sélectionnez les options que vous souhaitez ajouter :</p>
@@ -84,9 +108,7 @@ import { ToastService } from '../../../core/services/toast.service';
                   <div class="option-check">
                     <div class="checkbox" [class.checked]="isSelected(opt.id)">
                       @if (isSelected(opt.id)) {
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                          <path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                        <lucide-icon name="check" [size]="12" color="white" [strokeWidth]="1.8" />
                       }
                     </div>
                   </div>
@@ -241,6 +263,10 @@ import { ToastService } from '../../../core/services/toast.service';
     .btn-skip { background: none; color: #94a3b8; border: 0; padding: 10px 16px; font-size: 0.9rem; cursor: pointer; text-decoration: underline; }
     .btn-skip:hover { color: #64748b; }
 
+    .readonly-banner { display: flex; align-items: center; gap: 8px; background: #fefce8; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 16px; font-size: 0.88rem; font-weight: 600; color: #92400e; margin-bottom: 4px; }
+    .options-list.readonly .option-row { cursor: default; }
+    .options-list.readonly .option-row:hover { border-color: #e5e7eb; }
+
     /* Payment modal */
     .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.55); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
     .modal { background: white; border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
@@ -260,6 +286,9 @@ export class DeliverySelectionPageComponent implements OnInit {
   private readonly deliverySvc = inject(DeliveryOptionsService);
   private readonly paymentsSvc = inject(PaymentsService);
   private readonly toast = inject(ToastService);
+  private readonly auth = inject(AuthService);
+
+  readonly isReadOnly = computed(() => this.auth.hasAdminRole());
 
   readonly loading = signal(true);
   readonly submitting = signal(false);
@@ -394,7 +423,7 @@ export class DeliverySelectionPageComponent implements OnInit {
     if (!sel) return;
     this.paymentLoading.set(true);
 
-    this.paymentsSvc.initDeliveryPayment(sel.id, 'MOCK', this.paymentMethod).subscribe({
+    this.paymentsSvc.initDeliveryPayment(sel.id, 'FEDAPAY', this.paymentMethod).subscribe({
       next: (payment) => {
         this.paymentLoading.set(false);
         this.closePaymentModal();

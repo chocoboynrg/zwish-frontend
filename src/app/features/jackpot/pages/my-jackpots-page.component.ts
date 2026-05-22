@@ -2,7 +2,7 @@
 
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 import { JackpotService } from '../services/jackpot.service';
 import { Jackpot, STATUS_META, JackpotStatus } from '../models/jackpot.model';
 import { JackpotRequestModalComponent } from '../components/jackpot-request-modal.component';
@@ -11,7 +11,7 @@ import { ToastService } from '../../../core/services/toast.service';
 @Component({
   selector: 'app-my-jackpots-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, JackpotRequestModalComponent],
+  imports: [CommonModule, LucideAngularModule, JackpotRequestModalComponent],
   template: `
     <div class="page-wrap">
       <div class="page-hero">
@@ -22,14 +22,7 @@ import { ToastService } from '../../../core/services/toast.service';
             <p>Lancez et suivez vos collectes en ligne.</p>
           </div>
           <button class="btn-new" (click)="showModal.set(true)">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M10 4v12M4 10h12"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="plus" [size]="16" color="currentColor" [strokeWidth]="2" />
             Créer une cagnotte
           </button>
         </div>
@@ -100,7 +93,7 @@ import { ToastService } from '../../../core/services/toast.service';
                   }
                   <!-- Clôturer si APPROVED -->
                   @if (j.status === 'APPROVED') {
-                    <button class="btn-close-jack" (click)="closeJackpot(j)">Clôturer</button>
+                    <button class="btn-close-jack" (click)="openCloseModal(j)">Clôturer</button>
                   }
                 </div>
               </div>
@@ -116,6 +109,30 @@ import { ToastService } from '../../../core/services/toast.service';
       (close)="showModal.set(false)"
       (submitted)="onSubmitted()"
     ></app-jackpot-request-modal>
+
+    <!-- Modal clôture -->
+    @if (showCloseModal()) {
+      <div class="modal-backdrop" (click)="showCloseModal.set(false)">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <div class="modal-icon">🔒</div>
+          <h3 class="modal-title">Clôturer la cagnotte ?</h3>
+          <p class="modal-body">
+            Cette action est <strong>irréversible</strong>. La cagnotte
+            <em>"{{ jackpotToClose()?.title }}"</em> sera fermée et les
+            contributions ne seront plus acceptées.
+          </p>
+          <div class="modal-actions">
+            <button class="modal-btn-cancel" (click)="showCloseModal.set(false)" [disabled]="closing()">
+              Annuler
+            </button>
+            <button class="modal-btn-confirm" (click)="doClose()" [disabled]="closing()">
+              @if (closing()) { <span class="btn-spinner"></span> }
+              Confirmer la clôture
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [
     `
@@ -386,6 +403,53 @@ import { ToastService } from '../../../core/services/toast.service';
           order: 3;
         }
       }
+
+      /* ── MODAL CLÔTURE ── */
+      .modal-backdrop {
+        position: fixed; inset: 0; z-index: 1000;
+        background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+        display: flex; align-items: center; justify-content: center;
+        padding: 24px; animation: fadeIn 0.15s ease;
+      }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      .modal-card {
+        background: white; border-radius: 20px; padding: 32px 28px;
+        max-width: 420px; width: 100%; text-align: center;
+        display: flex; flex-direction: column; align-items: center; gap: 14px;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+        animation: slideUp 0.2s ease;
+      }
+      @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+      .modal-icon { font-size: 2.8rem; line-height: 1; }
+      .modal-title { margin: 0; font-size: 1.2rem; font-weight: 900; color: #111; }
+      .modal-body { margin: 0; font-size: 0.88rem; color: #6b7280; line-height: 1.65; max-width: 320px; }
+      .modal-body strong { color: #dc2626; }
+      .modal-body em { font-style: normal; font-weight: 700; color: #111; }
+      .modal-actions { display: flex; gap: 10px; width: 100%; margin-top: 4px; }
+      .modal-btn-cancel {
+        flex: 1; padding: 11px 16px; border-radius: 11px;
+        border: 1.5px solid #e5e7eb; background: white;
+        font: inherit; font-size: 0.88rem; font-weight: 700; color: #374151;
+        cursor: pointer; transition: 0.15s;
+      }
+      .modal-btn-cancel:hover:not(:disabled) { background: #f9fafb; }
+      .modal-btn-cancel:disabled { opacity: 0.4; cursor: not-allowed; }
+      .modal-btn-confirm {
+        flex: 1; padding: 11px 16px; border-radius: 11px; border: none;
+        background: #dc2626; color: white;
+        font: inherit; font-size: 0.88rem; font-weight: 700;
+        cursor: pointer; transition: 0.15s;
+        display: flex; align-items: center; justify-content: center; gap: 7px;
+      }
+      .modal-btn-confirm:hover:not(:disabled) { background: #b91c1c; }
+      .modal-btn-confirm:disabled { opacity: 0.55; cursor: not-allowed; }
+      .btn-spinner {
+        width: 13px; height: 13px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: white; border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
     `,
   ],
 })
@@ -396,6 +460,9 @@ export class MyJackpotsPageComponent implements OnInit {
   readonly jackpots = signal<Jackpot[]>([]);
   readonly loading = signal(true);
   readonly showModal = signal(false);
+  readonly showCloseModal = signal(false);
+  readonly jackpotToClose = signal<Jackpot | null>(null);
+  readonly closing = signal(false);
   readonly copiedId = signal<number | null>(null);
 
   ngOnInit(): void {
@@ -436,14 +503,27 @@ export class MyJackpotsPageComponent implements OnInit {
     });
   }
 
-  closeJackpot(j: Jackpot): void {
-    if (!confirm(`Clôturer la cagnotte "${j.title}" ? Cette action est irréversible.`)) return;
+  openCloseModal(j: Jackpot): void {
+    this.jackpotToClose.set(j);
+    this.showCloseModal.set(true);
+  }
+
+  doClose(): void {
+    const j = this.jackpotToClose();
+    if (!j) return;
+    this.closing.set(true);
     this.service.close(j.id).subscribe({
       next: (updated) => {
         this.jackpots.update((js) => js.map((x) => (x.id === updated.id ? updated : x)));
+        this.closing.set(false);
+        this.showCloseModal.set(false);
+        this.jackpotToClose.set(null);
         this.toast.success('Cagnotte clôturée.');
       },
-      error: (e: any) => this.toast.error(e?.error?.message ?? 'Erreur.'),
+      error: (e: any) => {
+        this.closing.set(false);
+        this.toast.error(e?.error?.message ?? 'Erreur.');
+      },
     });
   }
 }

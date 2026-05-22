@@ -10,6 +10,19 @@ import {
   ProductRequestStatus,
 } from '../models/product-request.model';
 
+export interface ProductRequestReviewPayload {
+  status: ProductRequestStatus;
+  reviewComment?: string;
+  categoryId?: number;
+  approvedCatalogProductId?: number;
+  approvedProductName?: string;
+  approvedProductSlug?: string;
+  realPrice?: number;
+  sellingPrice?: number;
+  itemPrice?: number;
+  itemQuantity?: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -27,7 +40,9 @@ export class ProductRequestsService {
     currencyCode?: string;
     categoryId?: number;
   }): Observable<ProductRequest> {
-    return this.http.post<ProductRequest>(this.baseUrl, payload);
+    return this.http
+      .post<ApiResponse<{ item: ProductRequest }>>(this.baseUrl, payload)
+      .pipe(map((response) => response.data.item));
   }
 
   getAll(status?: ProductRequestStatus): Observable<ProductRequest[]> {
@@ -48,14 +63,7 @@ export class ProductRequestsService {
 
   review(
     id: number,
-    payload: {
-      status: ProductRequestStatus;
-      reviewComment?: string;
-      categoryId?: number;
-      approvedCatalogProductId?: number;
-      approvedProductName?: string;
-      approvedProductSlug?: string;
-    },
+    payload: ProductRequestReviewPayload,
   ): Observable<ProductRequest> {
     return this.http.patch<ProductRequest>(
       `${this.baseUrl}/${id}/review`,
@@ -70,8 +78,11 @@ export class ProductRequestsService {
       price?: number;
       quantity?: number;
     },
-  ): Observable<any> {
-    return this.http.patch(`${this.baseUrl}/${id}/publish`, payload);
+  ): Observable<ProductRequestPublishResult> {
+    return this.http.patch<ProductRequestPublishResult>(
+      `${this.baseUrl}/${id}/publish`,
+      payload,
+    );
   }
 
   getAdminsList(): Observable<ProductRequestReviewer[]> {
@@ -85,4 +96,25 @@ export class ProductRequestsService {
       .patch<ApiResponse<{ item: ProductRequest }>>(`${this.baseUrl}/${id}/reassign`, { adminId })
       .pipe(map((r) => r.data.item));
   }
+}
+
+export interface ProductRequestPublishResult {
+  message: string;
+  productRequest: {
+    id: number;
+    status: ProductRequestStatus;
+    reviewedAt: string | null;
+  };
+  wishlistItem: {
+    id: number;
+    name: string;
+    price: number;
+    quantity: number;
+    targetAmount: number;
+    fundedAmount: number;
+    remainingAmount: number;
+    fundingStatus: string;
+    eventId: number;
+    wishlistId: number | null;
+  };
 }

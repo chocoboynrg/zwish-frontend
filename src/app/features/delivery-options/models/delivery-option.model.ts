@@ -64,6 +64,20 @@ export interface DeliverySelectionItem {
   textValue: string | null;
 }
 
+export type DeliveryDecider = 'ORGANIZER' | 'CONTRIBUTOR';
+
+export interface PendingDeliverySelection {
+  wishlistItemId: number;
+  itemName: string;
+  eventId: number;
+  eventTitle: string;
+  deliveryDecider: DeliveryDecider;
+  organizerId: number;
+  organizerName: string;
+  organizerEmail: string;
+  pendingSince: string;
+}
+
 export interface DeliverySelection {
   id: number;
   wishlistItemId: number;
@@ -73,6 +87,35 @@ export interface DeliverySelection {
   currencyCode: string;
   paymentId: number | null;
   items: DeliverySelectionItem[];
+  scheduledDeliveryAt: string | null;
+  deliveryPendingAdmin: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface FundingDeliveryRule {
+  id: number;
+  wishlistItemId: number;
+  fundingDeadline: string;
+  deliveryDate: string;
+  label: string | null;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FundingDeliveryRulePayload {
+  fundingDeadline: string;
+  deliveryDate: string;
+  label?: string;
+  sortOrder?: number;
+}
+
+export interface PendingAdminDeliveryRow {
+  deliverySelectionId: number;
+  wishlistItemId: number;
+  itemName: string;
+  fundedAt: string | null;
+  eventId: number;
+  eventTitle: string;
 }

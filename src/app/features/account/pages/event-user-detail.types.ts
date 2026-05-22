@@ -13,6 +13,7 @@ export type WishlistSort =
 export type WishlistItemVm = UserEventView['wishlist'][number];
 
 export type PaymentFeedbackStatus = 'SUCCESS' | 'PENDING' | 'FAILED';
+export type PaymentMethodChoice = 'MOBILE_MONEY' | 'BANK_TRANSFER' | 'CARD';
 
 export type EventUserDetailState = {
   loading: boolean;
@@ -38,6 +39,7 @@ export type EventUserDetailState = {
   contributionAmount: number | null;
   contributionMessage: string;
   contributionAnonymous: boolean;
+  selectedPaymentMethod: PaymentMethodChoice;
   contributionLoading: boolean;
   contributionError: string;
 
@@ -83,6 +85,7 @@ export const initialEventUserDetailState = (): EventUserDetailState => ({
   contributionAmount: null,
   contributionMessage: '',
   contributionAnonymous: false,
+  selectedPaymentMethod: 'MOBILE_MONEY',
   contributionLoading: false,
   contributionError: '',
 

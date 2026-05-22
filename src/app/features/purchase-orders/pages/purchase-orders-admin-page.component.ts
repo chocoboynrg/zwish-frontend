@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { LucideAngularModule } from 'lucide-angular';
 import { PurchaseOrdersService } from '../services/purchase-orders.service';
 import { PurchaseOrder, PurchaseOrderStatus } from '../models/purchase-order.model';
 import { ToastService } from '../../../core/services/toast.service';
@@ -15,7 +16,7 @@ const STATUS_META: Record<PurchaseOrderStatus, { label: string; color: string; b
 @Component({
   selector: 'app-purchase-orders-admin-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule],
   template: `
     <div class="page">
       <div class="page-header">
@@ -26,10 +27,7 @@ const STATUS_META: Record<PurchaseOrderStatus, { label: string; color: string; b
           </p>
         </div>
         <button class="btn-refresh" (click)="loadOrders()" [disabled]="loading()">
-          <svg width="15" height="15" viewBox="0 0 20 20" fill="none" [class.spinning]="loading()">
-            <path d="M4 10a6 6 0 016-6 6 6 0 015.66 4M16 4v4h-4M16 10a6 6 0 01-6 6 6 6 0 01-5.66-4M4 16v-4h4"
-              stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          </svg>
+          <lucide-icon name="refresh-cw" [size]="15" color="currentColor" [strokeWidth]="1.8" [class.spinning]="loading()" />
           Actualiser
         </button>
       </div>
@@ -63,10 +61,7 @@ const STATUS_META: Record<PurchaseOrderStatus, { label: string; color: string; b
       @if (!loading() && !loadError()) {
         @if (filtered().length === 0) {
           <div class="empty-state">
-            <svg width="48" height="48" viewBox="0 0 20 20" fill="none" opacity=".2">
-              <path d="M3 3h14v3H3zM3 8h14v9H3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-              <path d="M7 12h6M7 15h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
+            <lucide-icon name="package" [size]="48" color="currentColor" [strokeWidth]="1.8" style="opacity:.2" />
             <span>Aucun bon de commande{{ statusFilter() ? ' avec ce statut' : '' }}.</span>
           </div>
         } @else {
@@ -85,17 +80,12 @@ const STATUS_META: Record<PurchaseOrderStatus, { label: string; color: string; b
                 <div class="card-body">
                   <div class="item-name">{{ order.itemName }}</div>
                   <div class="item-meta">
-                    <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                      <rect x="2" y="4" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/>
-                      <path d="M6 2v4M14 2v4M2 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                    </svg>
-                    {{ order.event?.title }}
+                    <lucide-icon name="calendar" [size]="13" color="currentColor" [strokeWidth]="1.8" />
+                    {{ order.event.title }}
                   </div>
                   @if (order.catalogProduct?.referenceUrl) {
                     <a [href]="order.catalogProduct!.referenceUrl" target="_blank" class="ref-link">
-                      <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-                        <path d="M10 3H4a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1v-6M13 3h4v4M10 10l7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
+                      <lucide-icon name="external-link" [size]="12" color="currentColor" [strokeWidth]="1.8" />
                       Voir le produit référence
                     </a>
                   }
@@ -139,9 +129,7 @@ const STATUS_META: Record<PurchaseOrderStatus, { label: string; color: string; b
                 <!-- Notes admin -->
                 @if (order.adminNotes) {
                   <div class="admin-notes">
-                    <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                      <path d="M3 5h14M3 9h10M3 13h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                    </svg>
+                    <lucide-icon name="file-text" [size]="13" color="currentColor" [strokeWidth]="1.8" />
                     {{ order.adminNotes }}
                   </div>
                 }

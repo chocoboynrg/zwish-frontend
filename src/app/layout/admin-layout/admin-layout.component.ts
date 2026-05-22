@@ -5,11 +5,12 @@ import { AuthService } from '../../core/services/auth.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NotificationCenterService } from '../../features/notifications/services/notification-center.service';
 import { CommonModule } from '@angular/common';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, LucideAngularModule],
   template: `
     <div class="admin-shell">
       <aside class="sidebar">
@@ -19,252 +20,103 @@ import { CommonModule } from '@angular/common';
         </div>
 
         <nav class="nav">
-          <a
-            routerLink="/admin"
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{ exact: true }"
-          >
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <rect
-                x="2"
-                y="2"
-                width="7"
-                height="7"
-                rx="1.5"
-                stroke="currentColor"
-                stroke-width="1.6"
-              />
-              <rect
-                x="11"
-                y="2"
-                width="7"
-                height="7"
-                rx="1.5"
-                stroke="currentColor"
-                stroke-width="1.6"
-              />
-              <rect
-                x="2"
-                y="11"
-                width="7"
-                height="7"
-                rx="1.5"
-                stroke="currentColor"
-                stroke-width="1.6"
-              />
-              <rect
-                x="11"
-                y="11"
-                width="7"
-                height="7"
-                rx="1.5"
-                stroke="currentColor"
-                stroke-width="1.6"
-              />
-            </svg>
+
+          <!-- Dashboard -->
+          <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+            <lucide-icon name="home" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             Dashboard
           </a>
+
+          <!-- Utilisateurs & Activité -->
+          <div class="nav-group-label">Utilisateurs & Activité</div>
           <a routerLink="/admin/users" routerLinkActive="active">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="7" r="3.5" stroke="currentColor" stroke-width="1.6" />
-              <path
-                d="M3 17c0-3.314 3.134-6 7-6s7 2.686 7 6"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="user" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             Utilisateurs
           </a>
-          <a routerLink="/admin/payments" routerLinkActive="active">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <rect
-                x="1"
-                y="5"
-                width="18"
-                height="12"
-                rx="2"
-                stroke="currentColor"
-                stroke-width="1.6"
-              />
-              <path d="M1 9h18" stroke="currentColor" stroke-width="1.6" />
-              <path
-                d="M5 13h3M13 13h2"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
-            Paiements
-          </a>
-          <a routerLink="/admin/reconciliation" routerLinkActive="active">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M4 6h12M4 10h8M4 14h10"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
-            Réconciliation
-          </a>
           <a routerLink="/admin/events" routerLinkActive="active">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <rect
-                x="2"
-                y="4"
-                width="16"
-                height="14"
-                rx="2"
-                stroke="currentColor"
-                stroke-width="1.6"
-              />
-              <path
-                d="M6 2v4M14 2v4M2 9h16"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="calendar" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             Événements
           </a>
           <a routerLink="/admin/jackpot" routerLinkActive="active">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M10 2c0 0-7 3.5-7 9a7 7 0 0014 0c0-5.5-7-9-7-9z"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M10 8v4M8 10h4"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="package" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             Cagnottes
           </a>
+
+          <!-- Finances -->
+          <div class="nav-group-label">Finances</div>
+          <a routerLink="/admin/payments" routerLinkActive="active">
+            <lucide-icon name="credit-card" [size]="18" color="currentColor" [strokeWidth]="1.8" />
+            Paiements
+          </a>
+          <a routerLink="/admin/reconciliation" routerLinkActive="active">
+            <lucide-icon name="file-text" [size]="18" color="currentColor" [strokeWidth]="1.8" />
+            Réconciliation
+          </a>
+
+          <!-- Catalogue & Produits -->
+          <div class="nav-group-label">Catalogue & Produits</div>
           <a routerLink="/admin/catalog" routerLinkActive="active">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 4h14"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <lucide-icon name="package" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             Catalogue
           </a>
           @if (isSuperAdmin()) {
             <a routerLink="/admin/catalog-sales" routerLinkActive="active">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <path d="M3 17V8M7 17V4M11 17v-6M15 17v-9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                <path d="M3 5l4-2 4 3 4-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <lucide-icon name="bar-chart-2" [size]="18" color="currentColor" [strokeWidth]="1.8" />
               Point des ventes
             </a>
           }
-          <a routerLink="/admin/wishlist-tracker" routerLinkActive="active">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/>
-              <path d="M10 6v4l2.5 2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="10" cy="10" r="1.5" fill="currentColor"/>
-            </svg>
-            Suivi en temps réel
-          </a>
-          <a routerLink="/admin/promotions" routerLinkActive="active">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <path d="M3 10l7-7 7 7M5 8v8a1 1 0 001 1h3v-4h2v4h3a1 1 0 001-1V8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="10" cy="14" r="1.5" fill="currentColor"/>
-            </svg>
-            Promotions
-          </a>
           <a routerLink="/admin/product-requests" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M12 3H6a1 1 0 00-1 1v12a1 1 0 001 1h8a1 1 0 001-1V7l-3-4z"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path d="M12 3v4h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-              <path
-                d="M8 11h4M8 14h2"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="file-text" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             Demandes produit
           </a>
           @if (isSuperAdmin()) {
             <a routerLink="/admin/product-requests/assignment" routerLinkActive="active" class="nav-sub">
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                <circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M3 17c0-3 3-5 7-5s7 2 7 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                <path d="M14 4l2 2-2 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <lucide-icon name="user" [size]="16" color="currentColor" [strokeWidth]="1.8" />
               Affectations
             </a>
           }
+          <a routerLink="/admin/promotions" routerLinkActive="active">
+            <lucide-icon name="tag" [size]="18" color="currentColor" [strokeWidth]="1.8" />
+            Promotions
+          </a>
+
+          <!-- Commandes & Livraisons -->
+          <div class="nav-group-label">Commandes & Livraisons</div>
+          <a routerLink="/admin/wishlist-tracker" routerLinkActive="active">
+            <lucide-icon name="clock" [size]="18" color="currentColor" [strokeWidth]="1.8" />
+            Suivi wishlist
+          </a>
           <a routerLink="/admin/purchase-orders" routerLinkActive="active">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <path d="M3 3h14v3H3zM3 8h14v9H3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-              <path d="M7 12h6M7 15h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-            </svg>
+            <lucide-icon name="file-text" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             Bons de commande
           </a>
           <a routerLink="/admin/delivery-options" routerLinkActive="active">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <path d="M3 10l7-7 7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M5 8.5V17h10V8.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M8 17v-5h4v5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <lucide-icon name="truck" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             Options livraison
           </a>
+          <a routerLink="/admin/delivery-pending" routerLinkActive="active">
+            <lucide-icon name="clock" [size]="18" color="currentColor" [strokeWidth]="1.8" />
+            Livraisons en attente
+          </a>
+          <a routerLink="/admin/delivery-date-pending" routerLinkActive="active">
+            <lucide-icon name="calendar-clock" [size]="18" color="currentColor" [strokeWidth]="1.8" />
+            Dates à définir
+          </a>
+
+          <!-- Système -->
+          <div class="nav-group-label">Système</div>
           <a routerLink="/admin/audit" routerLinkActive="active">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M14 2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2z"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-              <path
-                d="M5 12h6M5 15h4"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="file-text" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             Audit Logs
           </a>
-
-          <!-- Séparateur -->
-          <div class="nav-sep"></div>
-
-          <!-- Notifications avec badge -->
           <a routerLink="/admin/notifications" routerLinkActive="active" class="nav-notif-link">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M15 18H9M18 16V11C18 7.686 15.314 5 12 5S6 7.686 6 11v5l-1.5 1.5V18h15v-.5L18 16z"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <lucide-icon name="bell" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             Notifications
             @if (unreadCount() > 0) {
-              <span class="notif-badge">
-                {{ unreadCount() > 99 ? '99+' : unreadCount() }}
-              </span>
+              <span class="notif-badge">{{ unreadCount() > 99 ? '99+' : unreadCount() }}</span>
             }
           </a>
+
         </nav>
 
         <div class="sidebar-footer">
@@ -278,21 +130,11 @@ import { CommonModule } from '@angular/common';
             </div>
           }
           <a routerLink="/app" class="user-space-btn">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <path d="M9 15l-5-5 5-5M4 10h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <lucide-icon name="arrow-left" [size]="16" color="currentColor" [strokeWidth]="1.8" />
             Mon espace
           </a>
           <button class="logout-btn" (click)="logout()">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M13 15l4-5-4-5M17 10H7M7 3H4a1 1 0 00-1 1v12a1 1 0 001 1h3"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <lucide-icon name="log-out" [size]="16" color="currentColor" [strokeWidth]="1.8" />
             Déconnexion
           </button>
         </div>
@@ -375,6 +217,17 @@ import { CommonModule } from '@angular/common';
         color: #818cf8;
       }
 
+      /* Group label */
+      .nav-group-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #334155;
+        padding: 14px 12px 4px;
+        user-select: none;
+      }
+
       /* Sub-nav link (indented child) */
       .nav-sub {
         padding-left: 36px !important;
@@ -384,13 +237,6 @@ import { CommonModule } from '@angular/common';
       .nav-sub.active {
         background: rgba(99, 102, 241, 0.1) !important;
         color: #a5b4fc !important;
-      }
-
-      /* Séparateur */
-      .nav-sep {
-        height: 1px;
-        background: rgba(255, 255, 255, 0.06);
-        margin: 8px 0;
       }
 
       /* Lien notifications avec badge */

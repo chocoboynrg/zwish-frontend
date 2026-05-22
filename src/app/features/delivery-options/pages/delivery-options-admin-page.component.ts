@@ -9,6 +9,7 @@ import {
   DELIVERY_OPTION_TYPE_LABELS,
 } from '../models/delivery-option.model';
 import { ToastService } from '../../../core/services/toast.service';
+import { LucideAngularModule } from 'lucide-angular';
 
 const OPTION_TYPES: DeliveryOptionType[] = [
   'GIFT_WRAPPING',
@@ -21,7 +22,7 @@ const OPTION_TYPES: DeliveryOptionType[] = [
 @Component({
   selector: 'app-delivery-options-admin-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule],
   template: `
     <div class="page">
       <div class="page-header">
@@ -55,14 +56,10 @@ const OPTION_TYPES: DeliveryOptionType[] = [
                 <span class="type-badge">{{ typeLabel(opt.type) }}</span>
                 <div class="card-actions">
                   <button class="btn-icon" title="Modifier" (click)="openEdit(opt)">
-                    <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-                      <path d="M14.5 2.5l3 3-10 10H4.5v-3l10-10z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-                    </svg>
+                    <lucide-icon name="pencil" [size]="15" color="currentColor" [strokeWidth]="1.8" />
                   </button>
                   <button class="btn-icon danger" title="Désactiver" (click)="deleteOption(opt)" [disabled]="!opt.isActive">
-                    <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-                      <path d="M4 8h12M6 8V5a1 1 0 011-1h6a1 1 0 011 1v3M8 11v5M12 11v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                    </svg>
+                    <lucide-icon name="trash-2" [size]="15" color="currentColor" [strokeWidth]="1.8" />
                   </button>
                 </div>
               </div>

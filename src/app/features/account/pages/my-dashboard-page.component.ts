@@ -2,13 +2,14 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { LucideAngularModule } from 'lucide-angular';
 import { DashboardService, MyDashboardResponse } from '../services/dashboard.service';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-my-dashboard-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LucideAngularModule],
   template: `
     <div class="dashboard">
       <!-- Hero -->
@@ -22,14 +23,7 @@ import { AuthService } from '../../../core/services/auth.service';
             </div>
           </div>
           <a routerLink="/app/events/new" class="btn-create">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M10 4v12M4 10h12"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="plus" [size]="16" color="currentColor" [strokeWidth]="1.8" />
             Créer un événement
           </a>
         </div>
@@ -146,86 +140,24 @@ import { AuthService } from '../../../core/services/auth.service';
           <!-- Shortcuts -->
           <div class="shortcuts">
             <a routerLink="/app/contributions" class="shortcut-card">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 2l2.4 4.8L20 7.6l-4 3.9.95 5.5L12 14.3l-4.95 2.7.95-5.5-4-3.9 5.6-.8L12 2z"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
+              <lucide-icon name="star" [size]="24" color="currentColor" [strokeWidth]="1.8" />
               <span>Mes contributions</span>
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" class="arrow">
-                <path
-                  d="M5 10h10M10 5l5 5-5 5"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="arrow-right" [size]="16" color="currentColor" [strokeWidth]="1.8" class="arrow" />
             </a>
             <a routerLink="/app/payments" class="shortcut-card">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <rect
-                  x="1"
-                  y="5"
-                  width="22"
-                  height="14"
-                  rx="2"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                />
-                <path d="M1 10h22" stroke="currentColor" stroke-width="1.8" />
-              </svg>
+              <lucide-icon name="credit-card" [size]="24" color="currentColor" [strokeWidth]="1.8" />
               <span>Mes paiements</span>
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" class="arrow">
-                <path
-                  d="M5 10h10M10 5l5 5-5 5"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="arrow-right" [size]="16" color="currentColor" [strokeWidth]="1.8" class="arrow" />
             </a>
             <a routerLink="/catalog" class="shortcut-card">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 4h14"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
+              <lucide-icon name="shopping-cart" [size]="24" color="currentColor" [strokeWidth]="1.8" />
               <span>Parcourir le catalogue</span>
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" class="arrow">
-                <path
-                  d="M5 10h10M10 5l5 5-5 5"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="arrow-right" [size]="16" color="currentColor" [strokeWidth]="1.8" class="arrow" />
             </a>
             <a routerLink="/app/events/new" class="shortcut-card shortcut-cta">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 5v14M5 12h14"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="plus" [size]="24" color="currentColor" [strokeWidth]="1.8" />
               <span>Créer un événement</span>
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" class="arrow">
-                <path
-                  d="M5 10h10M10 5l5 5-5 5"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="arrow-right" [size]="16" color="currentColor" [strokeWidth]="1.8" class="arrow" />
             </a>
           </div>
         }

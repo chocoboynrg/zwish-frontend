@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { LucideAngularModule } from 'lucide-angular';
 import {
   Component,
   DestroyRef,
@@ -16,7 +17,9 @@ import { delay, filter, take } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationCenterService } from '../../../features/notifications/services/notification-center.service';
 import { NotificationsService } from '../../../features/notifications/services/notifications.service';
-import { AppNotification } from '../../../features/notifications/models/notification.model';
+import {
+  AppNotification,
+} from '../../../features/notifications/models/notification.model';
 
 type PrimaryNavItem = {
   label: string;
@@ -36,7 +39,7 @@ type NotificationPayload = {
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive, LucideAngularModule],
   template: `
     <header class="topbar">
       <div class="container topbar-inner">
@@ -67,15 +70,7 @@ type NotificationPayload = {
                 aria-label="Voir les notifications"
                 (click)="toggleNotificationsMenu($event)"
               >
-                <svg viewBox="0 0 24 24" fill="none" class="notification-icon" aria-hidden="true">
-                  <path
-                    d="M15 18H9M18 16V11C18 7.68629 15.3137 5 12 5C8.68629 5 6 7.68629 6 11V16L4.5 17.5V18H19.5V17.5L18 16Z"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
+                <lucide-icon name="bell" [size]="20" color="currentColor" [strokeWidth]="1.8" class="notification-icon" aria-hidden="true" />
                 @if (unreadCount() > 0) {
                   <span class="notification-badge" [ngClass]="getUnreadBadgeClass(unreadCount())">
                     {{ formatUnreadCount(unreadCount()) }}
@@ -1116,7 +1111,7 @@ export class AppNavbarComponent {
   openNotificationFromNavbar(notification: AppNotification, event?: Event): void {
     event?.stopPropagation();
 
-    const payload = notification.dataPayload as NotificationPayload | null;
+    const payload = notification.dataPayload;
 
     if (!this.isRead(notification)) {
       this.notificationCenter.markOneAsReadLocally(notification.id);

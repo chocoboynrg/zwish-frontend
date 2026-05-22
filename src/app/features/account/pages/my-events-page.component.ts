@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 import { DashboardService, MyDashboardResponse } from '../services/dashboard.service';
 import { MyContributionsService, MyContributionItem } from '../services/my-contributions.service';
 
@@ -10,7 +11,7 @@ type OrgTab = 'upcoming' | 'past' | 'archived';
 @Component({
   selector: 'app-my-events-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LucideAngularModule],
   template: `
     <div class="page-wrap">
       <!-- ══════════ HERO ══════════ -->
@@ -50,14 +51,7 @@ type OrgTab = 'upcoming' | 'past' | 'archived';
               [class.active]="mainTab() === 'joined'"
               (click)="mainTab.set('joined')"
             >
-              <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M10 11a4 4 0 100-8 4 4 0 000 8zM2 19a8 8 0 0116 0"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="user" [size]="15" color="currentColor" [strokeWidth]="1.8" />
               Je participe
               @if (joinedEvents().length > 0) {
                 <span class="tab-pill">{{ joinedEvents().length }}</span>
@@ -68,13 +62,7 @@ type OrgTab = 'upcoming' | 'past' | 'archived';
               [class.active]="mainTab() === 'organized'"
               (click)="mainTab.set('organized')"
             >
-              <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M10 2l1.5 4.5H16l-3.7 2.7 1.4 4.3L10 11l-3.7 2.5 1.4-4.3L4 6.5h4.5L10 2z"
-                  stroke="currentColor"
-                  stroke-width="1.3"
-                />
-              </svg>
+              <lucide-icon name="star" [size]="15" color="currentColor" [strokeWidth]="1.8" />
               J'organise
               @if (organizedEvents().length > 0) {
                 <span class="tab-pill">{{ organizedEvents().length }}</span>
@@ -125,23 +113,7 @@ type OrgTab = 'upcoming' | 'past' | 'archived';
                       <div class="jcard-head-info">
                         <div class="jcard-title">{{ e.title }}</div>
                         <div class="jcard-date">
-                          <svg width="11" height="11" viewBox="0 0 20 20" fill="none">
-                            <rect
-                              x="2"
-                              y="4"
-                              width="16"
-                              height="14"
-                              rx="2"
-                              stroke="currentColor"
-                              stroke-width="1.5"
-                            />
-                            <path
-                              d="M6 2v4M14 2v4M2 9h16"
-                              stroke="currentColor"
-                              stroke-width="1.5"
-                              stroke-linecap="round"
-                            />
-                          </svg>
+                          <lucide-icon name="calendar" [size]="11" color="currentColor" [strokeWidth]="1.8" />
                           {{ formatDate(e.eventDate) }}
                         </div>
                       </div>
@@ -165,7 +137,7 @@ type OrgTab = 'upcoming' | 'past' | 'archived';
                           @if (c.wishlistItem?.title) {
                             <span class="contrib-item"
                               >pour « {{ c.wishlistItem!.title | slice: 0 : 30
-                              }}{{ (c.wishlistItem!.title?.length ?? 0) > 30 ? '…' : '' }} »</span
+                              }}{{ c.wishlistItem!.title.length > 30 ? '…' : '' }} »</span
                             >
                           }
                         </div>
@@ -174,15 +146,7 @@ type OrgTab = 'upcoming' | 'past' | 'archived';
                     <!-- Pas encore contribué -->
                     @if (!getContrib(e.id)) {
                       <div class="jcard-no-contrib">
-                        <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                          <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.4" />
-                          <path
-                            d="M10 6v5M10 13.5v.5"
-                            stroke="currentColor"
-                            stroke-width="1.7"
-                            stroke-linecap="round"
-                          />
-                        </svg>
+                        <lucide-icon name="info" [size]="13" color="currentColor" [strokeWidth]="1.8" />
                         Vous n'avez pas encore contribué à cet événement.
                       </div>
                     }
@@ -266,30 +230,13 @@ type OrgTab = 'upcoming' | 'past' | 'archived';
                   </div>
                   <div class="org-card-body">
                     <div class="org-card-date">
-                      <svg width="11" height="11" viewBox="0 0 20 20" fill="none">
-                        <rect
-                          x="2"
-                          y="4"
-                          width="16"
-                          height="14"
-                          rx="2"
-                          stroke="currentColor"
-                          stroke-width="1.5"
-                        />
-                        <path
-                          d="M6 2v4M14 2v4M2 9h16"
-                          stroke="currentColor"
-                          stroke-width="1.5"
-                          stroke-linecap="round"
-                        />
-                      </svg>
+                      <lucide-icon name="calendar" [size]="11" color="currentColor" [strokeWidth]="1.8" />
                       {{ formatDate(e.eventDate) }}
                     </div>
                     <div class="org-card-title">{{ e.title }}</div>
                     @if (e.description) {
                       <div class="org-card-desc">
-                        {{ e.description | slice: 0 : 70
-                        }}{{ (e.description?.length ?? 0) > 70 ? '…' : '' }}
+                        {{ e.description | slice: 0 : 70 }}{{ e.description.length > 70 ? '…' : '' }}
                       </div>
                     }
                   </div>
@@ -308,14 +255,7 @@ type OrgTab = 'upcoming' | 'past' | 'archived';
       <!-- FAB créer événement (visible seulement sur onglet J'organise) -->
       @if (mainTab() === 'organized') {
         <a routerLink="/app/events/new" class="fab" title="Créer un événement">
-          <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
-            <path
-              d="M10 4v12M4 10h12"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-            />
-          </svg>
+          <lucide-icon name="plus" [size]="22" color="currentColor" [strokeWidth]="1.8" />
         </a>
       }
     </div>
@@ -927,14 +867,12 @@ export class MyEventsPageComponent implements OnInit {
   readonly organizedEvents = computed(() => this.data()?.organizedEvents ?? []);
 
   readonly upcomingOrg = computed(() =>
-    this.organizedEvents().filter((e) => !this.isPast(e.eventDate) && !(e as any).isArchived),
+    this.organizedEvents().filter((e) => !this.isPast(e.eventDate) && !e.isArchived),
   );
   readonly pastOrg = computed(() =>
-    this.organizedEvents().filter((e) => this.isPast(e.eventDate) && !(e as any).isArchived),
+    this.organizedEvents().filter((e) => this.isPast(e.eventDate) && !e.isArchived),
   );
-  readonly archivedOrg = computed(() =>
-    this.organizedEvents().filter((e) => !!(e as any).isArchived),
-  );
+  readonly archivedOrg = computed(() => this.organizedEvents().filter((e) => !!e.isArchived));
   readonly currentOrg = computed(() => {
     if (this.orgTab() === 'upcoming') return this.upcomingOrg();
     if (this.orgTab() === 'past') return this.pastOrg();

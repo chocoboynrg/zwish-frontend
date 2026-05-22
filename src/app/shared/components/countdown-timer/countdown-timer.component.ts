@@ -1,31 +1,21 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-countdown-timer',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideAngularModule],
   template: `
     @if (visible()) {
       <div class="countdown" [ngClass]="urgencyClass()">
-        <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-          <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
-          <path d="M10 6v4l3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-        </svg>
+        <lucide-icon name="clock" [size]="13" color="currentColor" [strokeWidth]="1.6" />
         <span>{{ label() }}</span>
       </div>
     }
     @if (!visible() && showExpired) {
       <div class="expired">
-        <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-          <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
-          <path
-            d="M7 13l6-6M13 13L7 7"
-            stroke="currentColor"
-            stroke-width="1.6"
-            stroke-linecap="round"
-          />
-        </svg>
+        <lucide-icon name="x-circle" [size]="13" color="currentColor" [strokeWidth]="1.6" />
         Expiré
       </div>
     }

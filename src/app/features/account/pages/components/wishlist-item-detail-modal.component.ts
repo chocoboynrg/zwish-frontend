@@ -1,5 +1,6 @@
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { LucideAngularModule } from 'lucide-angular';
 import {
   WishlistItem,
   formatAmount,
@@ -11,7 +12,7 @@ import {
 @Component({
   selector: 'app-wishlist-item-detail-modal',
   standalone: true,
-  imports: [CommonModule, DecimalPipe],
+  imports: [CommonModule, DecimalPipe, LucideAngularModule],
   template: `
     <!-- Overlay -->
     @if (show) {
@@ -26,14 +27,7 @@ import {
           <div class="drawer-header">
             <div class="drawer-eyebrow">Détail de l'item</div>
             <button class="btn-close" (click)="close.emit()" aria-label="Fermer">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M4 4l12 12M16 4L4 16"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="x" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             </button>
           </div>
           @if (selectedItem) {
@@ -50,14 +44,7 @@ import {
                 <div class="img-badges">
                   @if (selectedItem.fundingStatus === 'FUNDED') {
                     <span class="ibadge ibadge-funded">
-                      <svg width="10" height="10" viewBox="0 0 20 20" fill="none">
-                        <path
-                          d="M4 10l4.5 4.5 7.5-7.5"
-                          stroke="currentColor"
-                          stroke-width="2.2"
-                          stroke-linecap="round"
-                        />
-                      </svg>
+                      <lucide-icon name="check" [size]="10" color="currentColor" [strokeWidth]="2.2" />
                       Financé à 100%
                     </span>
                   }
@@ -76,33 +63,11 @@ import {
                 <h2 class="item-name">{{ selectedItem.name }}</h2>
                 <div class="item-meta">
                   <span class="meta-pill">
-                    <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-                      <rect
-                        x="2"
-                        y="2"
-                        width="16"
-                        height="16"
-                        rx="2"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                      />
-                      <path
-                        d="M7 10h6M7 14h4"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                      />
-                    </svg>
+                    <lucide-icon name="clipboard-list" [size]="12" color="currentColor" [strokeWidth]="1.8" />
                     Qté : {{ selectedItem.quantity }}
                   </span>
                   <span class="meta-pill">
-                    <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-                      <path
-                        d="M10 2l1.5 4.5H16l-3.7 2.7 1.4 4.3L10 11l-3.7 2.5 1.4-4.3L4 6.5h4.5L10 2z"
-                        stroke="currentColor"
-                        stroke-width="1.3"
-                      />
-                    </svg>
+                    <lucide-icon name="star" [size]="12" color="currentColor" [strokeWidth]="1.8" />
                     {{ formatReservationMode(selectedItem.reservationMode) }}
                   </span>
                   <span
@@ -116,14 +81,7 @@ import {
               <!-- Réservé par -->
               @if (selectedItem.isReserved && selectedItem.reservedByName) {
                 <div class="reserved-by-block">
-                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M10 11a4 4 0 100-8 4 4 0 000 8zM2 19a8 8 0 0116 0"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                    />
-                  </svg>
+                  <lucide-icon name="user" [size]="14" color="currentColor" [strokeWidth]="1.8" />
                   {{
                     selectedItem.reservedByMe
                       ? 'Réservé par vous'
@@ -193,29 +151,17 @@ import {
                     [disabled]="contributionLoading"
                     (click)="contribute.emit(selectedItem)"
                   >
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                      @if (!selectedItem.pendingContributionByMe) {
-                        <path
-                          d="M10 4v12M4 10h12"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                        />
-                      }
-                      @if (selectedItem.pendingContributionByMe) {
-                        <path
-                          d="M5 10h10M10 5l5 5-5 5"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linecap="round"
-                        />
-                      }
-                    </svg>
+                    @if (!selectedItem.pendingContributionByMe) {
+                      <lucide-icon name="plus" [size]="16" color="currentColor" [strokeWidth]="2" />
+                    }
+                    @if (selectedItem.pendingContributionByMe) {
+                      <lucide-icon name="arrow-right" [size]="16" color="currentColor" [strokeWidth]="1.8" />
+                    }
                     {{
                       contributionLoading
                         ? 'Chargement...'
                         : selectedItem.pendingContributionByMe
-                          ? 'Voir mon paiement en attente'
+                          ? 'Continuer le paiement'
                           : 'Contribuer à cet item'
                     }}
                   </button>
@@ -227,38 +173,14 @@ import {
                     [disabled]="reservationLoading"
                     (click)="reserve.emit(selectedItem.id)"
                   >
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                      <rect
-                        x="3"
-                        y="3"
-                        width="14"
-                        height="14"
-                        rx="2"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                      />
-                      <path
-                        d="M7 10h6M7 13h4"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                      />
-                    </svg>
+                    <lucide-icon name="file-text" [size]="16" color="currentColor" [strokeWidth]="1.8" />
                     {{ reservationLoading ? 'Réservation...' : 'Réserver cet item' }}
                   </button>
                 }
                 <!-- État si déjà financé -->
                 @if (selectedItem.fundingStatus === 'FUNDED') {
                   <div class="funded-notice">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                      <circle cx="10" cy="10" r="9" stroke="#22c55e" stroke-width="1.5" />
-                      <path
-                        d="M6.5 10l3 3 4-5"
-                        stroke="#22c55e"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                      />
-                    </svg>
+                    <lucide-icon name="check-circle-2" [size]="16" color="#22c55e" [strokeWidth]="1.8" />
                     Cet item est entièrement financé. Merci à tous les contributeurs !
                   </div>
                 }
@@ -270,15 +192,7 @@ import {
                   selectedItem.fundingStatus !== 'FUNDED'
                 ) {
                   <div class="no-action-notice">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                      <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
-                      <path
-                        d="M10 6v5M10 13.5v.5"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                      />
-                    </svg>
+                    <lucide-icon name="info" [size]="16" color="currentColor" [strokeWidth]="1.8" />
                     Aucune action disponible pour cet item actuellement.
                   </div>
                 }
@@ -294,27 +208,12 @@ import {
                     [title]="!canDeleteSelectedItem ? deleteSelectedItemBlockedReason : ''"
                     (click)="delete.emit()"
                   >
-                    <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-                      <path
-                        d="M4 6h12M8 6V4h4v2M7 6v9a1 1 0 001 1h4a1 1 0 001-1V6"
-                        stroke="currentColor"
-                        stroke-width="1.6"
-                        stroke-linecap="round"
-                      />
-                    </svg>
+                    <lucide-icon name="trash-2" [size]="15" color="currentColor" [strokeWidth]="1.8" />
                     {{ deleteItemLoading ? 'Suppression...' : 'Supprimer cet item' }}
                   </button>
                   @if (!canDeleteSelectedItem) {
                     <div class="delete-blocked">
-                      <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                        <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.4" />
-                        <path
-                          d="M10 6v5M10 13.5v.5"
-                          stroke="currentColor"
-                          stroke-width="1.7"
-                          stroke-linecap="round"
-                        />
-                      </svg>
+                      <lucide-icon name="info" [size]="13" color="currentColor" [strokeWidth]="1.8" />
                       {{ deleteSelectedItemBlockedReason }}
                     </div>
                   }

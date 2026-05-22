@@ -7,6 +7,19 @@ import { EventsService, SharedEventPreview } from '../services/events.service';
 import { TokenStorageService } from '../../../core/services/token-storage.service';
 import { ToastService } from '../../../core/services/toast.service';
 
+function extractErrorMessage(error: unknown, fallback: string): string {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'error' in error &&
+    typeof (error as { error?: { message?: unknown } }).error?.message === 'string'
+  ) {
+    return (error as { error: { message: string } }).error.message;
+  }
+
+  return fallback;
+}
+
 @Component({
   selector: 'app-join-event-page',
   standalone: true,
@@ -530,15 +543,7 @@ export class JoinEventPageComponent implements OnInit {
         this.loading.set(false);
       },
       error: (error: unknown) => {
-        const message =
-          typeof error === 'object' &&
-          error !== null &&
-          'error' in error &&
-          typeof (error as any).error?.message === 'string'
-            ? (error as any).error.message
-            : 'Impossible de charger cette invitation';
-
-        this.errorMessage.set(message);
+        this.errorMessage.set(extractErrorMessage(error, 'Impossible de charger cette invitation'));
         this.loading.set(false);
       },
     });
@@ -570,16 +575,10 @@ export class JoinEventPageComponent implements OnInit {
         }, 1200);
       },
       error: (error: unknown) => {
-        const message =
-          typeof error === 'object' &&
-          error !== null &&
-          'error' in error &&
-          typeof (error as any).error?.message === 'string'
-            ? (error as any).error.message
-            : 'Impossible de rejoindre cet événement';
-
         this.joinLoading.set(false);
-        this.errorMessage.set(message);
+        this.errorMessage.set(
+          extractErrorMessage(error, 'Impossible de rejoindre cet événement'),
+        );
       },
     });
   }

@@ -8,6 +8,10 @@ import {
   CreateCatalogDeliveryOptionPayload,
   UpdateCatalogDeliveryOptionPayload,
   DeliverySelection,
+  PendingDeliverySelection,
+  FundingDeliveryRule,
+  FundingDeliveryRulePayload,
+  PendingAdminDeliveryRow,
 } from '../models/delivery-option.model';
 
 @Injectable({ providedIn: 'root' })
@@ -47,30 +51,61 @@ export class DeliveryOptionsService {
       .pipe(map((r) => r.data));
   }
 
-  setItemOptions(wishlistItemId: number, catalogOptionIds: number[]): Observable<void> {
+  setItemOptions(wishlistItemId: number, optionIds: number[]): Observable<void> {
     return this.http
-      .put<ApiResponse<unknown>>(`${this.base}/item/${wishlistItemId}`, { catalogOptionIds })
+      .put<ApiResponse<unknown>>(`${this.base}/item/${wishlistItemId}`, { optionIds })
       .pipe(map(() => undefined));
   }
 
   getSelection(wishlistItemId: number): Observable<DeliverySelection | null> {
     return this.http
-      .get<ApiResponse<{ selection: DeliverySelection | null }>>(`${this.base}/selection/${wishlistItemId}`)
-      .pipe(map((r) => r.data.selection));
+      .get<ApiResponse<{ item: DeliverySelection | null }>>(`${this.base}/selection/${wishlistItemId}`)
+      .pipe(map((r) => r.data.item));
   }
 
   createSelection(wishlistItemId: number, selectedOptionIds: number[], textValues?: Record<number, string>): Observable<DeliverySelection> {
+    const selectedOptions = selectedOptionIds.map((id) => ({
+      catalogDeliveryOptionId: id,
+      ...(textValues?.[id] ? { textValue: textValues[id] } : {}),
+    }));
     return this.http
-      .post<ApiResponse<{ selection: DeliverySelection }>>(`${this.base}/selection/${wishlistItemId}`, {
-        selectedOptionIds,
-        textValues,
-      })
-      .pipe(map((r) => r.data.selection));
+      .post<ApiResponse<{ item: DeliverySelection }>>(`${this.base}/selection/${wishlistItemId}`, { selectedOptions })
+      .pipe(map((r) => r.data.item));
   }
 
   skipSelection(wishlistItemId: number): Observable<DeliverySelection> {
     return this.http
-      .post<ApiResponse<{ selection: DeliverySelection }>>(`${this.base}/selection/${wishlistItemId}/skip`, {})
-      .pipe(map((r) => r.data.selection));
+      .post<ApiResponse<{ item: DeliverySelection }>>(`${this.base}/selection/${wishlistItemId}/skip`, {})
+      .pipe(map((r) => r.data.item));
+  }
+
+  getPendingSelections(): Observable<PendingDeliverySelection[]> {
+    return this.http
+      .get<ApiResponse<{ items: PendingDeliverySelection[] }>>(`${this.base}/admin/pending`)
+      .pipe(map((r) => r.data.items));
+  }
+
+  getDeliveryRules(wishlistItemId: number): Observable<FundingDeliveryRule[]> {
+    return this.http
+      .get<ApiResponse<{ rules: FundingDeliveryRule[] }>>(`${this.base}/item/${wishlistItemId}/delivery-rules`)
+      .pipe(map((r) => r.data.rules));
+  }
+
+  setDeliveryRules(wishlistItemId: number, rules: FundingDeliveryRulePayload[]): Observable<FundingDeliveryRule[]> {
+    return this.http
+      .put<ApiResponse<{ rules: FundingDeliveryRule[] }>>(`${this.base}/item/${wishlistItemId}/delivery-rules`, { rules })
+      .pipe(map((r) => r.data.rules));
+  }
+
+  getPendingAdminDeliveryDates(): Observable<PendingAdminDeliveryRow[]> {
+    return this.http
+      .get<ApiResponse<{ items: PendingAdminDeliveryRow[] }>>(`${this.base}/admin/pending-delivery-date`)
+      .pipe(map((r) => r.data.items));
+  }
+
+  setAdminDeliveryDate(wishlistItemId: number, deliveryDate: string): Observable<DeliverySelection> {
+    return this.http
+      .patch<ApiResponse<{ item: DeliverySelection }>>(`${this.base}/item/${wishlistItemId}/scheduled-delivery-date`, { deliveryDate })
+      .pipe(map((r) => r.data.item));
   }
 }

@@ -3,7 +3,11 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NotificationCenterService } from '../../notifications/services/notification-center.service';
 import { NotificationsService } from '../../notifications/services/notifications.service';
-import { AppNotification } from '../../notifications/models/notification.model';
+import {
+  AppNotification,
+  NotificationPayload,
+} from '../../notifications/models/notification.model';
+import { LucideAngularModule } from 'lucide-angular';
 
 // Types de notifs pertinents pour l'admin
 const ADMIN_TYPE_META: Record<string, { label: string; color: string; bg: string }> = {
@@ -20,7 +24,7 @@ const DEFAULT_META = { label: 'Notification', color: '#374151', bg: '#f3f4f6' };
 @Component({
   selector: 'app-notifications-admin-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LucideAngularModule],
   template: `
     <div class="page">
       <div class="page-header">
@@ -39,14 +43,7 @@ const DEFAULT_META = { label: 'Notification', color: '#374151', bg: '#f3f4f6' };
             {{ markLoading() ? '...' : 'Tout marquer lu' }}
           </button>
           <button class="btn-refresh" (click)="refresh()">
-            <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M4 10a6 6 0 016-6 6 6 0 015.66 4M16 4v4h-4M16 10a6 6 0 01-6 6 6 6 0 01-5.66-4M4 16v-4h4"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="refresh-cw" [size]="15" color="currentColor" [strokeWidth]="1.8" />
           </button>
         </div>
       </div>
@@ -58,10 +55,7 @@ const DEFAULT_META = { label: 'Notification', color: '#374151', bg: '#f3f4f6' };
           [class.active]="showUnread()"
           (click)="showUnread.set(!showUnread())"
         >
-          <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-            <circle cx="10" cy="10" r="8" fill="currentColor" opacity="0.3" />
-            <circle cx="10" cy="10" r="4" fill="currentColor" />
-          </svg>
+          <lucide-icon name="circle" [size]="12" color="currentColor" [strokeWidth]="1.8" />
           Non lues seulement
         </button>
         @for (f of typeFilters; track f.value) {
@@ -396,8 +390,8 @@ export class NotificationsAdminPageComponent implements OnInit {
     return ADMIN_TYPE_META[type ?? ''] ?? DEFAULT_META;
   }
 
-  getPayload(n: AppNotification): Record<string, any> | null {
-    return (n as any).dataPayload ?? null;
+  getPayload(n: AppNotification): NotificationPayload | null {
+    return n.dataPayload ?? null;
   }
 
   ngOnInit(): void {

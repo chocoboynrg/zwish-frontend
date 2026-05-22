@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
+import { LucideAngularModule } from 'lucide-angular';
 import { PromotionsService, Promotion, PromotionStatus } from '../services/promotions.service';
 import { CatalogService } from '../../catalog/services/catalog.service';
 import { CatalogProduct } from '../../catalog/models/catalog-product.model';
@@ -17,7 +18,7 @@ const STATUS_META: Record<PromotionStatus, { label: string; color: string; bg: s
 @Component({
   selector: 'app-promotions-admin-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
   template: `
     <div class="page">
       <div class="page-header">
@@ -27,9 +28,7 @@ const STATUS_META: Record<PromotionStatus, { label: string; color: string; bg: s
         </div>
         <button class="btn-create" (click)="toggleForm()">
           @if (!showForm()) {
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-              <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
+            <lucide-icon name="plus" [size]="14" color="currentColor" [strokeWidth]="1.8" />
             Nouvelle campagne
           } @else {
             ✕ Annuler
@@ -80,9 +79,7 @@ const STATUS_META: Record<PromotionStatus, { label: string; color: string; bg: s
                       <div class="psc-check-wrap">
                         <div class="psc-check" [class.checked]="isSelected(p.id)">
                           @if (isSelected(p.id)) {
-                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                              <path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
+                            <lucide-icon name="check" [size]="10" color="white" [strokeWidth]="1.8" />
                           }
                         </div>
                       </div>

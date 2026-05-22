@@ -1,4 +1,4 @@
-import { CommonModule, DecimalPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CatalogService } from '../services/catalog.service';
@@ -9,13 +9,16 @@ import { CreateCatalogThemePayload, UpdateCatalogThemePayload } from '../service
 import { ToastService } from '../../../core/services/toast.service';
 import { PromotionsService, Promotion } from '../../promotions/services/promotions.service';
 import { DeliveryOptionsService } from '../../delivery-options/services/delivery-options.service';
+import { CatalogProductDrawerComponent } from '../components/catalog-product-drawer.component';
+import { CatalogProductCardComponent } from '../components/catalog-product-card.component';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-catalog-admin-page',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, LucideAngularModule, CatalogProductDrawerComponent, CatalogProductCardComponent],
   template: `
     <div class="page">
       <!-- Header -->
@@ -97,108 +100,17 @@ import { environment } from '../../../../environments/environment';
         @if (filteredProducts().length > 0) {
           <div class="products-grid">
             @for (p of filteredProducts(); track p.id) {
-              <div class="product-card" (click)="openProductDrawer(p)">
-                <!-- Image -->
-                <div class="product-img-wrap">
-                  @if (p.mainImageUrl) {
-                    <img
-                      [src]="resolveImageUrl(p.mainImageUrl)"
-                      [alt]="p.name"
-                      class="product-img"
-                      (error)="onImageError($event)"
-                    />
-                  }
-                  @if (!p.mainImageUrl) {
-                    <div class="product-img-placeholder">
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                        <rect
-                          x="3"
-                          y="3"
-                          width="18"
-                          height="18"
-                          rx="3"
-                          stroke="#d1d5db"
-                          stroke-width="1.5"
-                        />
-                        <circle cx="8.5" cy="8.5" r="1.5" fill="#d1d5db" />
-                        <path
-                          d="M21 15l-5-5L5 21"
-                          stroke="#d1d5db"
-                          stroke-width="1.5"
-                          stroke-linecap="round"
-                        />
-                      </svg>
-                    </div>
-                  }
-                  <span class="product-status-badge" [ngClass]="getStatusClass(p.status)">
-                    {{ getStatusLabel(p.status) }}
-                  </span>
-                </div>
-                <!-- Infos -->
-                <div class="product-info">
-                  @if (p.category) {
-                    <div class="product-category-tag">{{ p.category.name }}</div>
-                  }
-                  <div class="product-name">{{ p.name }}</div>
-                  @if (p.brand) {
-                    <div class="product-brand muted">{{ p.brand }}</div>
-                  }
-                  <div class="product-price">
-                    @if (isPromoActive(p)) {
-                      <span class="promo-price">{{ p.promoPrice! | number }} <span class="currency">{{ p.currencyCode }}</span></span>
-                      <span class="original-price">{{ (p.sellingPrice ?? p.estimatedPrice) | number }}</span>
-                    } @else {
-                      {{ (p.sellingPrice ?? p.estimatedPrice) | number }}
-                      <span class="currency">{{ p.currencyCode }}</span>
-                    }
-                  </div>
-                  @if (isPromoActive(p)) {
-                    <div class="promo-badge">Promo · Fin {{ p.promoEndsAt! | date:'dd/MM' }}</div>
-                  }
-                </div>
-                <!-- Actions rapides -->
-                <div class="product-actions" (click)="$event.stopPropagation()">
-                  <button
-                    class="btn-icon"
-                    [title]="p.status === 'ACTIVE' ? 'Désactiver' : 'Activer'"
-                    (click)="toggleProductStatus(p)"
-                  >
-                    <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-                      <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6" />
-                      @if (p.status === 'ACTIVE') {
-                        <path
-                          d="M7 10l2 2 4-4"
-                          stroke="currentColor"
-                          stroke-width="1.6"
-                          stroke-linecap="round"
-                        />
-                      }
-                      @if (p.status !== 'ACTIVE') {
-                        <path
-                          d="M7 13l6-6M13 13L7 7"
-                          stroke="currentColor"
-                          stroke-width="1.6"
-                          stroke-linecap="round"
-                        />
-                      }
-                    </svg>
-                  </button>
-                  <button
-                    class="btn-icon btn-icon-danger"
-                    title="Supprimer"
-                    (click)="confirmDeleteProduct(p)"
-                  >
-                    <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-                      <path
-                        d="M4 6h12M8 6V4h4v2M7 6v9a1 1 0 001 1h4a1 1 0 001-1V6"
-                        stroke="currentColor"
-                        stroke-width="1.6"
-                        stroke-linecap="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
+              <app-catalog-product-card
+                [product]="p"
+                [resolveImageUrl]="resolveImageUrl.bind(this)"
+                [isPromoActive]="isPromoActive.bind(this)"
+                [getStatusLabel]="getStatusLabel.bind(this)"
+                [getStatusClass]="getStatusClass.bind(this)"
+                [onImageError]="onImageError.bind(this)"
+                (open)="openProductDrawer(p)"
+                (toggleStatus)="toggleProductStatus(p)"
+                (delete)="confirmDeleteProduct(p)"
+              />
             }
           </div>
         }
@@ -219,10 +131,10 @@ import { environment } from '../../../../environments/environment';
             @for (t of themes(); track t.id) {
               <div class="theme-card" [style.border-top-color]="t.color || '#e5e7eb'">
                 <div class="theme-emoji">{{ t.emoji || '🏷️' }}</div>
-                <div class="theme-info">
+                  <div class="theme-info">
                   <div class="theme-name">{{ t.name }}</div>
                   @if (t.description) {
-                    <div class="theme-desc muted">{{ t.description | slice:0:60 }}{{ (t.description?.length ?? 0) > 60 ? '…' : '' }}</div>
+                    <div class="theme-desc muted">{{ t.description | slice:0:60 }}{{ t.description.length > 60 ? '…' : '' }}</div>
                   }
                   <div class="theme-footer">
                     <span class="badge" [ngClass]="t.isActive ? 'badge-green' : 'badge-gray'">{{ t.isActive ? 'Actif' : 'Inactif' }}</span>
@@ -291,365 +203,7 @@ import { environment } from '../../../../environments/environment';
       }
     </div>
 
-    <!-- ===== DRAWER PRODUIT ===== -->
-    @if (productDrawerOpen()) {
-      <div class="drawer-overlay" (click)="closeProductDrawer()">
-        <div class="drawer" (click)="$event.stopPropagation()">
-          <div class="drawer-header">
-            <h2>{{ editingProduct() ? 'Modifier le produit' : 'Nouveau produit' }}</h2>
-            <button class="btn-close" (click)="closeProductDrawer()">✕</button>
-          </div>
-          <div class="drawer-body">
-            <form [formGroup]="productForm" (ngSubmit)="submitProduct()">
-              <!-- Image -->
-              <div class="form-section">
-                <div class="image-upload-area" (click)="imageInput.click()">
-                  @if (productImagePreview()) {
-                    <img [src]="productImagePreview()!" class="image-preview" alt="Aperçu" />
-                  }
-                  @if (!productImagePreview()) {
-                    <div class="image-placeholder">
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                        <rect
-                          x="3"
-                          y="3"
-                          width="18"
-                          height="18"
-                          rx="3"
-                          stroke="#9ca3af"
-                          stroke-width="1.5"
-                        />
-                        <circle cx="8.5" cy="8.5" r="1.5" fill="#9ca3af" />
-                        <path
-                          d="M21 15l-5-5L5 21"
-                          stroke="#9ca3af"
-                          stroke-width="1.5"
-                          stroke-linecap="round"
-                        />
-                      </svg>
-                      <span>Cliquer pour ajouter une image</span>
-                    </div>
-                  }
-                </div>
-                <input
-                  #imageInput
-                  type="file"
-                  accept="image/*"
-                  style="display:none"
-                  (change)="onImageSelected($event)"
-                />
-                <div class="or-separator">ou</div>
-                <input
-                  type="text"
-                  formControlName="mainImageUrl"
-                  placeholder="URL de l'image (https://...)"
-                  class="form-input"
-                />
-              </div>
-              <!-- Champs principaux -->
-              <div class="form-group">
-                <label>Nom <span class="required">*</span></label>
-                <input
-                  type="text"
-                  formControlName="name"
-                  class="form-input"
-                  placeholder="Ex: iPhone 15 Pro"
-                  (input)="autoSlugProduct()"
-                  [class.invalid]="isInvalid('product', 'name')"
-                />
-                @if (isInvalid('product', 'name')) {
-                  <span class="field-error">Nom requis.</span>
-                }
-              </div>
-              <div class="form-group">
-                <label>Slug <span class="required">*</span></label>
-                <input
-                  type="text"
-                  formControlName="slug"
-                  class="form-input mono"
-                  placeholder="iphone-15-pro"
-                  [class.invalid]="isInvalid('product', 'slug')"
-                />
-                @if (isInvalid('product', 'slug')) {
-                  <span class="field-error">Slug requis.</span>
-                }
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Catégorie <span class="required">*</span></label>
-                  <select
-                    formControlName="categoryId"
-                    class="form-input"
-                    [class.invalid]="isInvalid('product', 'categoryId')"
-                  >
-                    <option [ngValue]="null" disabled>Choisir...</option>
-                    @for (c of categories(); track c.id) {
-                      <option [ngValue]="c.id">{{ c.name }}</option>
-                    }
-                  </select>
-                  @if (isInvalid('product', 'categoryId')) {
-                    <span class="field-error">Catégorie requise.</span>
-                  }
-                </div>
-                <div class="form-group">
-                  <label>Statut</label>
-                  <select formControlName="status" class="form-input">
-                    <option value="ACTIVE">Actif</option>
-                    <option value="INACTIVE">Inactif</option>
-                    <option value="DRAFT">Brouillon</option>
-                    <option value="ARCHIVED">Archivé</option>
-                  </select>
-                </div>
-              </div>
-              <!-- Prix réel + prix de vente -->
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Prix réel <span class="price-hint">(coût)</span></label>
-                  <div class="price-input-wrap">
-                    <input
-                      type="number"
-                      formControlName="realPrice"
-                      class="form-input"
-                      min="0"
-                      placeholder="0"
-                    />
-                    <span class="currency-badge">{{ productForm.get('currencyCode')?.value || 'XOF' }}</span>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label>Prix de vente <span class="price-hint">(affiché)</span></label>
-                  <div class="price-input-wrap">
-                    <input
-                      type="number"
-                      formControlName="sellingPrice"
-                      class="form-input"
-                      min="0"
-                      placeholder="0"
-                    />
-                    <span class="currency-badge">{{ productForm.get('currencyCode')?.value || 'XOF' }}</span>
-                  </div>
-                </div>
-              </div>
-              @if ((productForm.get('realPrice')?.value || 0) > 0 && (productForm.get('sellingPrice')?.value || 0) > 0) {
-                <div class="margin-hint">
-                  Marge : <strong>{{ ((productForm.get('sellingPrice')?.value || 0) - (productForm.get('realPrice')?.value || 0)) | number }} {{ productForm.get('currencyCode')?.value }}</strong>
-                  ({{ (((productForm.get('sellingPrice')?.value || 0) - (productForm.get('realPrice')?.value || 0)) / (productForm.get('realPrice')?.value || 1) * 100) | number:'1.0-1' }}%)
-                </div>
-              }
-              <!-- Promotion -->
-              @if (editingProduct()) {
-                <div class="promo-section">
-                  <div class="promo-section-title">
-                    <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                      <path d="M3 10l7-7 7 7M5 8v8a1 1 0 001 1h3v-4h2v4h3a1 1 0 001-1V8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Promotion
-                  </div>
-                  @if (promoLoading()) {
-                    <div class="promo-load-hint">Chargement...</div>
-                  } @else if (drawerActivePromo()) {
-                    <div class="promo-active-display">
-                      <div class="pad-row">
-                        <span class="pad-price">{{ drawerActivePromo()!.promoPrice | number }}</span>
-                        <span class="pad-curr">{{ editingProduct()?.currencyCode || 'XOF' }}</span>
-                        <span class="pad-orig">au lieu de {{ (editingProduct()!.sellingPrice ?? editingProduct()!.estimatedPrice) | number }}</span>
-                        <span class="pad-pct">
-                          -{{ (((editingProduct()!.sellingPrice ?? editingProduct()!.estimatedPrice) - drawerActivePromo()!.promoPrice) / ((editingProduct()!.sellingPrice ?? editingProduct()!.estimatedPrice) || 1) * 100) | number:'1.0-0' }}%
-                        </span>
-                      </div>
-                      <div class="pad-dates">Expire le {{ drawerActivePromo()!.endsAt | date:'dd/MM/yyyy à HH:mm' }}</div>
-                      @if (drawerActivePromo()!.note) {
-                        <div class="pad-note">{{ drawerActivePromo()!.note }}</div>
-                      }
-                      <button type="button" class="btn-end-promo" (click)="endDrawerPromo()" [disabled]="promoEndLoading()">
-                        {{ promoEndLoading() ? '...' : 'Terminer la promotion' }}
-                      </button>
-                    </div>
-                  } @else {
-                    <div class="promo-none">
-                      <span class="promo-none-text">Aucune promotion active</span>
-                      @if (!showQuickPromoForm()) {
-                        <button type="button" class="btn-add-promo" (click)="openQuickPromoForm()">
-                          + Mettre en promo
-                        </button>
-                      }
-                    </div>
-                    @if (showQuickPromoForm()) {
-                      <div class="quick-promo-form">
-                        @if (quickPromoError()) {
-                          <div class="qpf-error">{{ quickPromoError() }}</div>
-                        }
-                        <div class="form-row">
-                          <div class="form-group">
-                            <label>Prix promo <span class="required">*</span></label>
-                            <div class="price-input-wrap">
-                              <input
-                                type="number" class="form-input" min="1" placeholder="0"
-                                [value]="quickPromoPrice() ?? ''"
-                                (input)="quickPromoPrice.set(getNumOrNull($event))"
-                              />
-                              <span class="currency-badge">{{ productForm.get('currencyCode')?.value || 'XOF' }}</span>
-                            </div>
-                          </div>
-                          <div class="form-group">
-                            <label>Fin <span class="required">*</span></label>
-                            <input
-                              type="datetime-local" class="form-input"
-                              [value]="quickPromoEndsAt()"
-                              (input)="quickPromoEndsAt.set(getInputVal($event))"
-                            />
-                          </div>
-                        </div>
-                        @if ((quickPromoPrice() ?? 0) > 0 && (productForm.get('sellingPrice')?.value || 0) > 0) {
-                          <div class="promo-discount-hint">
-                            Réduction :
-                            <strong>{{ ((productForm.get('sellingPrice')?.value || 0) - (quickPromoPrice() ?? 0)) | number }} {{ productForm.get('currencyCode')?.value || 'XOF' }}</strong>
-                            ({{ (((productForm.get('sellingPrice')?.value || 0) - (quickPromoPrice() ?? 0)) / (productForm.get('sellingPrice')?.value || 1) * 100) | number:'1.0-0' }}% de remise)
-                          </div>
-                        }
-                        <div class="form-group">
-                          <label>Note <span class="price-hint">— optionnelle</span></label>
-                          <input
-                            type="text" class="form-input" placeholder="Black Friday, Soldes..."
-                            [value]="quickPromoNote()"
-                            (input)="quickPromoNote.set(getInputVal($event))"
-                          />
-                        </div>
-                        <div class="qpf-actions">
-                          <button type="button" class="btn-cancel" (click)="showQuickPromoForm.set(false)">Annuler</button>
-                          <button
-                            type="button" class="btn-primary"
-                            (click)="submitQuickPromo()"
-                            [disabled]="!quickPromoPrice() || (quickPromoPrice() ?? 0) <= 0 || !quickPromoEndsAt() || quickPromoLoading()"
-                          >
-                            {{ quickPromoLoading() ? 'Création...' : 'Créer la promotion' }}
-                          </button>
-                        </div>
-                      </div>
-                    }
-                  }
-                </div>
-              }
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Marque</label>
-                  <input
-                    type="text"
-                    formControlName="brand"
-                    class="form-input"
-                    placeholder="Ex: Apple"
-                  />
-                </div>
-                <div class="form-group">
-                  <label>Prix estimé</label>
-                  <div class="price-input-wrap">
-                    <input
-                      type="number"
-                      formControlName="estimatedPrice"
-                      class="form-input"
-                      min="0"
-                      placeholder="0"
-                    />
-                    <select formControlName="currencyCode" class="currency-select">
-                      <option value="XOF">XOF</option>
-                      <option value="EUR">EUR</option>
-                      <option value="USD">USD</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-              <div class="form-group">
-                <label>Description</label>
-                <textarea
-                  formControlName="description"
-                  class="form-input"
-                  rows="3"
-                  placeholder="Description du produit..."
-                ></textarea>
-              </div>
-              <div class="form-group">
-                <label>Lien de référence</label>
-                <input
-                  type="url"
-                  formControlName="referenceUrl"
-                  class="form-input"
-                  placeholder="https://..."
-                />
-              </div>
-              @if (themes().length > 0) {
-                <div class="form-group">
-                  <label>Thèmes</label>
-                  <div class="theme-chips">
-                    @for (t of themes(); track t.id) {
-                      <button
-                        type="button"
-                        class="theme-chip"
-                        [class.selected]="selectedThemeIds().has(t.id)"
-                        [style.--chip-color]="t.color || '#6b7280'"
-                        (click)="toggleThemeSelection(t.id)"
-                      >
-                        {{ t.emoji || '' }} {{ t.name }}
-                      </button>
-                    }
-                  </div>
-                </div>
-              }
-              <!-- Options de livraison -->
-              @if (allDeliveryOptions().length > 0) {
-                <div class="form-group">
-                  <label>Options de livraison</label>
-                  <p class="field-hint">Ces options seront automatiquement proposées quand ce produit est ajouté à une wishlist.</p>
-                  <div class="delivery-opts-list">
-                    @if (deliveryOptionsLoading()) {
-                      <span class="hint-text">Chargement…</span>
-                    } @else {
-                      @for (opt of allDeliveryOptions(); track opt.id) {
-                        <label class="delivery-opt-row">
-                          <input
-                            type="checkbox"
-                            [checked]="selectedDeliveryOptionIds().has(opt.id)"
-                            (change)="toggleDeliveryOption(opt.id)"
-                          />
-                          <span class="delivery-opt-label">{{ opt.label }}</span>
-                          @if (opt.price > 0) {
-                            <span class="delivery-opt-price">+{{ opt.price | number:'1.0-0' }} XOF</span>
-                          } @else {
-                            <span class="delivery-opt-free">Gratuit</span>
-                          }
-                        </label>
-                      }
-                    }
-                  </div>
-                </div>
-              }
-              <div class="drawer-actions">
-                <button type="button" class="btn-cancel" (click)="closeProductDrawer()">
-                  Annuler
-                </button>
-                @if (editingProduct()) {
-                  <button
-                    type="button"
-                    class="btn-danger-outline"
-                    (click)="confirmDeleteProduct(editingProduct()!); closeProductDrawer()"
-                  >
-                    Supprimer
-                  </button>
-                }
-                <button type="submit" class="btn-primary" [disabled]="productLoading()">
-                  {{
-                    productLoading()
-                      ? 'Enregistrement...'
-                      : editingProduct()
-                        ? 'Mettre à jour'
-                        : 'Créer le produit'
-                  }}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    }
+    <app-catalog-product-drawer [host]="this" />
 
     <!-- ===== DRAWER CATÉGORIE ===== -->
     @if (categoryDrawerOpen()) {
@@ -957,140 +511,6 @@ import { environment } from '../../../../environments/environment';
         gap: 16px;
       }
 
-      .product-card {
-        background: white;
-        border: 1.5px solid #e5e7eb;
-        border-radius: 16px;
-        overflow: hidden;
-        cursor: pointer;
-        transition:
-          box-shadow 0.15s,
-          transform 0.15s;
-        display: flex;
-        flex-direction: column;
-        position: relative;
-      }
-      .product-card:hover {
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-        transform: translateY(-2px);
-      }
-
-      .product-img-wrap {
-        position: relative;
-        height: 160px;
-        background: #f9fafb;
-        flex-shrink: 0;
-      }
-      .product-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-      .product-img-placeholder {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        color: #d1d5db;
-        font-size: 0.82rem;
-      }
-      .product-status-badge {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        padding: 2px 8px;
-        border-radius: 999px;
-        font-size: 0.7rem;
-        font-weight: 700;
-      }
-      .status-active {
-        background: #dcfce7;
-        color: #166534;
-      }
-      .status-inactive {
-        background: #fef3c7;
-        color: #92400e;
-      }
-      .status-draft {
-        background: #f3f4f6;
-        color: #6b7280;
-      }
-      .status-archived {
-        background: #fee2e2;
-        color: #991b1b;
-      }
-
-      .product-info {
-        padding: 14px;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-      .product-category-tag {
-        font-size: 0.72rem;
-        font-weight: 700;
-        color: #6366f1;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-      }
-      .product-name {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: #111827;
-        line-height: 1.3;
-      }
-      .product-brand {
-        font-size: 0.82rem;
-      }
-      .product-price {
-        font-size: 1rem;
-        font-weight: 800;
-        color: #111827;
-        margin-top: 4px;
-      }
-      .currency {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #6b7280;
-      }
-      .muted {
-        color: #9ca3af;
-      }
-
-      .product-actions {
-        display: flex;
-        gap: 4px;
-        padding: 10px 14px;
-        border-top: 1px solid #f3f4f6;
-        justify-content: flex-end;
-      }
-      .btn-icon {
-        width: 32px;
-        height: 32px;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        background: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        color: #6b7280;
-        transition: 0.15s;
-      }
-      .btn-icon:hover {
-        background: #f3f4f6;
-        color: #111827;
-      }
-      .btn-icon-danger:hover {
-        background: #fee2e2;
-        color: #991b1b;
-        border-color: #fca5a5;
-      }
-
       /* Categories list */
       .categories-list {
         display: flex;
@@ -1298,193 +718,6 @@ import { environment } from '../../../../environments/environment';
         color: #ef4444;
       }
 
-      .price-input-wrap {
-        display: flex;
-        gap: 0;
-      }
-      .price-input-wrap .form-input {
-        border-radius: 10px 0 0 10px;
-        flex: 1;
-      }
-      .currency-select {
-        border: 1.5px solid #d1d5db;
-        border-left: 0;
-        border-radius: 0 10px 10px 0;
-        padding: 10px 10px;
-        font: inherit;
-        background: #f9fafb;
-        cursor: pointer;
-      }
-      .currency-badge {
-        display: flex;
-        align-items: center;
-        padding: 0 12px;
-        background: #f9fafb;
-        border: 1.5px solid #d1d5db;
-        border-left: 0;
-        border-radius: 0 10px 10px 0;
-        font-size: 0.8rem;
-        font-weight: 700;
-        color: #6b7280;
-        white-space: nowrap;
-      }
-      .price-hint {
-        font-weight: 400;
-        color: #9ca3af;
-        font-size: 0.78rem;
-      }
-      .margin-hint {
-        background: #f0fdf4;
-        border: 1px solid #bbf7d0;
-        border-radius: 8px;
-        padding: 8px 12px;
-        font-size: 0.82rem;
-        color: #166534;
-      }
-      .margin-hint strong {
-        color: #15803d;
-      }
-
-      /* Promo */
-      .promo-section {
-        background: #fff7ed;
-        border: 1.5px solid #fed7aa;
-        border-radius: 12px;
-        padding: 14px 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-      .promo-section-title {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.72rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.07em;
-        color: #92400e;
-      }
-      .promo-discount-hint {
-        background: #ffedd5;
-        border: 1px solid #fdba74;
-        border-radius: 8px;
-        padding: 7px 12px;
-        font-size: 0.82rem;
-        color: #9a3412;
-      }
-      .promo-price {
-        font-weight: 800;
-        color: #dc2626;
-      }
-      .original-price {
-        font-size: 0.75rem;
-        color: #94a3b8;
-        text-decoration: line-through;
-        margin-left: 4px;
-      }
-      .promo-badge {
-        display: inline-block;
-        background: #dc2626;
-        color: white;
-        font-size: 0.62rem;
-        font-weight: 800;
-        padding: 2px 7px;
-        border-radius: 999px;
-        margin-top: 2px;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-      }
-      .promo-load-hint { font-size: 0.78rem; color: #94a3b8; }
-      .promo-active-display { display: flex; flex-direction: column; gap: 6px; }
-      .pad-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-      .pad-price { font-size: 1.05rem; font-weight: 900; color: #dc2626; }
-      .pad-curr { font-size: 0.72rem; color: #94a3b8; font-weight: 600; }
-      .pad-orig { font-size: 0.78rem; color: #94a3b8; text-decoration: line-through; }
-      .pad-pct {
-        background: #dc2626; color: white; font-size: 0.68rem; font-weight: 800;
-        padding: 2px 7px; border-radius: 999px;
-      }
-      .pad-dates { font-size: 0.75rem; color: #64748b; }
-      .pad-note { font-size: 0.75rem; color: #64748b; font-style: italic; }
-      .btn-end-promo {
-        align-self: flex-start; margin-top: 4px;
-        padding: 6px 14px; border: 1.5px solid #fecaca; border-radius: 8px;
-        background: white; color: #dc2626; font: inherit; font-size: 0.78rem; font-weight: 700;
-        cursor: pointer; transition: 0.15s;
-      }
-      .btn-end-promo:hover:not(:disabled) { background: #fef2f2; }
-      .btn-end-promo:disabled { opacity: 0.5; cursor: not-allowed; }
-      .promo-none { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-      .promo-none-text { font-size: 0.82rem; color: #94a3b8; }
-      .btn-add-promo {
-        padding: 6px 14px; border: 1.5px solid #fed7aa; border-radius: 8px;
-        background: #fff7ed; color: #c2410c; font: inherit; font-size: 0.78rem; font-weight: 700;
-        cursor: pointer; transition: 0.15s;
-      }
-      .btn-add-promo:hover { background: #ffedd5; border-color: #fdba74; }
-      .quick-promo-form { display: flex; flex-direction: column; gap: 10px; padding-top: 4px; }
-      .qpf-error {
-        padding: 8px 12px; background: #fef2f2; border: 1px solid #fecaca;
-        border-radius: 8px; font-size: 0.78rem; color: #991b1b;
-      }
-      .qpf-actions { display: flex; gap: 8px; justify-content: flex-end; }
-
-      /* Image upload */
-      .image-upload-area {
-        border: 2px dashed #d1d5db;
-        border-radius: 12px;
-        cursor: pointer;
-        min-height: 140px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        transition: 0.15s;
-        background: #f9fafb;
-      }
-      .image-upload-area:hover {
-        border-color: #111827;
-        background: #f3f4f6;
-      }
-      .image-preview {
-        width: 100%;
-        height: 140px;
-        object-fit: cover;
-      }
-      .image-placeholder {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-        color: #9ca3af;
-        font-size: 0.82rem;
-        padding: 20px;
-        text-align: center;
-      }
-      .or-separator {
-        text-align: center;
-        color: #9ca3af;
-        font-size: 0.82rem;
-        position: relative;
-      }
-      .or-separator::before,
-      .or-separator::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        width: 40%;
-        height: 1px;
-        background: #e5e7eb;
-      }
-      .or-separator::before {
-        left: 0;
-      }
-      .or-separator::after {
-        right: 0;
-      }
-
-      /* Toggle */
       .toggle-row {
         display: flex;
         align-items: center;
@@ -1518,7 +751,6 @@ import { environment } from '../../../../environments/environment';
         left: 23px;
       }
 
-      /* Drawer actions */
       .drawer-actions {
         display: flex;
         gap: 10px;
@@ -1602,7 +834,6 @@ import { environment } from '../../../../environments/environment';
         cursor: not-allowed;
       }
 
-      /* Themes grid */
       .themes-grid { display: flex; flex-direction: column; gap: 8px; }
       .theme-card { background: white; border: 1.5px solid #f3f4f6; border-top-width: 3px; border-radius: 14px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; transition: 0.15s; }
       .theme-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
@@ -1613,21 +844,6 @@ import { environment } from '../../../../environments/environment';
       .theme-footer { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
       .theme-count { font-size: 0.75rem; }
       .theme-actions { display: flex; gap: 6px; flex-shrink: 0; }
-
-      /* Theme chips in product drawer */
-      .theme-chips { display: flex; flex-wrap: wrap; gap: 7px; }
-      .theme-chip { padding: 5px 12px; border: 1.5px solid #e5e7eb; border-radius: 999px; background: white; font: inherit; font-size: 0.78rem; font-weight: 600; color: #6b7280; cursor: pointer; transition: 0.15s; }
-      .theme-chip:hover { border-color: var(--chip-color); color: var(--chip-color); }
-      .theme-chip.selected { background: var(--chip-color); border-color: var(--chip-color); color: white; }
-      .delivery-opts-list { display: flex; flex-direction: column; gap: 6px; }
-      .delivery-opt-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; font-size: 0.82rem; transition: background 0.1s; }
-      .delivery-opt-row:hover { background: #f9fafb; }
-      .delivery-opt-row input[type="checkbox"] { accent-color: #6366f1; width: 15px; height: 15px; flex-shrink: 0; }
-      .delivery-opt-label { flex: 1; font-weight: 600; color: #374151; }
-      .delivery-opt-price { font-weight: 700; color: #6366f1; font-size: 0.78rem; }
-      .delivery-opt-free { font-weight: 600; color: #22c55e; font-size: 0.78rem; }
-      .field-hint { font-size: 0.75rem; color: #9ca3af; margin: 0 0 8px; }
-      .hint-text { font-size: 0.78rem; color: #9ca3af; }
 
       /* Color picker row */
       .color-row { display: flex; gap: 8px; align-items: center; }
@@ -2009,8 +1225,8 @@ export class CatalogAdminPageComponent implements OnInit {
         : this.catalogService.createProduct(payload);
 
       req$.subscribe({
-        next: (res: any) => {
-          const productId = editing ? editing.id : (res as any)?.id ?? (res as any)?.data?.item?.id;
+        next: (res) => {
+          const productId = editing ? editing.id : res.item.id;
           const themeIds = Array.from(this.selectedThemeIds());
           const deliveryOptionIds = Array.from(this.selectedDeliveryOptionIds());
           if (productId) {
@@ -2032,9 +1248,16 @@ export class CatalogAdminPageComponent implements OnInit {
             this.loadProducts();
           }
         },
-        error: (e: any) => {
+        error: (e: unknown) => {
           this.productLoading.set(false);
-          this.toast.error(e?.error?.message ?? 'Erreur.');
+          const message =
+            typeof e === 'object' &&
+            e !== null &&
+            'error' in e &&
+            typeof (e as { error?: { message?: unknown } }).error?.message === 'string'
+              ? (e as { error: { message: string } }).error.message
+              : 'Erreur.';
+          this.toast.error(message);
         },
       });
     };

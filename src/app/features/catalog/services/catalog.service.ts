@@ -62,6 +62,10 @@ export interface CreateCatalogProductPayload {
   categoryId?: number | null;
 }
 
+export interface CatalogProductActionPayload {
+  item: CatalogProduct;
+}
+
 export interface UpdateCatalogProductPayload {
   name?: string;
   slug?: string;
@@ -204,18 +208,18 @@ export class CatalogService {
     return this.getProductById(productId);
   }
 
-  createProduct(payload: CreateCatalogProductPayload): Observable<unknown> {
+  createProduct(payload: CreateCatalogProductPayload): Observable<CatalogProductActionPayload> {
     return this.http
-      .post<ActionResponse>(this.productsUrl, payload)
+      .post<ActionResponse<CatalogProductActionPayload>>(this.productsUrl, payload)
       .pipe(map((response) => response.data));
   }
 
   updateProduct(
     productId: number,
     payload: UpdateCatalogProductPayload,
-  ): Observable<unknown> {
+  ): Observable<CatalogProductActionPayload> {
     return this.http
-      .patch<ActionResponse>(`${this.productsUrl}/${productId}`, payload)
+      .patch<ActionResponse<CatalogProductActionPayload>>(`${this.productsUrl}/${productId}`, payload)
       .pipe(map((response) => response.data));
   }
 

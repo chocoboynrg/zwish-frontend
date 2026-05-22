@@ -1,13 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 import { WishlistDrawerService, WishlistDrawerEvent } from '../services/wishlist-drawer.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { EventWishlistItem } from '../../events/models/event-wishlist.model';
 
 @Component({
   selector: 'app-wishlist-drawer',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LucideAngularModule],
   template: `
     <!-- Overlay -->
     @if (drawer.isOpen()) {
@@ -18,29 +20,14 @@ import { AuthService } from '../../../core/services/auth.service';
     <div class="drawer" [class.open]="drawer.isOpen()">
       <div class="drawer-header">
         <div class="drawer-title">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
+          <lucide-icon name="heart" [size]="20" color="currentColor" [strokeWidth]="1.8" />
           Ma Wishlist
           @if (drawer.totalItems() > 0) {
             <span class="total-badge">{{ drawer.totalItems() }}</span>
           }
         </div>
         <button class="btn-close" (click)="drawer.close()">
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-            <path
-              d="M4 4l12 12M16 4L4 16"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-            />
-          </svg>
+          <lucide-icon name="x" [size]="18" color="currentColor" [strokeWidth]="1.8" />
         </button>
       </div>
 
@@ -172,14 +159,7 @@ import { AuthService } from '../../../core/services/auth.service';
             Tous mes événements
           </a>
           <button class="btn-refresh" (click)="drawer.load()" [disabled]="drawer.loading()">
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M4 10a6 6 0 016-6 6 6 0 015.66 4M16 4v4h-4M16 10a6 6 0 01-6 6 6 6 0 01-5.66-4M4 16v-4h4"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="refresh-cw" [size]="14" color="currentColor" [strokeWidth]="1.8" />
           </button>
         </div>
       }
@@ -577,7 +557,7 @@ export class WishlistDrawerComponent {
   readonly drawer: WishlistDrawerService = inject(WishlistDrawerService);
   readonly auth: AuthService = inject(AuthService);
 
-  getPercent(item: any): number {
+  getPercent(item: EventWishlistItem): number {
     if (!item.targetAmount) return 0;
     return Math.min(100, Math.round((item.fundedAmount / item.targetAmount) * 100));
   }

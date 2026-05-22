@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Router } from '@angular/router';
 import { NotificationCenterService } from '../services/notification-center.service';
 import { NotificationsService } from '../services/notifications.service';
 import { AppNotification } from '../models/notification.model';
@@ -307,6 +308,10 @@ import { AppNotification } from '../models/notification.model';
         background: #e0f2fe;
         color: #0369a1;
       }
+      .type-delivery {
+        background: #fce7f3;
+        color: #9d174d;
+      }
       .type-default {
         background: #f3f4f6;
         color: #6b7280;
@@ -331,6 +336,7 @@ import { AppNotification } from '../models/notification.model';
 export class NotificationsPageComponent implements OnInit {
   private readonly center = inject(NotificationCenterService);
   private readonly service = inject(NotificationsService);
+  private readonly router = inject(Router);
 
   readonly notifications = this.center.notifications;
   readonly unreadCount = this.center.unreadCount;
@@ -358,6 +364,19 @@ export class NotificationsPageComponent implements OnInit {
     if (!this.isRead(n)) {
       this.center.markOneAsReadLocally(n.id);
       this.service.markAsRead(n.id).subscribe();
+    }
+    this.navigateForNotification(n);
+  }
+
+  private navigateForNotification(n: AppNotification): void {
+    const payload = n.dataPayload;
+    if (
+      n.type === 'DELIVERY_SELECTION_REQUIRED' &&
+      payload?.['wishlistItemId']
+    ) {
+      this.router.navigate(['/app/delivery', payload['wishlistItemId']]);
+    } else if (n.type === 'DELIVERY_DATE_PENDING_ADMIN') {
+      this.router.navigate(['/admin/delivery-date-pending']);
     }
   }
 
@@ -389,6 +408,9 @@ export class NotificationsPageComponent implements OnInit {
       WISHLIST_ITEM_RESERVED: 'Réservation',
       WISHLIST_ITEM_RESERVATION_EXPIRED: 'Réservation',
       RESERVATION_EXPIRED: 'Réservation',
+      DELIVERY_SELECTION_REQUIRED: 'Livraison',
+      DELIVERY_SELECTION_CONFIRMED: 'Livraison',
+      DELIVERY_DATE_PENDING_ADMIN: 'Livraison',
     };
     return m[type ?? ''] ?? 'Notification';
   }
@@ -410,6 +432,9 @@ export class NotificationsPageComponent implements OnInit {
       WISHLIST_ITEM_RESERVED: 'type-event',
       WISHLIST_ITEM_RESERVATION_EXPIRED: 'type-event',
       RESERVATION_EXPIRED: 'type-event',
+      DELIVERY_SELECTION_REQUIRED: 'type-delivery',
+      DELIVERY_SELECTION_CONFIRMED: 'type-delivery',
+      DELIVERY_DATE_PENDING_ADMIN: 'type-delivery',
     };
     return m[type ?? ''] ?? 'type-default';
   }

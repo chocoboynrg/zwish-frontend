@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { LucideAngularModule } from 'lucide-angular';
 import {
   AdminPaymentsService,
   ReconciliationIssue,
@@ -20,7 +21,7 @@ const ISSUE_TYPES = [
 @Component({
   selector: 'app-reconciliation-admin-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, LucideAngularModule],
   template: `
     <div class="page">
       <!-- Header -->
@@ -35,15 +36,7 @@ const ISSUE_TYPES = [
           }
         </div>
         <button class="btn-refresh" (click)="loadIssues()" [disabled]="loading()">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-            <path
-              d="M4 10a6 6 0 016-6 6 6 0 015.66 4M16 4v4h-4M16 10a6 6 0 01-6 6 6 6 0 01-5.66-4M4 16v-4h4"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
+          <lucide-icon name="refresh-cw" [size]="16" color="currentColor" [strokeWidth]="1.8" />
           {{ loading() ? 'Analyse...' : 'Rafraîchir' }}
         </button>
       </div>
@@ -177,40 +170,13 @@ const ISSUE_TYPES = [
                 <div class="issue-links">
                   @if (issue.paymentId) {
                     <a [routerLink]="['/admin/payments', issue.paymentId]" class="issue-link">
-                      <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                        <rect
-                          x="1"
-                          y="5"
-                          width="18"
-                          height="12"
-                          rx="2"
-                          stroke="currentColor"
-                          stroke-width="1.6"
-                        />
-                        <path d="M1 9h18" stroke="currentColor" stroke-width="1.6" />
-                      </svg>
+                      <lucide-icon name="credit-card" [size]="14" color="currentColor" [strokeWidth]="1.8" />
                       Paiement #{{ issue.paymentId }}
                     </a>
                   }
                   @if (issue.eventId) {
                     <a [routerLink]="['/admin/events', issue.eventId]" class="issue-link">
-                      <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                        <rect
-                          x="2"
-                          y="4"
-                          width="16"
-                          height="14"
-                          rx="2"
-                          stroke="currentColor"
-                          stroke-width="1.6"
-                        />
-                        <path
-                          d="M6 2v4M14 2v4M2 9h16"
-                          stroke="currentColor"
-                          stroke-width="1.6"
-                          stroke-linecap="round"
-                        />
-                      </svg>
+                      <lucide-icon name="calendar" [size]="14" color="currentColor" [strokeWidth]="1.8" />
                       Événement #{{ issue.eventId }}
                     </a>
                   }

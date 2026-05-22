@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { LucideAngularModule } from 'lucide-angular';
 import { UserEventView } from '../../../events/services/events.service';
 import {
   WishlistItem,
@@ -15,7 +16,7 @@ type WishlistSort = 'DEFAULT' | 'TARGET_DESC' | 'REMAINING_DESC' | 'FUNDED_DESC'
 @Component({
   selector: 'app-event-wishlist-section',
   standalone: true,
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, DecimalPipe, LucideAngularModule],
   template: `
     <div class="wishlist-wrap">
       <!-- Header + toolbar -->
@@ -38,15 +39,7 @@ type WishlistSort = 'DEFAULT' | 'TARGET_DESC' | 'REMAINING_DESC' | 'FUNDED_DESC'
           <div class="toolbar">
             <!-- Recherche -->
             <div class="search-wrap">
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" class="search-icon">
-                <circle cx="8.5" cy="8.5" r="6" stroke="currentColor" stroke-width="1.5" />
-                <path
-                  d="M13.5 13.5l3 3"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="search" [size]="16" color="currentColor" [strokeWidth]="1.8" class="search-icon" />
               <input
                 type="text"
                 class="search-input"
@@ -86,29 +79,13 @@ type WishlistSort = 'DEFAULT' | 'TARGET_DESC' | 'REMAINING_DESC' | 'FUNDED_DESC'
       <!-- Erreurs -->
       @if (contributionError) {
         <div class="alert-error">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-            <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
-            <path
-              d="M10 6v5M10 13.5v.5"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-            />
-          </svg>
+          <lucide-icon name="alert-circle" [size]="16" color="currentColor" [strokeWidth]="1.8" />
           {{ contributionError }}
         </div>
       }
       @if (reservationError) {
         <div class="alert-error">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-            <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
-            <path
-              d="M10 6v5M10 13.5v.5"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-            />
-          </svg>
+          <lucide-icon name="alert-circle" [size]="16" color="currentColor" [strokeWidth]="1.8" />
           {{ reservationError }}
         </div>
       }
@@ -153,14 +130,7 @@ type WishlistSort = 'DEFAULT' | 'TARGET_DESC' | 'REMAINING_DESC' | 'FUNDED_DESC'
                 <div class="wish-badges">
                   @if (item.fundingStatus === 'FUNDED') {
                     <span class="badge badge-funded">
-                      <svg width="10" height="10" viewBox="0 0 20 20" fill="none">
-                        <path
-                          d="M4 10l4.5 4.5 7.5-7.5"
-                          stroke="currentColor"
-                          stroke-width="2.2"
-                          stroke-linecap="round"
-                        />
-                      </svg>
+                      <lucide-icon name="check" [size]="10" color="currentColor" [strokeWidth]="2.2" />
                       Financé
                     </span>
                   }
@@ -211,14 +181,7 @@ type WishlistSort = 'DEFAULT' | 'TARGET_DESC' | 'REMAINING_DESC' | 'FUNDED_DESC'
                 <!-- Réservé par -->
                 @if (item.isReserved && item.reservedByName) {
                   <div class="wish-reserved-by">
-                    <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-                      <path
-                        d="M10 11a4 4 0 100-8 4 4 0 000 8zM2 19a8 8 0 0116 0"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                      />
-                    </svg>
+                    <lucide-icon name="user" [size]="12" color="currentColor" [strokeWidth]="1.8" />
                     {{
                       item.reservedByMe ? 'Réservé par vous' : 'Réservé par ' + item.reservedByName
                     }}
@@ -234,15 +197,8 @@ type WishlistSort = 'DEFAULT' | 'TARGET_DESC' | 'REMAINING_DESC' | 'FUNDED_DESC'
                       [disabled]="contributionLoading"
                       (click)="handleContribution.emit(item)"
                     >
-                      <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                        <path
-                          d="M10 4v12M4 10h12"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                        />
-                      </svg>
-                      {{ item.pendingContributionByMe ? 'Voir mon paiement' : 'Contribuer' }}
+                      <lucide-icon name="plus" [size]="14" color="currentColor" [strokeWidth]="2" />
+                      {{ item.pendingContributionByMe ? 'Continuer le paiement' : 'Contribuer' }}
                     </button>
                   }
                   <!-- Réservation -->
@@ -252,28 +208,13 @@ type WishlistSort = 'DEFAULT' | 'TARGET_DESC' | 'REMAINING_DESC' | 'FUNDED_DESC'
                       [disabled]="reservationLoading"
                       (click)="reserveItem.emit(item.id)"
                     >
-                      <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                        <path
-                          d="M5 9l5 5 5-5"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linecap="round"
-                        />
-                      </svg>
+                      <lucide-icon name="chevron-down" [size]="14" color="currentColor" [strokeWidth]="1.8" />
                       Réserver
                     </button>
                   }
                   <!-- Détail -->
                   <button class="btn-detail" (click)="openItemDetail.emit(item)">
-                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                      <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.4" />
-                      <path
-                        d="M10 9v5M10 6.5v.5"
-                        stroke="currentColor"
-                        stroke-width="1.6"
-                        stroke-linecap="round"
-                      />
-                    </svg>
+                    <lucide-icon name="info" [size]="14" color="currentColor" [strokeWidth]="1.8" />
                     Détail
                   </button>
                 </div>

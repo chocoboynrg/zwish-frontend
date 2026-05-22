@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 import {
   AdminPaymentsService,
   AdminPayment,
@@ -12,7 +13,7 @@ import { ToastService } from '../../../core/services/toast.service';
 @Component({
   selector: 'app-payments-admin-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule],
   template: `
     <div class="page">
       <!-- Tabs -->
@@ -41,15 +42,7 @@ import { ToastService } from '../../../core/services/toast.service';
             <p class="subtitle">{{ response()?.summary?.totalCount ?? 0 }} paiements au total</p>
           </div>
           <button class="btn-export" (click)="exportCsv()" [disabled]="exporting()">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M10 3v10M6 9l4 4 4-4M4 17h12"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <lucide-icon name="download" [size]="16" color="currentColor" [strokeWidth]="1.8" />
             {{ exporting() ? 'Export...' : 'Export CSV' }}
           </button>
         </div>
@@ -168,7 +161,7 @@ import { ToastService } from '../../../core/services/toast.service';
                         <span class="badge badge-gray">{{ p.provider }}</span>
                       </td>
                       <td>
-                        <span class="badge badge-gray">{{ p.paymentMethod ?? '—' }}</span>
+                        <span class="badge badge-gray">{{ p.paymentMethod }}</span>
                       </td>
                       <td>
                         <span class="badge" [ngClass]="getStatusBadge(p.status)">{{

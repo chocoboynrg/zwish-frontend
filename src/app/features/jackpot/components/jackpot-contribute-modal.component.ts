@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { LucideAngularModule } from 'lucide-angular';
 import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -17,7 +18,7 @@ interface ApiResp<T> {
 @Component({
   selector: 'app-jackpot-contribute-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
   template: `
     @if (show) {
       <div class="overlay" (click)="tryClose()"></div>
@@ -30,14 +31,7 @@ interface ApiResp<T> {
               <div class="modal-title">Contribuer à "{{ jackpot?.title }}"</div>
             </div>
             <button class="btn-close" (click)="tryClose()" [disabled]="loading()">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M4 4l12 12M16 4L4 16"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="x" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             </button>
           </div>
           <!-- Progression jackpot -->
@@ -110,15 +104,7 @@ interface ApiResp<T> {
             <label class="anon-toggle" (click)="toggleAnon()">
               <div class="anon-checkbox" [class.checked]="form.get('isAnonymous')?.value">
                 @if (form.get('isAnonymous')?.value) {
-                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M4 10l5 5 7-7"
-                      stroke="white"
-                      stroke-width="2.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
+                  <lucide-icon name="check" [size]="12" color="white" [strokeWidth]="2" />
                 }
               </div>
               <span class="anon-label">Contribuer anonymement</span>
@@ -135,14 +121,7 @@ interface ApiResp<T> {
                 [disabled]="loading() || form.invalid"
               >
                 @if (!loading()) {
-                  <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M10 4v12M4 10h12"
-                      stroke="currentColor"
-                      stroke-width="2.2"
-                      stroke-linecap="round"
-                    />
-                  </svg>
+                  <lucide-icon name="plus" [size]="15" color="currentColor" [strokeWidth]="2" />
                   Confirmer la contribution
                 }
                 @if (loading()) {

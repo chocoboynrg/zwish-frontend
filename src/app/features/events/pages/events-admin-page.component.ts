@@ -3,13 +3,14 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { EventsService, AdminEventFull } from '../services/events.service';
+import { LucideAngularModule } from 'lucide-angular';
 
 type StatusTab = 'all' | 'upcoming' | 'past' | 'archived';
 
 @Component({
   selector: 'app-events-admin-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, LucideAngularModule],
   template: `
     <div class="page">
 
@@ -23,9 +24,7 @@ type StatusTab = 'all' | 'upcoming' | 'past' | 'archived';
           </p>
         </div>
         <button class="btn-refresh" (click)="load()" [disabled]="loading()">
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-            <path d="M4 10a6 6 0 1 0 1.6-4M4 6v4h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <lucide-icon name="refresh-cw" [size]="14" color="currentColor" [strokeWidth]="1.8" />
           Actualiser
         </button>
       </div>
@@ -33,10 +32,7 @@ type StatusTab = 'all' | 'upcoming' | 'past' | 'archived';
       <!-- Search + tabs -->
       <div class="toolbar">
         <div class="search-wrap">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" class="search-icon">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.8"/>
-            <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
+          <lucide-icon name="search" [size]="15" color="currentColor" [strokeWidth]="1.8" class="search-icon" />
           <input
             type="text"
             class="search-input"
@@ -97,10 +93,7 @@ type StatusTab = 'all' | 'upcoming' | 'past' | 'archived';
 
                 <!-- Date -->
                 <div class="card-date">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/>
-                    <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                  </svg>
+                  <lucide-icon name="calendar" [size]="13" color="currentColor" [strokeWidth]="1.8" />
                   {{ ev.eventDate | date:'EEEE d MMMM yyyy, HH:mm' }}
                 </div>
 
@@ -112,17 +105,12 @@ type StatusTab = 'all' | 'upcoming' | 'past' | 'archived';
                       <span class="org-name">{{ ev.organizer.name }}</span>
                       <div class="org-contacts">
                         <a [href]="'mailto:' + ev.organizer.email" class="contact-link email-link" (click)="$event.stopPropagation()">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                            <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/>
-                            <path d="M2 8l10 7 10-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                          </svg>
+                          <lucide-icon name="mail" [size]="12" color="currentColor" [strokeWidth]="1.8" />
                           {{ ev.organizer.email }}
                         </a>
                         @if (ev.organizer.phoneNumber) {
                           <a [href]="'tel:' + ev.organizer.phoneNumber" class="contact-link phone-link" (click)="$event.stopPropagation()">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                              <path d="M6.6 10.8a15.2 15.2 0 006.6 6.6l2.2-2.2a1 1 0 011-.24 11.4 11.4 0 003.57.57A1 1 0 0121 16.5V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 .93c.06 1.23.28 2.43.57 3.57a1 1 0 01-.25 1L6.6 10.8z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                            </svg>
+                            <lucide-icon name="phone" [size]="12" color="currentColor" [strokeWidth]="1.8" />
                             {{ ev.organizer.phoneNumber }}
                           </a>
                         }
@@ -137,25 +125,17 @@ type StatusTab = 'all' | 'upcoming' | 'past' | 'archived';
                 <!-- Stats chips -->
                 <div class="stats-row">
                   <div class="stat-chip">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.6"/>
-                      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                    </svg>
+                    <lucide-icon name="user" [size]="13" color="currentColor" [strokeWidth]="1.8" />
                     <span>{{ ev.stats.participantsCount }}</span>
                     <span class="stat-label">participants</span>
                   </div>
                   <div class="stat-chip">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                      <rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/>
-                      <path d="M16 7V5a2 2 0 00-8 0v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                    </svg>
+                    <lucide-icon name="package" [size]="13" color="currentColor" [strokeWidth]="1.8" />
                     <span>{{ ev.stats.itemsCount }}</span>
                     <span class="stat-label">items</span>
                   </div>
                   <div class="stat-chip" [class.chip-funded]="ev.stats.fundedItemsCount > 0">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                      <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <lucide-icon name="check" [size]="13" color="currentColor" [strokeWidth]="1.8" />
                     <span>{{ ev.stats.fundedItemsCount }}</span>
                     <span class="stat-label">financés</span>
                   </div>
@@ -184,9 +164,7 @@ type StatusTab = 'all' | 'upcoming' | 'past' | 'archived';
 
                 <a [routerLink]="['/admin/events', ev.id]" class="btn-detail">
                   Voir le détail
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                    <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
+                  <lucide-icon name="chevron-right" [size]="13" color="currentColor" [strokeWidth]="1.8" />
                 </a>
               </div>
 

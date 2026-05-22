@@ -1,11 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-check-email-page',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, LucideAngularModule],
   template: `
     <div class="auth-centered">
       <div class="check-card">
@@ -14,24 +15,7 @@ import { AuthService } from '../../core/services/auth.service';
 
         <!-- Icône email animée -->
         <div class="email-icon" [class.warning]="fromLogin">
-          <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
-            <rect
-              x="4"
-              y="16"
-              width="56"
-              height="38"
-              rx="8"
-              [attr.fill]="fromLogin ? '#fff7ed' : '#f0fdf4'"
-              [attr.stroke]="fromLogin ? '#f59e0b' : '#22c55e'"
-              stroke-width="2"
-            />
-            <path
-              d="M4 24l28 18 28-18"
-              [attr.stroke]="fromLogin ? '#f59e0b' : '#22c55e'"
-              stroke-width="2.5"
-              stroke-linecap="round"
-            />
-          </svg>
+          <lucide-icon name="mail" [size]="56" color="currentColor" [strokeWidth]="1.8" />
           @if (fromLogin) {
             <div class="icon-badge">!</div>
           }
@@ -47,15 +31,7 @@ import { AuthService } from '../../core/services/auth.service';
             <div class="email-highlight">{{ email }}</div>
           }
           <div class="alert-banner">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
-              <path
-                d="M10 6v5M10 13.5v.5"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="info" [size]="16" color="currentColor" [strokeWidth]="1.8" />
             Le lien est valable <strong>24 heures</strong>. Après expiration, renvoyez un nouvel
             email.
           </div>
@@ -74,29 +50,13 @@ import { AuthService } from '../../core/services/auth.service';
         <!-- Alerte succès/erreur renvoie -->
         @if (resendSuccess) {
           <div class="alert alert-success">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
-              <path
-                d="M6.5 10l2.5 2.5 4.5-4.5"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="check-circle-2" [size]="16" color="currentColor" [strokeWidth]="1.8" />
             Email renvoyé avec succès !
           </div>
         }
         @if (resendError) {
           <div class="alert alert-error">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
-              <path
-                d="M10 6v5M10 13.5v.5"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="alert-circle" [size]="16" color="currentColor" [strokeWidth]="1.8" />
             {{ resendError }}
           </div>
         }
@@ -107,29 +67,14 @@ import { AuthService } from '../../core/services/auth.service';
             (click)="resend()"
             [disabled]="resendLoading || resendSuccess"
           >
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M4 10a6 6 0 016-6 6 6 0 015.66 4M16 4v4h-4M16 10a6 6 0 01-6 6 6 6 0 01-5.66-4M4 16v-4h4"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="refresh-cw" [size]="16" color="currentColor" [strokeWidth]="1.8" />
             {{ resendLoading ? 'Envoi...' : 'Renvoyer l'email' }}
           </button>
           <a routerLink="/login" class="btn-ghost">← Retour à la connexion</a>
         </div>
 
         <div class="check-tip">
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-            <circle cx="10" cy="10" r="9" stroke="#9ca3af" stroke-width="1.5" />
-            <path
-              d="M10 6v5M10 13.5v.5"
-              stroke="#9ca3af"
-              stroke-width="1.8"
-              stroke-linecap="round"
-            />
-          </svg>
+          <lucide-icon name="info" [size]="14" color="currentColor" [strokeWidth]="1.8" />
           Vérifiez aussi vos spams si vous ne trouvez pas l'email.
         </div>
       </div>

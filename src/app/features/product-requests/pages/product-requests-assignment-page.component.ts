@@ -6,6 +6,7 @@ import { ProductRequestsService } from '../services/product-requests.service';
 import { ProductRequest, ProductRequestReviewer } from '../models/product-request.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { LucideAngularModule } from 'lucide-angular';
 
 interface AdminStats {
   admin: ProductRequestReviewer;
@@ -22,7 +23,7 @@ interface AdminStats {
 @Component({
   selector: 'app-product-requests-assignment-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LucideAngularModule],
   template: `
     <div class="page">
       <!-- Header -->
@@ -37,10 +38,7 @@ interface AdminStats {
           <p class="subtitle">Vue d'ensemble de l'activité de traitement des demandes</p>
         </div>
         <button class="btn-refresh" (click)="loadData()" [disabled]="loading()">
-          <svg width="15" height="15" viewBox="0 0 20 20" fill="none" [class.spinning]="loading()">
-            <path d="M4 10a6 6 0 016-6 6 6 0 015.66 4M16 4v4h-4M16 10a6 6 0 01-6 6 6 6 0 01-5.66-4M4 16v-4h4"
-              stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          </svg>
+          <lucide-icon name="refresh-cw" [size]="15" color="currentColor" [strokeWidth]="1.8" [class.spinning]="loading()" />
           Actualiser
         </button>
       </div>
@@ -62,10 +60,7 @@ interface AdminStats {
         <div class="kpi-grid">
           <div class="kpi-card">
             <div class="kpi-icon kpi-total">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <path d="M12 3H6a1 1 0 00-1 1v12a1 1 0 001 1h8a1 1 0 001-1V7l-3-4z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M12 3v4h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-              </svg>
+              <lucide-icon name="file-text" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             </div>
             <div class="kpi-body">
               <span class="kpi-value">{{ totalCount() }}</span>
@@ -75,10 +70,7 @@ interface AdminStats {
 
           <div class="kpi-card">
             <div class="kpi-icon kpi-pending">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M10 6v4l2.5 2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-              </svg>
+              <lucide-icon name="clock" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             </div>
             <div class="kpi-body">
               <span class="kpi-value">{{ submittedCount() }}</span>
@@ -88,10 +80,7 @@ interface AdminStats {
 
           <div class="kpi-card">
             <div class="kpi-icon kpi-review">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M13 13l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-              </svg>
+              <lucide-icon name="search" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             </div>
             <div class="kpi-body">
               <span class="kpi-value">{{ underReviewCount() }}</span>
@@ -101,10 +90,7 @@ interface AdminStats {
 
           <div class="kpi-card">
             <div class="kpi-icon kpi-approved">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M6.5 10l2.5 2.5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <lucide-icon name="check-circle-2" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             </div>
             <div class="kpi-body">
               <span class="kpi-value">{{ approvedCount() }}</span>
@@ -114,10 +100,7 @@ interface AdminStats {
 
           <div class="kpi-card">
             <div class="kpi-icon kpi-rejected">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M7 7l6 6M13 7l-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-              </svg>
+              <lucide-icon name="x-circle" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             </div>
             <div class="kpi-body">
               <span class="kpi-value">{{ rejectedCount() }}</span>
@@ -130,10 +113,7 @@ interface AdminStats {
 
           <div class="kpi-card">
             <div class="kpi-icon kpi-time">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M10 5v5l3 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <lucide-icon name="clock" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             </div>
             <div class="kpi-body">
               <span class="kpi-value">{{ formatDuration(globalAvgProcessingMs()) }}</span>
@@ -217,11 +197,9 @@ interface AdminStats {
                         }
                       </td>
                       <td class="td-chevron">
-                        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"
+                        <lucide-icon name="chevron-down" [size]="14" color="currentColor" [strokeWidth]="1.8"
                           [style.transform]="selectedAdminId() === s.admin.id ? 'rotate(180deg)' : 'rotate(0)'"
-                          style="transition:transform 0.2s">
-                          <path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                          style="transition:transform 0.2s" />
                       </td>
                     </tr>
 
@@ -240,8 +218,8 @@ interface AdminStats {
                                     <div class="req-main">
                                       <span class="req-name">{{ req.name }}</span>
                                       <div class="req-tags">
-                                        <span class="req-tag">{{ req.event?.title }}</span>
-                                        <span class="req-tag">{{ req.wishlist?.title }}</span>
+                                        <span class="req-tag">{{ req.event.title }}</span>
+                                        <span class="req-tag">{{ req.wishlist.title }}</span>
                                         <span class="req-age">Prise en charge {{ req.reviewedAt | date:'dd/MM/yy' }}</span>
                                       </div>
                                     </div>
@@ -270,10 +248,7 @@ interface AdminStats {
           <div class="section">
             <div class="section-header">
               <h2 class="section-title unassigned-title">
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="flex-shrink:0">
-                  <path d="M10 4v8M10 14v.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                  <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/>
-                </svg>
+                <lucide-icon name="alert-circle" [size]="16" color="currentColor" [strokeWidth]="1.8" style="flex-shrink:0" />
                 Demandes non assignées
               </h2>
               <span class="section-count warn">{{ unassignedRequests().length }}</span>
@@ -284,8 +259,8 @@ interface AdminStats {
                   <div class="req-main">
                     <span class="req-name">{{ req.name }}</span>
                     <div class="req-tags">
-                      <span class="req-tag">{{ req.event?.title }}</span>
-                      <span class="req-tag">{{ req.wishlist?.title }}</span>
+                      <span class="req-tag">{{ req.event.title }}</span>
+                      <span class="req-tag">{{ req.wishlist.title }}</span>
                       <span class="req-age">Soumis {{ req.createdAt | date:'dd/MM/yy' }}</span>
                     </div>
                   </div>
@@ -339,9 +314,7 @@ interface AdminStats {
                         <span class="opt-role">{{ admin.platformRole === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin' }}</span>
                       </div>
                       @if (reassignTo() === admin.id) {
-                        <svg class="opt-check" width="16" height="16" viewBox="0 0 20 20" fill="none">
-                          <path d="M4 10l4 4 8-8" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                        <lucide-icon class="opt-check" name="check" [size]="16" color="currentColor" [strokeWidth]="1.8" />
                       }
                     </button>
                   }

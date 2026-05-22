@@ -3,6 +3,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { LucideAngularModule } from 'lucide-angular';
 
 interface DashSummary {
   totalUsers: number;
@@ -43,7 +44,7 @@ interface AdminDashboard {
 @Component({
   selector: 'app-admin-dashboard-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LucideAngularModule],
   template: `
     <div class="dash">
       <!-- Header -->
@@ -71,15 +72,7 @@ interface AdminDashboard {
         <div class="kpi-grid">
           <div class="kpi-card kpi-blue">
             <div class="kpi-icon">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <circle cx="10" cy="7" r="3.5" stroke="currentColor" stroke-width="1.6" />
-                <path
-                  d="M3 17c0-3.314 3.134-6 7-6s7 2.686 7 6"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="user" [size]="20" color="currentColor" [strokeWidth]="1.8" />
             </div>
             <div class="kpi-body">
               <div class="kpi-val">{{ d.summary.totalUsers }}</div>
@@ -89,18 +82,7 @@ interface AdminDashboard {
           </div>
           <div class="kpi-card kpi-green">
             <div class="kpi-icon">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <rect
-                  x="1"
-                  y="5"
-                  width="18"
-                  height="12"
-                  rx="2"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                />
-                <path d="M1 9h18" stroke="currentColor" stroke-width="1.6" />
-              </svg>
+              <lucide-icon name="credit-card" [size]="20" color="currentColor" [strokeWidth]="1.8" />
             </div>
             <div class="kpi-body">
               <div class="kpi-val">{{ formatAmount(d.summary.succeededPaymentsAmount) }}</div>
@@ -110,14 +92,7 @@ interface AdminDashboard {
           </div>
           <div class="kpi-card kpi-purple">
             <div class="kpi-icon">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M10 2l2.4 5 5.6.8-4 3.9.9 5.5L10 14.5l-4.9 2.7.9-5.5-4-3.9 5.6-.8z"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linejoin="round"
-                />
-              </svg>
+              <lucide-icon name="star" [size]="20" color="currentColor" [strokeWidth]="1.8" />
             </div>
             <div class="kpi-body">
               <div class="kpi-val">{{ pct(d.summary.conversionRate) }}%</div>
@@ -129,23 +104,7 @@ interface AdminDashboard {
           </div>
           <div class="kpi-card kpi-amber">
             <div class="kpi-icon">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <rect
-                  x="2"
-                  y="4"
-                  width="16"
-                  height="14"
-                  rx="2"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                />
-                <path
-                  d="M6 2v4M14 2v4M2 9h16"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="calendar" [size]="20" color="currentColor" [strokeWidth]="1.8" />
             </div>
             <div class="kpi-body">
               <div class="kpi-val">{{ d.summary.totalEvents }}</div>
@@ -231,59 +190,23 @@ interface AdminDashboard {
         <!-- Quick actions -->
         <div class="quick-actions">
           <a routerLink="/admin/jackpot" class="qa-btn">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M10 2c0 0-7 3.5-7 9a7 7 0 0014 0c0-5.5-7-9-7-9z"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <lucide-icon name="zap" [size]="16" color="currentColor" [strokeWidth]="1.8" />
             Cagnottes
           </a>
           <a routerLink="/admin/product-requests" class="qa-btn">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M12 3H6a1 1 0 00-1 1v12a1 1 0 001 1h8a1 1 0 001-1V7l-3-4z"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="file-text" [size]="16" color="currentColor" [strokeWidth]="1.8" />
             Demandes produit
           </a>
           <a routerLink="/admin/users" class="qa-btn">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="7" r="3.5" stroke="currentColor" stroke-width="1.6" />
-              <path
-                d="M3 17c0-3.314 3.134-6 7-6s7 2.686 7 6"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="user" [size]="16" color="currentColor" [strokeWidth]="1.8" />
             Utilisateurs
           </a>
           <a routerLink="/admin/reconciliation" class="qa-btn">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M4 6h12M4 10h8M4 14h10"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="list" [size]="16" color="currentColor" [strokeWidth]="1.8" />
             Réconciliation
           </a>
           <a routerLink="/admin/audit" class="qa-btn">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M14 2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2z"
-                stroke="currentColor"
-                stroke-width="1.6"
-              />
-            </svg>
+            <lucide-icon name="clipboard" [size]="16" color="currentColor" [strokeWidth]="1.8" />
             Audit logs
           </a>
         </div>

@@ -14,6 +14,7 @@ export interface DashboardEventItem {
   description?: string | null;
   // ✅ Le backend inclut wishlistId dans organizedEvents
   wishlistId?: number | null;
+  isArchived?: boolean;
 }
 
 export interface MyDashboardResponse {

@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 import { CountdownTimerComponent } from '../../../shared/components/countdown-timer/countdown-timer.component';
 import {
   MyContributionsService,
@@ -14,7 +15,7 @@ type Filter = 'ALL' | 'AWAITING_PAYMENT' | 'CONFIRMED' | 'FAILED' | 'CANCELLED' 
 @Component({
   selector: 'app-my-contributions-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CountdownTimerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, CountdownTimerComponent, LucideAngularModule],
   template: `
     <div class="page-wrap">
       <!-- Hero -->
@@ -94,23 +95,7 @@ type Filter = 'ALL' | 'AWAITING_PAYMENT' | 'CONFIRMED' | 'FAILED' | 'CANCELLED' 
                   <div class="contrib-info">
                     <div class="contrib-item-name">{{ c.wishlistItem?.title ?? '—' }}</div>
                     <div class="contrib-event-name">
-                      <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-                        <rect
-                          x="2"
-                          y="4"
-                          width="16"
-                          height="14"
-                          rx="2"
-                          stroke="currentColor"
-                          stroke-width="1.5"
-                        />
-                        <path
-                          d="M6 2v4M14 2v4M2 9h16"
-                          stroke="currentColor"
-                          stroke-width="1.5"
-                          stroke-linecap="round"
-                        />
-                      </svg>
+                      <lucide-icon name="calendar" [size]="12" color="currentColor" [strokeWidth]="1.8" />
                       {{ c.event?.title ?? '—' }}
                     </div>
                     <div class="contrib-date">{{ c.createdAt | date: 'dd MMM yyyy' }}</div>
@@ -130,14 +115,7 @@ type Filter = 'ALL' | 'AWAITING_PAYMENT' | 'CONFIRMED' | 'FAILED' | 'CANCELLED' 
                       [showExpired]="true"
                     ></app-countdown-timer>
                   }
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" class="chevron">
-                    <path
-                      d="M7 4l6 6-6 6"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                    />
-                  </svg>
+                  <lucide-icon name="chevron-right" [size]="16" color="currentColor" [strokeWidth]="1.8" class="chevron" />
                 </div>
               </div>
             }
@@ -158,14 +136,7 @@ type Filter = 'ALL' | 'AWAITING_PAYMENT' | 'CONFIRMED' | 'FAILED' | 'CANCELLED' 
         <div class="drawer-header">
           <div class="drawer-eyebrow">Détail de la contribution</div>
           <button class="btn-close" (click)="selectedContrib.set(null)">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M4 4l12 12M16 4L4 16"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="x" [size]="18" color="currentColor" [strokeWidth]="1.8" />
           </button>
         </div>
         <div class="drawer-content">
@@ -218,15 +189,7 @@ type Filter = 'ALL' | 'AWAITING_PAYMENT' | 'CONFIRMED' | 'FAILED' | 'CANCELLED' 
           @if (c.message) {
             <div class="detail-message-block">
               <div class="detail-message-label">
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                  <path
-                    d="M17 2H3a1 1 0 00-1 1v10a1 1 0 001 1h10l4 4V3a1 1 0 00-1-1z"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
+                <lucide-icon name="mail" [size]="14" color="currentColor" [strokeWidth]="1.8" />
                 Votre message
               </div>
               <div class="detail-message-text">{{ c.message }}</div>
@@ -265,18 +228,7 @@ type Filter = 'ALL' | 'AWAITING_PAYMENT' | 'CONFIRMED' | 'FAILED' | 'CANCELLED' 
                 class="btn-see-payment"
                 (click)="selectedContrib.set(null)"
               >
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                  <rect
-                    x="1"
-                    y="5"
-                    width="18"
-                    height="13"
-                    rx="2"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                  />
-                  <path d="M1 9h18" stroke="currentColor" stroke-width="1.5" />
-                </svg>
+                <lucide-icon name="credit-card" [size]="14" color="currentColor" [strokeWidth]="1.8" />
                 Voir le détail du paiement
               </a>
             </div>
@@ -288,23 +240,7 @@ type Filter = 'ALL' | 'AWAITING_PAYMENT' | 'CONFIRMED' | 'FAILED' | 'CANCELLED' 
               class="btn-see-event"
               (click)="selectedContrib.set(null)"
             >
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                <rect
-                  x="2"
-                  y="4"
-                  width="16"
-                  height="14"
-                  rx="2"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                />
-                <path
-                  d="M6 2v4M14 2v4M2 9h16"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <lucide-icon name="calendar" [size]="14" color="currentColor" [strokeWidth]="1.8" />
               Voir l'événement
             </a>
           }

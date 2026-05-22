@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 import {
   AuditAdminService,
   AuditLog,
@@ -30,7 +31,7 @@ const KNOWN_ENTITY_TYPES = ['User', 'Payment', 'Contribution', 'Event', 'Reserva
 @Component({
   selector: 'app-audit-logs-admin-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule],
   template: `
     <div class="page">
       <!-- Header -->
@@ -40,15 +41,7 @@ const KNOWN_ENTITY_TYPES = ['User', 'Payment', 'Contribution', 'Event', 'Reserva
           <p class="subtitle">{{ response()?.summary?.totalCount ?? 0 }} entrées au total</p>
         </div>
         <button class="btn-export" (click)="exportCsv()" [disabled]="exporting()">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-            <path
-              d="M10 3v10M6 9l4 4 4-4M4 17h12"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
+          <lucide-icon name="download" [size]="16" color="currentColor" [strokeWidth]="1.8" />
           {{ exporting() ? 'Export...' : 'Export CSV' }}
         </button>
       </div>

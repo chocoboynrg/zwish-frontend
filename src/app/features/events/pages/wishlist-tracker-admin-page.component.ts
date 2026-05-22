@@ -5,6 +5,7 @@ import { HttpClient, HttpContext } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { SKIP_GLOBAL_ERROR_TOAST } from '../../../core/http/http-context-tokens';
 import { map } from 'rxjs/operators';
+import { LucideAngularModule } from 'lucide-angular';
 
 interface TrackerItem {
   id: number;
@@ -29,7 +30,7 @@ interface TrackerItem {
 @Component({
   selector: 'app-wishlist-tracker-admin-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LucideAngularModule],
   template: `
     <div class="page">
       <div class="page-header">
@@ -53,10 +54,7 @@ interface TrackerItem {
             </select>
           </div>
           <button class="btn-refresh" (click)="load()" [disabled]="loading()">
-            <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-              <path d="M17 10A7 7 0 116.23 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-              <path d="M14 1v5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <lucide-icon name="refresh-cw" [size]="15" color="currentColor" [strokeWidth]="1.8" />
             Actualiser
           </button>
         </div>
@@ -101,10 +99,7 @@ interface TrackerItem {
 
       @if (filteredItems().length === 0 && !loading()) {
         <div class="empty">
-          <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="#d1d5db" stroke-width="1.5"/>
-            <path d="M12 8v4l2.5 2.5" stroke="#d1d5db" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
+          <lucide-icon name="clock" [size]="56" color="#d1d5db" [strokeWidth]="1.8" />
           <p>Aucun item au-dessus du seuil de {{ minProgress() }}%.</p>
         </div>
       }
@@ -134,10 +129,7 @@ interface TrackerItem {
               </div>
 
               <div class="card-event">
-                <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                  <rect x="2" y="4" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/>
-                  <path d="M6 2v4M14 2v4M2 9h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
+                <lucide-icon name="calendar" [size]="13" color="currentColor" [strokeWidth]="1.8" />
                 <a [routerLink]="['/admin/events', item.event.id]" class="event-link">{{ item.event.title }}</a>
                 <span class="card-organizer">· {{ item.event.organizerName }}</span>
               </div>
@@ -154,16 +146,11 @@ interface TrackerItem {
 
               <div class="card-footer">
                 <div class="card-meta">
-                  <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                    <path d="M3 6h14M6 6V4a1 1 0 011-1h6a1 1 0 011 1v2M4 6l1 11h10l1-11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  </svg>
+                  <lucide-icon name="gift" [size]="13" color="currentColor" [strokeWidth]="1.8" />
                   {{ item.contributionCount }} contribution(s)
                 </div>
                 <div class="card-meta">
-                  <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                    <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
-                    <path d="M10 6v4l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  </svg>
+                  <lucide-icon name="clock" [size]="13" color="currentColor" [strokeWidth]="1.8" />
                   {{ formatDate(item.updatedAt) }}
                 </div>
               </div>

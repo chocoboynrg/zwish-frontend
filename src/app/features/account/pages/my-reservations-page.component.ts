@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 import { UserReservationService, ReservationItem } from '../services/user-reservation.service';
 
 type Filter = 'ALL' | 'ACTIVE' | 'RELEASED' | 'EXPIRED' | 'CONFIRMED';
@@ -8,7 +9,7 @@ type Filter = 'ALL' | 'ACTIVE' | 'RELEASED' | 'EXPIRED' | 'CONFIRMED';
 @Component({
   selector: 'app-my-reservations-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LucideAngularModule],
   template: `
     <div class="page-wrap">
       <!-- Hero -->
@@ -88,10 +89,7 @@ type Filter = 'ALL' | 'ACTIVE' | 'RELEASED' | 'EXPIRED' | 'CONFIRMED';
                     <div class="reserv-item-name">{{ r.wishlistItem?.name ?? 'Item #' + r.id }}</div>
                     @if (r.event) {
                       <div class="reserv-event-name">
-                        <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-                          <rect x="2" y="4" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/>
-                          <path d="M6 2v4M14 2v4M2 9h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                        </svg>
+                        <lucide-icon name="calendar" [size]="12" color="currentColor" [strokeWidth]="1.8" />
                         {{ r.event.title }}
                       </div>
                     }

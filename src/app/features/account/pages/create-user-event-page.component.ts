@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 import { EventsService } from '../../events/services/events.service';
 import { ToastService } from '../../../core/services/toast.service';
 
@@ -17,21 +18,14 @@ const EVENT_TYPES = [
 @Component({
   selector: 'app-create-user-event-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule],
   template: `
     <div class="page-wrap">
       <!-- Hero -->
       <div class="page-hero">
         <div class="page-hero-inner">
           <a routerLink="/app/events" class="back-link">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M12 4L6 10l6 6"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-            </svg>
+            <lucide-icon name="chevron-left" [size]="16" color="currentColor" [strokeWidth]="1.8" />
             Mes événements
           </a>
           <div class="hero-text">
@@ -87,26 +81,7 @@ const EVENT_TYPES = [
                   </p>
                   <div class="field">
                     <div class="input-wrap">
-                      <svg
-                        class="input-icon"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        <path
-                          d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linecap="round"
-                        />
-                        <path
-                          d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linecap="round"
-                        />
-                      </svg>
+                      <lucide-icon class="input-icon" name="edit-2" [size]="18" color="currentColor" [strokeWidth]="1.8" />
                       <input
                         type="text"
                         formControlName="title"
@@ -143,29 +118,7 @@ const EVENT_TYPES = [
                   </p>
                   <div class="field">
                     <div class="date-input-wrap">
-                      <svg
-                        class="input-icon"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        <rect
-                          x="3"
-                          y="4"
-                          width="18"
-                          height="18"
-                          rx="2"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                        />
-                        <path
-                          d="M8 2v4M16 2v4M3 10h18"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linecap="round"
-                        />
-                      </svg>
+                      <lucide-icon class="input-icon" name="calendar" [size]="18" color="currentColor" [strokeWidth]="1.8" />
                       <input
                         type="datetime-local"
                         formControlName="eventDate"
@@ -250,15 +203,7 @@ const EVENT_TYPES = [
               <!-- Alerte erreur -->
               @if (errorMessage()) {
                 <div class="alert-error">
-                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                    <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
-                    <path
-                      d="M10 6v5M10 13.5v.5"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                    />
-                  </svg>
+                  <lucide-icon name="alert-circle" [size]="18" color="currentColor" [strokeWidth]="1.8" />
                   {{ errorMessage() }}
                 </div>
               }
@@ -270,14 +215,7 @@ const EVENT_TYPES = [
                   @if (!loading()) {
                     <span>
                       Créer mon événement
-                      <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                        <path
-                          d="M4 10h12M10 4l6 6-6 6"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                        />
-                      </svg>
+                      <lucide-icon name="arrow-right" [size]="18" color="currentColor" [strokeWidth]="1.8" />
                     </span>
                   }
                   @if (loading()) {
@@ -298,23 +236,7 @@ const EVENT_TYPES = [
                 <div class="preview-title">{{ previewTitle() }}</div>
                 @if (previewDate()) {
                   <div class="preview-date">
-                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                      <rect
-                        x="2"
-                        y="4"
-                        width="16"
-                        height="14"
-                        rx="2"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                      />
-                      <path
-                        d="M6 2v4M14 2v4M2 9h16"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                      />
-                    </svg>
+                    <lucide-icon name="calendar" [size]="14" color="currentColor" [strokeWidth]="1.8" />
                     {{ previewDate() }}
                   </div>
                 }
@@ -337,15 +259,7 @@ const EVENT_TYPES = [
             <!-- Tips -->
             <div class="tips-card">
               <div class="tips-title">
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                  <circle cx="10" cy="10" r="9" stroke="#FFD700" stroke-width="1.5" />
-                  <path
-                    d="M10 6v5M10 13.5v.5"
-                    stroke="#FFD700"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                  />
-                </svg>
+                <lucide-icon name="info" [size]="16" color="#FFD700" [strokeWidth]="1.8" />
                 Bons à savoir
               </div>
               <div class="tip-item">

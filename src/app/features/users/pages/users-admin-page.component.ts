@@ -5,11 +5,12 @@ import { RouterLink } from '@angular/router';
 import { AdminUsersService, AdminUser, AdminUsersResponse } from '../services/admin-users.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-users-admin-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule],
   template: `
     <div class="page">
       <!-- Header -->
@@ -19,15 +20,7 @@ import { AuthService } from '../../../core/services/auth.service';
           <p class="subtitle">{{ response()?.summary?.totalCount ?? 0 }} comptes au total</p>
         </div>
         <button class="btn-export" (click)="exportCsv()" [disabled]="exporting()">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-            <path
-              d="M10 3v10M6 9l4 4 4-4M4 17h12"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
+          <lucide-icon name="download" [size]="16" color="currentColor" [strokeWidth]="1.8" />
           {{ exporting() ? 'Export...' : 'Export CSV' }}
         </button>
       </div>

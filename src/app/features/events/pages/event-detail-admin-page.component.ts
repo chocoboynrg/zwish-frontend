@@ -6,11 +6,12 @@ import {
   type AdminEventDetail,
   type AdminEventDetailItem,
 } from '../services/events.service';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-event-detail-admin-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, DecimalPipe],
+  imports: [CommonModule, RouterLink, DecimalPipe, LucideAngularModule],
   template: `
     <div class="page">
       <!-- Header -->
@@ -49,13 +50,13 @@ import {
             <div class="org-label">Organisateur</div>
             @if (d.event.organizer?.email) {
               <a [href]="'mailto:' + d.event.organizer!.email" class="org-contact org-email">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 7l10 7 10-7" stroke="currentColor" stroke-width="1.5"/></svg>
+                <lucide-icon name="mail" [size]="14" color="currentColor" [strokeWidth]="1.8" />
                 {{ d.event.organizer!.email }}
               </a>
             }
             @if (d.event.organizer?.phoneNumber) {
               <a [href]="'tel:' + d.event.organizer!.phoneNumber" class="org-contact org-phone">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6.5 3h2.8l1.2 4-1.8 1.1a11 11 0 0 0 4.7 4.7l1.1-1.8 4 1.2v2.8A2 2 0 0 1 16.5 17C9.6 17 3.5 10.9 3.5 4a2 2 0 0 1 2-2l1 1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <lucide-icon name="phone" [size]="14" color="currentColor" [strokeWidth]="1.8" />
                 {{ d.event.organizer!.phoneNumber }}
               </a>
             }
@@ -81,7 +82,7 @@ import {
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-icon stat-icon-blue">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <lucide-icon name="users" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             </div>
             <div class="stat-body">
               <div class="stat-val">{{ d.summary.participantsCount }}</div>
@@ -90,7 +91,7 @@ import {
           </div>
           <div class="stat-card">
             <div class="stat-icon stat-icon-purple">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <lucide-icon name="clipboard-list" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             </div>
             <div class="stat-body">
               <div class="stat-val">{{ d.summary.itemsCount }}</div>
@@ -99,7 +100,7 @@ import {
           </div>
           <div class="stat-card">
             <div class="stat-icon stat-icon-green">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/></svg>
+              <lucide-icon name="check-circle-2" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             </div>
             <div class="stat-body">
               <div class="stat-val">{{ d.summary.fundedItemsCount }}</div>
@@ -131,7 +132,7 @@ import {
           @if (fundedItems().length > 0) {
             <div class="wl-group">
               <div class="wl-group-header wl-group-funded">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/></svg>
+                <lucide-icon name="check-circle-2" [size]="14" color="currentColor" [strokeWidth]="1.8" />
                 Financés ({{ fundedItems().length }})
               </div>
               <div class="wl-items">
@@ -145,7 +146,7 @@ import {
           @if (partialItems().length > 0) {
             <div class="wl-group">
               <div class="wl-group-header wl-group-partial">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v4l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <lucide-icon name="clock" [size]="14" color="currentColor" [strokeWidth]="1.8" />
                 Partiellement financés ({{ partialItems().length }})
               </div>
               <div class="wl-items">
@@ -159,7 +160,7 @@ import {
           @if (notFundedItems().length > 0) {
             <div class="wl-group">
               <div class="wl-group-header wl-group-none">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M8 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <lucide-icon name="minus" [size]="14" color="currentColor" [strokeWidth]="1.8" />
                 Non financés ({{ notFundedItems().length }})
               </div>
               <div class="wl-items">
@@ -183,7 +184,7 @@ import {
                 <img class="wl-img" [src]="item.imageUrl" [alt]="item.name" />
               } @else {
                 <div class="wl-img-ph">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="#d1d5db" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="#d1d5db"/><path d="M21 15l-5-5L5 21" stroke="#d1d5db" stroke-width="1.5" stroke-linecap="round"/></svg>
+                  <lucide-icon name="image" [size]="18" color="#d1d5db" [strokeWidth]="1.8" />
                 </div>
               }
               <div class="wl-info">

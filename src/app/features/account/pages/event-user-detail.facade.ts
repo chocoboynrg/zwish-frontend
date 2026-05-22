@@ -265,6 +265,7 @@ export class EventUserDetailFacade {
       contributionError: '',
       contributionModalItem: item,
       showContributionModal: true,
+      selectedPaymentMethod: this.state().selectedPaymentMethod ?? 'MOBILE_MONEY',
       contributionAmount:
         item.remainingAmount > 0
           ? (suggestions[1] ?? suggestions[0] ?? item.remainingAmount)
@@ -283,8 +284,13 @@ export class EventUserDetailFacade {
       contributionAmount: null,
       contributionMessage: '',
       contributionAnonymous: false,
+      selectedPaymentMethod: 'MOBILE_MONEY',
       contributionError: '',
     });
+  }
+
+  setContributionPaymentMethod(value: 'MOBILE_MONEY' | 'BANK_TRANSFER' | 'CARD'): void {
+    this.patch({ selectedPaymentMethod: value });
   }
 
   reserveItem(wishlistItemId: number): void {
@@ -346,8 +352,8 @@ export class EventUserDetailFacade {
       next: (contribution: CreateUserContributionResponse) => {
         this.userPaymentService.createPayment({
           contributionId: contribution.id,
-          provider: 'OTHER',
-          paymentMethod: 'MOBILE_MONEY',
+          provider: 'FEDAPAY',
+          paymentMethod: this.state().selectedPaymentMethod,
         }).subscribe({
           next: (payment: PaymentItem) => {
             this.patch({ contributionLoading: false });

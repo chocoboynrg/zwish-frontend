@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { LucideAngularModule } from 'lucide-angular';
 import { finalize } from 'rxjs';
 import { CatalogService } from '../../catalog/services/catalog.service';
 import { CatalogProduct } from '../../catalog/models/catalog-product.model';
@@ -13,6 +14,7 @@ import { UserWishlistItemService } from '../../account/services/user-wishlist-it
 import { DashboardService } from '../../account/services/dashboard.service';
 import { EventsService } from '../../events/services/events.service';
 import { WishlistDrawerService } from '../services/wishlist-drawer.service';
+import { PublicCatalogCardComponent } from '../components/public-catalog-card.component';
 import { environment } from '../../../../environments/environment';
 
 interface WishlistChoice {
@@ -27,7 +29,7 @@ const SHOW_LIMIT = 7;
 @Component({
   selector: 'app-public-catalog-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, LucideAngularModule, PublicCatalogCardComponent],
   template: `
     <!-- ─── HERO ─── -->
     <section class="hero">
@@ -39,10 +41,7 @@ const SHOW_LIMIT = 7;
         <p class="hero-sub">Des milliers de produits soigneusement sélectionnés pour tous vos événements.</p>
 
         <div class="search-bar" [class.has-value]="search().trim()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="search-icon">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.8"/>
-            <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
+          <lucide-icon name="search" [size]="18" color="currentColor" [strokeWidth]="1.8" class="search-icon" />
           <input
             type="text"
             [ngModel]="search()"
@@ -53,9 +52,7 @@ const SHOW_LIMIT = 7;
           />
           @if (search().trim()) {
             <button class="search-clear" (click)="search.set('')">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-              </svg>
+              <lucide-icon name="x" [size]="14" color="currentColor" [strokeWidth]="2.2" />
             </button>
           }
         </div>
@@ -94,10 +91,7 @@ const SHOW_LIMIT = 7;
           @if (hasActiveFilters()) {
             <div class="sidebar-reset">
               <div class="reset-label">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" stroke="#d97706" stroke-width="2"/>
-                  <path d="M12 8v4M12 16h.01" stroke="#d97706" stroke-width="2" stroke-linecap="round"/>
-                </svg>
+                <lucide-icon name="info" [size]="13" color="#d97706" [strokeWidth]="2" />
                 Filtres actifs
               </div>
               <button class="reset-btn" (click)="resetFilters()">Tout effacer</button>
@@ -114,9 +108,7 @@ const SHOW_LIMIT = 7;
                   (click)="showPromoOnly.set(!showPromoOnly())"
                 >
                   <span class="item-label">
-                    <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="flex-shrink:0">
-                      <path d="M9.293 1.293a1 1 0 011.414 0l8 8A1 1 0 0118 11h-1v5a1 1 0 01-1 1H4a1 1 0 01-1-1v-5H2a1 1 0 01-.707-1.707l8-8zM7 14a1 1 0 002 0v-2a1 1 0 00-2 0v2zm4 0a1 1 0 002 0v-2a1 1 0 00-2 0v2z" fill="currentColor"/>
-                    </svg>
+                    <lucide-icon name="tag" [size]="13" color="currentColor" [strokeWidth]="1.8" style="flex-shrink:0" />
                     En promotion
                   </span>
                   <span class="promo-count-pill">{{ promoCount() }}</span>
@@ -272,72 +264,15 @@ const SHOW_LIMIT = 7;
           @if (!loading() && filteredProducts().length > 0) {
             <div class="grid">
               @for (p of sortedProducts(); track p.id) {
-                <article class="card">
-                  <div class="card-img-wrap">
-                    @if (p.mainImageUrl) {
-                      <img
-                        [src]="resolveUrl(p.mainImageUrl)"
-                        [alt]="p.name"
-                        class="card-img"
-                        (error)="onImgError($event)"
-                        loading="lazy"
-                      />
-                    } @else {
-                      <div class="card-no-img">
-                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-                          <rect x="3" y="3" width="18" height="18" rx="3" stroke="#d1d5db" stroke-width="1.5"/>
-                          <circle cx="8.5" cy="8.5" r="1.5" fill="#d1d5db"/>
-                          <path d="M21 15l-5-5L5 21" stroke="#d1d5db" stroke-width="1.5" stroke-linecap="round"/>
-                        </svg>
-                      </div>
-                    }
-                    @if (p.category) {
-                      <div class="card-cat-tag">{{ p.category.name }}</div>
-                    }
-                    @if (p.themes && p.themes.length > 0) {
-                      <div class="card-theme-dots">
-                        @for (t of p.themes.slice(0, 3); track t.id) {
-                          <span class="theme-dot" [style.background]="t.color || '#6366f1'" [title]="t.name"></span>
-                        }
-                      </div>
-                    }
-                    @if (isPromoActive(p)) {
-                      <div class="promo-ribbon">-{{ getDiscountPct(p) }}%</div>
-                    }
-                  </div>
-                  <div class="card-body">
-                    @if (p.brand) {
-                      <div class="card-brand">{{ p.brand }}</div>
-                    }
-                    <h3 class="card-name">{{ p.name }}</h3>
-                    @if (p.description) {
-                      <p class="card-desc">
-                        {{ p.description | slice:0:72 }}{{ (p.description?.length ?? 0) > 72 ? '…' : '' }}
-                      </p>
-                    }
-                    <div class="card-footer">
-                      <div class="card-price">
-                        @if (isPromoActive(p)) {
-                          <span class="promo-price-pub">{{ p.promoPrice! | number }}</span>
-                          <span class="original-price-pub">{{ (p.sellingPrice ?? p.estimatedPrice) | number }}</span>
-                          <span class="card-cur"> {{ p.currencyCode }}</span>
-                        } @else {
-                          {{ (p.sellingPrice ?? p.estimatedPrice) | number }}<span class="card-cur"> {{ p.currencyCode }}</span>
-                        }
-                      </div>
-                      <button class="card-add" (click)="addToWishlist(p)" [disabled]="submittingId() === p.id">
-                        @if (submittingId() === p.id) {
-                          <span class="spinner"></span>
-                        } @else {
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                          </svg>
-                        }
-                        Ajouter
-                      </button>
-                    </div>
-                  </div>
-                </article>
+                <app-public-catalog-card
+                  [product]="p"
+                  [submitting]="submittingId() === p.id"
+                  [resolveUrl]="resolveUrl.bind(this)"
+                  [isPromoActive]="isPromoActive.bind(this)"
+                  [getDiscountPct]="getDiscountPct.bind(this)"
+                  [onImgError]="onImgError.bind(this)"
+                  (add)="addToWishlist($event)"
+                />
               }
             </div>
           }
@@ -352,9 +287,7 @@ const SHOW_LIMIT = 7;
           <div class="modal-head">
             <h3>Ajouter à ma wishlist</h3>
             <button class="modal-close" (click)="showModal.set(false)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-              </svg>
+              <lucide-icon name="x" [size]="16" color="currentColor" [strokeWidth]="2.2" />
             </button>
           </div>
           @if (selectedProduct()) {
@@ -407,13 +340,9 @@ const SHOW_LIMIT = 7;
                       }
                     </div>
                     @if (isAlreadyInWishlist(choice)) {
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M20 6L9 17l-5-5" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
+                      <lucide-icon name="check" [size]="16" color="#16a34a" [strokeWidth]="2.5" />
                     } @else {
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                      </svg>
+                      <lucide-icon name="chevron-right" [size]="16" color="currentColor" [strokeWidth]="2" />
                     }
                   </button>
                 }
@@ -635,51 +564,8 @@ const SHOW_LIMIT = 7;
       100% { background-position:  200%; }
     }
 
-    /* ── CARD ── */
-    .card {
-      background: white; border: 1.5px solid #f0f1f3;
-      border-radius: 18px; overflow: hidden;
-      display: flex; flex-direction: column;
-      transition: box-shadow 0.25s, transform 0.25s, border-color 0.25s;
-    }
-    .card:hover { box-shadow: 0 16px 48px rgba(0,0,0,0.1); transform: translateY(-4px); border-color: #e5e7eb; }
-    .card-img-wrap { position: relative; height: 220px; background: #f3f4f6; overflow: hidden; flex-shrink: 0; }
-    .card-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
-    .card:hover .card-img { transform: scale(1.05); }
-    .card-no-img { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f9fafb; }
-    .card-cat-tag {
-      position: absolute; bottom: 10px; left: 10px;
-      background: rgba(0,0,0,0.68); backdrop-filter: blur(8px);
-      color: white; font-size: 0.68rem; font-weight: 700;
-      padding: 3px 9px; border-radius: 999px;
-    }
-    .card-theme-dots { position: absolute; top: 10px; right: 10px; display: flex; gap: 4px; }
-    .theme-dot {
-      width: 9px; height: 9px; border-radius: 50%;
-      border: 1.5px solid rgba(255,255,255,0.7); display: block;
-    }
-    .card-body { padding: 16px 18px 18px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
-    .card-brand { font-size: 0.68rem; font-weight: 800; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.07em; }
-    .card-name { font-size: 0.92rem; font-weight: 700; color: #111; margin: 0; line-height: 1.35; }
-    .card-desc { font-size: 0.78rem; color: #9ca3af; line-height: 1.5; margin: 2px 0 0; flex: 1; }
-    .card-footer {
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      margin-top: 14px; padding-top: 14px; border-top: 1px solid #f3f4f6;
-    }
-    .card-price { font-size: 1rem; font-weight: 900; color: #111; white-space: nowrap; display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap; }
-    .card-cur { font-size: 0.7rem; font-weight: 600; color: #9ca3af; margin-left: 2px; }
     .promo-price-pub { color: #dc2626; font-weight: 900; }
     .original-price-pub { font-size: 0.75rem; color: #9ca3af; text-decoration: line-through; font-weight: 500; }
-
-    /* Promo ribbon on card */
-    .promo-ribbon {
-      position: absolute; top: 12px; left: 12px;
-      background: #dc2626; color: white;
-      font-size: 0.68rem; font-weight: 900;
-      padding: 3px 9px; border-radius: 999px;
-      letter-spacing: 0.04em;
-      box-shadow: 0 2px 8px rgba(220,38,38,0.4);
-    }
 
     /* Promo sidebar filter */
     .promo-filter-section { border-color: #fecaca; }
@@ -701,22 +587,6 @@ const SHOW_LIMIT = 7;
       padding: 2px 8px; border-radius: 999px;
       border: 1px solid #fecaca;
     }
-    .card-add {
-      display: inline-flex; align-items: center; gap: 5px;
-      background: #111; color: white; border: 0; border-radius: 10px;
-      padding: 8px 14px; font: inherit; font-size: 0.8rem; font-weight: 700;
-      cursor: pointer; transition: background 0.15s, transform 0.15s;
-      white-space: nowrap; flex-shrink: 0;
-    }
-    .card-add:hover:not(:disabled) { background: #222; transform: scale(1.04); }
-    .card-add:disabled { opacity: 0.5; cursor: not-allowed; }
-    .spinner {
-      width: 12px; height: 12px;
-      border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
-      border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
     /* ── EMPTY ── */
     .empty {
       text-align: center; padding: 80px 20px;
@@ -989,11 +859,11 @@ export class PublicCatalogPageComponent implements OnInit {
         if (events.length === 0) { this.wishlistLoading.set(false); return; }
         let remaining = events.length;
         const choices: WishlistChoice[] = [];
-        events.forEach((e: any) => {
+        events.forEach((e) => {
           this.eventsService.getEventWishlist(e.id).subscribe({
             next: wl => choices.push({
               wishlistId: 0, eventId: e.id, eventTitle: e.title,
-              existingNames: (wl.items ?? []).map((item: any) => item.name.trim().toLowerCase()),
+              existingNames: (wl.items ?? []).map((item) => item.name.trim().toLowerCase()),
             }),
             error: () => choices.push({ wishlistId: 0, eventId: e.id, eventTitle: e.title, existingNames: [] }),
             complete: () => { if (--remaining === 0) { this.wishlistChoices.set(choices); this.wishlistLoading.set(false); } },
@@ -1035,10 +905,26 @@ export class PublicCatalogPageComponent implements OnInit {
             this.loadWishlists();
             this.wishlistDrawer.notifyAdded(choice.eventId);
           },
-          error: (e: any) => { this.submittingId.set(null); this.toast.error(e?.error?.message ?? "Erreur lors de l'ajout."); },
+          error: (e: unknown) => {
+            this.submittingId.set(null);
+            this.toast.error(this.extractErrorMessage(e, "Erreur lors de l'ajout."));
+          },
         });
       },
       error: () => { this.submittingId.set(null); this.toast.error('Impossible de récupérer la wishlist.'); },
     });
+  }
+
+  private extractErrorMessage(error: unknown, fallback: string): string {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'error' in error &&
+      typeof (error as { error?: { message?: unknown } }).error?.message === 'string'
+    ) {
+      return (error as { error: { message: string } }).error.message;
+    }
+
+    return fallback;
   }
 }
