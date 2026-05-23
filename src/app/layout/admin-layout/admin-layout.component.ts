@@ -129,6 +129,10 @@ import { LucideAngularModule } from 'lucide-angular';
               </div>
             </div>
           }
+          <a routerLink="/app/profile" class="user-space-btn">
+            <lucide-icon name="user" [size]="16" color="currentColor" [strokeWidth]="1.8" />
+            Mon profil
+          </a>
           <a routerLink="/app" class="user-space-btn">
             <lucide-icon name="arrow-left" [size]="16" color="currentColor" [strokeWidth]="1.8" />
             Mon espace
