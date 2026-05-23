@@ -1,6 +1,6 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { finalize } from 'rxjs';
@@ -272,6 +272,7 @@ const SHOW_LIMIT = 7;
                   [getDiscountPct]="getDiscountPct.bind(this)"
                   [onImgError]="onImgError.bind(this)"
                   (add)="addToWishlist($event)"
+                  (view)="openDetail($event)"
                 />
               }
             </div>
@@ -279,6 +280,84 @@ const SHOW_LIMIT = 7;
         </div>
       </div>
     </section>
+
+    <!-- ─── DETAIL MODAL ─── -->
+    @if (detailProduct()) {
+      <div class="modal-backdrop" (click)="closeDetail()">
+        <div class="detail-modal" (click)="$event.stopPropagation()">
+
+          <!-- Image -->
+          <div class="detail-img-side">
+            @if (detailProduct()!.mainImageUrl) {
+              <img [src]="resolveUrl(detailProduct()!.mainImageUrl!)" [alt]="detailProduct()!.name" class="detail-img" />
+            } @else {
+              <div class="detail-no-img">
+                <lucide-icon name="image-off" [size]="52" color="#d1d5db" [strokeWidth]="1.5" />
+              </div>
+            }
+            @if (isPromoActive(detailProduct()!)) {
+              <div class="detail-promo-ribbon">-{{ getDiscountPct(detailProduct()!) }}%</div>
+            }
+          </div>
+
+          <!-- Body -->
+          <div class="detail-body">
+            <button class="detail-close" (click)="closeDetail()">
+              <lucide-icon name="x" [size]="16" color="currentColor" [strokeWidth]="2.2" />
+            </button>
+
+            <div class="detail-top-meta">
+              @if (detailProduct()!.category) {
+                <span class="detail-cat-tag">{{ detailProduct()!.category!.name }}</span>
+              }
+              @if (detailProduct()!.brand) {
+                <span class="detail-brand-tag">{{ detailProduct()!.brand }}</span>
+              }
+            </div>
+
+            <h2 class="detail-name">{{ detailProduct()!.name }}</h2>
+
+            @if (detailProduct()!.description) {
+              <p class="detail-desc">{{ detailProduct()!.description }}</p>
+            }
+
+            @if (detailProduct()!.themes && detailProduct()!.themes!.length > 0) {
+              <div class="detail-themes">
+                @for (t of detailProduct()!.themes!; track t.id) {
+                  <span class="detail-theme-pill" [style.background]="(t.color || '#6366f1') + '22'" [style.color]="t.color || '#6366f1'" [style.border-color]="(t.color || '#6366f1') + '44'">
+                    @if (t.emoji) { {{ t.emoji }}&nbsp; }{{ t.name }}
+                  </span>
+                }
+              </div>
+            }
+
+            <div class="detail-price-wrap">
+              @if (isPromoActive(detailProduct()!)) {
+                <span class="detail-promo-price">{{ detailProduct()!.promoPrice! | number }} {{ detailProduct()!.currencyCode }}</span>
+                <span class="detail-orig-price">{{ (detailProduct()!.sellingPrice ?? detailProduct()!.estimatedPrice) | number }} {{ detailProduct()!.currencyCode }}</span>
+              } @else {
+                <span class="detail-price">{{ (detailProduct()!.sellingPrice ?? detailProduct()!.estimatedPrice) | number }} {{ detailProduct()!.currencyCode }}</span>
+              }
+            </div>
+
+            @if (detailProduct()!.referenceUrl) {
+              <a [href]="detailProduct()!.referenceUrl" target="_blank" rel="noopener" class="detail-ref-link">
+                <lucide-icon name="external-link" [size]="13" color="currentColor" [strokeWidth]="2" />
+                Voir la référence produit
+              </a>
+            }
+
+            <div class="detail-footer-actions">
+              <button class="detail-add-btn" (click)="detailAddToWishlist()">
+                <lucide-icon name="plus" [size]="16" color="currentColor" [strokeWidth]="2.5" />
+                Ajouter à ma wishlist
+              </button>
+              <button class="detail-cancel-btn" (click)="closeDetail()">Fermer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
 
     <!-- ─── WISHLIST MODAL ─── -->
     @if (showModal()) {
@@ -653,6 +732,212 @@ const SHOW_LIMIT = 7;
     .choice-title { font-size: 0.9rem; font-weight: 600; color: #111; }
     .choice-done { font-size: 0.75rem; color: #16a34a; font-weight: 600; }
 
+    /* ── DETAIL MODAL ── */
+    .detail-modal {
+      background: white;
+      border-radius: 24px;
+      width: min(860px, 95vw);
+      max-height: 90vh;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      position: relative;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.28);
+    }
+    .detail-img-side {
+      background: #f3f4f6;
+      position: relative;
+      min-height: 320px;
+      overflow: hidden;
+    }
+    .detail-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .detail-no-img {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .detail-promo-ribbon {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: #dc2626;
+      color: white;
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 5px 12px;
+      border-radius: 999px;
+    }
+    .detail-body {
+      padding: 36px 32px 32px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      position: relative;
+    }
+    .detail-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      background: #f3f4f6;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #6b7280;
+      transition: background 0.15s;
+    }
+    .detail-close:hover { background: #e5e7eb; }
+    .detail-top-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding-right: 40px;
+    }
+    .detail-cat-tag {
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #6b7280;
+      background: #f3f4f6;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+    .detail-brand-tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ca3af;
+    }
+    .detail-name {
+      font-size: 1.45rem;
+      font-weight: 900;
+      color: #111;
+      line-height: 1.25;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+    .detail-desc {
+      font-size: 0.9rem;
+      color: #6b7280;
+      line-height: 1.7;
+      margin: 0;
+    }
+    .detail-themes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .detail-theme-pill {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1.5px solid;
+    }
+    .detail-price-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .detail-price {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: #111;
+      letter-spacing: -0.02em;
+    }
+    .detail-promo-price {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: #dc2626;
+      letter-spacing: -0.02em;
+    }
+    .detail-orig-price {
+      font-size: 1rem;
+      color: #9ca3af;
+      text-decoration: line-through;
+    }
+    .detail-ref-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #6b7280;
+      text-decoration: none;
+      border: 1.5px solid #e5e7eb;
+      padding: 7px 14px;
+      border-radius: 10px;
+      width: fit-content;
+      transition: 0.15s;
+    }
+    .detail-ref-link:hover { border-color: #111; color: #111; }
+    .detail-footer-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: auto;
+      padding-top: 8px;
+    }
+    .detail-add-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 24px;
+      border: 0;
+      border-radius: 12px;
+      background: #111827;
+      color: white;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+      flex: 1;
+      justify-content: center;
+    }
+    .detail-add-btn:hover { background: #374151; }
+    .detail-cancel-btn {
+      padding: 13px 20px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 12px;
+      background: white;
+      font: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #6b7280;
+      cursor: pointer;
+      transition: 0.15s;
+      white-space: nowrap;
+    }
+    .detail-cancel-btn:hover { border-color: #111; color: #111; }
+
+    @media (max-width: 640px) {
+      .detail-modal {
+        grid-template-columns: 1fr;
+        max-height: 95vh;
+        border-radius: 20px 20px 0 0;
+        align-self: flex-end;
+        width: 100%;
+      }
+      .detail-img-side { min-height: 220px; }
+      .detail-body { padding: 24px 20px 20px; }
+    }
+
     /* ── RESPONSIVE ── */
     @media (max-width: 1100px) {
       .grid { grid-template-columns: repeat(2, 1fr); }
@@ -684,6 +969,8 @@ export class PublicCatalogPageComponent implements OnInit {
   private readonly catalogService = inject(CatalogService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly location = inject(Location);
   private readonly toast = inject(ToastService);
   private readonly wishlistItemService = inject(UserWishlistItemService);
   private readonly dashboardService = inject(DashboardService);
@@ -707,6 +994,8 @@ export class PublicCatalogPageComponent implements OnInit {
   readonly priceRange = signal<string | null>(null);
   readonly search = signal('');
   sortBy = signal('default');
+
+  readonly detailProduct = signal<CatalogProduct | null>(null);
 
   readonly showPromoOnly = signal(false);
   readonly themesExpanded = signal(false);
@@ -780,6 +1069,8 @@ export class PublicCatalogPageComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    const itemId = Number(this.route.snapshot.queryParams['item']) || null;
+
     this.catalogService.getThemes(true).subscribe({ next: t => this.themes.set(t) });
 
     this.loading.set(true);
@@ -787,13 +1078,35 @@ export class PublicCatalogPageComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: prods => {
-          this.products.set(prods.filter(p => p.status === 'ACTIVE'));
+          const active = prods.filter(p => p.status === 'ACTIVE');
+          this.products.set(active);
           const cats = new Map<number, CatalogCategory>();
           prods.forEach(p => { if (p.category) cats.set(p.category.id, p.category); });
           this.categories.set([...cats.values()]);
+          if (itemId) {
+            const found = active.find(p => p.id === itemId);
+            if (found) this.detailProduct.set(found);
+          }
         },
         error: () => this.toast.error('Impossible de charger le catalogue.'),
       });
+  }
+
+  openDetail(p: CatalogProduct): void {
+    this.detailProduct.set(p);
+    this.location.replaceState('/catalog', 'item=' + p.id);
+  }
+
+  closeDetail(): void {
+    this.detailProduct.set(null);
+    this.location.replaceState('/catalog');
+  }
+
+  detailAddToWishlist(): void {
+    const p = this.detailProduct();
+    if (!p) return;
+    this.closeDetail();
+    this.addToWishlist(p);
   }
 
   getCount(catId: number): number {

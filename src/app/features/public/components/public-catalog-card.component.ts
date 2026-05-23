@@ -8,7 +8,7 @@ import { CatalogProduct } from '../../catalog/models/catalog-product.model';
   standalone: true,
   imports: [CommonModule, LucideAngularModule],
   template: `
-    <article class="card">
+    <article class="card" (click)="view.emit(product)" style="cursor:pointer">
       <div class="card-img-wrap">
         @if (product.mainImageUrl) {
           <img
@@ -57,14 +57,19 @@ import { CatalogProduct } from '../../catalog/models/catalog-product.model';
               {{ (product.sellingPrice ?? product.estimatedPrice) | number }}<span class="card-cur"> {{ product.currencyCode }}</span>
             }
           </div>
-          <button class="card-add" (click)="add.emit(product)" [disabled]="submitting">
-            @if (submitting) {
-              <span class="spinner"></span>
-            } @else {
-              <lucide-icon name="plus" [size]="14" color="currentColor" [strokeWidth]="2.5" />
-            }
-            Ajouter
-          </button>
+          <div class="card-actions">
+            <button class="card-detail-btn" (click)="$event.stopPropagation(); view.emit(product)" title="Voir les détails">
+              <lucide-icon name="external-link" [size]="13" color="currentColor" [strokeWidth]="2" />
+            </button>
+            <button class="card-add" (click)="$event.stopPropagation(); add.emit(product)" [disabled]="submitting">
+              @if (submitting) {
+                <span class="spinner"></span>
+              } @else {
+                <lucide-icon name="plus" [size]="14" color="currentColor" [strokeWidth]="2.5" />
+              }
+              Ajouter
+            </button>
+          </div>
         </div>
       </div>
     </article>
@@ -186,6 +191,29 @@ import { CatalogProduct } from '../../catalog/models/catalog-product.model';
         gap: 12px;
         margin-top: 10px;
       }
+      .card-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+      .card-detail-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        background: white;
+        color: #6b7280;
+        cursor: pointer;
+        transition: border-color 0.15s, color 0.15s;
+      }
+      .card-detail-btn:hover {
+        border-color: #111;
+        color: #111;
+      }
       .card-price {
         font-size: 1rem;
         font-weight: 900;
@@ -264,4 +292,5 @@ export class PublicCatalogCardComponent {
   @Input({ required: true }) getDiscountPct!: (product: CatalogProduct) => number;
   @Input({ required: true }) onImgError!: (event: Event) => void;
   @Output() add = new EventEmitter<CatalogProduct>();
+  @Output() view = new EventEmitter<CatalogProduct>();
 }
