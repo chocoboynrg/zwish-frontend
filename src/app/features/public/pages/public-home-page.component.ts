@@ -246,18 +246,9 @@ import { LucideAngularModule } from 'lucide-angular';
       .hero-bg {
         position: absolute;
         inset: 0;
-        background-image: url('/home_page_hero.png');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-      }
-      .hero-bg::after {
-        content: '';
-        position: absolute;
-        inset: 0;
         background:
-          linear-gradient(to right, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.25) 100%),
-          radial-gradient(ellipse 80% 60% at 70% 50%, rgba(255, 215, 0, 0.06) 0%, transparent 60%);
+          linear-gradient(to right, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.20) 100%),
+          url('/home_page_hero.png') center / cover no-repeat;
       }
       .hero .container {
         position: relative;
