@@ -118,10 +118,17 @@ import { LucideAngularModule } from 'lucide-angular';
     <!-- FEATURES DARK -->
     <section class="features-dark">
       <div class="container">
-        <div class="section-eyebrow">Pourquoi ZWish</div>
-        <h2 class="section-title-light">
-          Tout ce dont vous avez besoin,<br />dans une seule plateforme.
-        </h2>
+        <div class="features-top">
+          <div class="features-top-text">
+            <div class="section-eyebrow">Pourquoi ZWish</div>
+            <h2 class="section-title-light">
+              Tout ce dont vous avez besoin,<br />dans une seule plateforme.
+            </h2>
+          </div>
+          <div class="features-top-img">
+            <img src="/pourquoi_zwish.png" alt="Pourquoi ZWish" />
+          </div>
+        </div>
 
         <div class="features-grid">
           <div class="feature-card-dark">
@@ -129,10 +136,7 @@ import { LucideAngularModule } from 'lucide-angular';
               <lucide-icon name="boxes" [size]="28" color="#FFD700" [strokeWidth]="1.8" />
             </div>
             <h3>Catalogue riche</h3>
-            <p>
-              Des milliers de produits classés par catégorie. Trouvez l'idée parfaite ou proposez la
-              vôtre.
-            </p>
+            <p>Des milliers de produits classés par catégorie. Trouvez l'idée parfaite ou proposez la vôtre.</p>
           </div>
           <div class="feature-card-dark featured">
             <div class="feature-badge">★ Populaire</div>
@@ -140,10 +144,7 @@ import { LucideAngularModule } from 'lucide-angular';
               <lucide-icon name="users" [size]="28" color="#FFD700" [strokeWidth]="1.8" />
             </div>
             <h3>Contributions groupées</h3>
-            <p>
-              Vos invités contribuent ensemble à l'achat d'un cadeau qui compte vraiment.
-              Transparent et simple.
-            </p>
+            <p>Vos invités contribuent ensemble à l'achat d'un cadeau qui compte vraiment. Transparent et simple.</p>
           </div>
           <div class="feature-card-dark">
             <div class="feature-icon-wrap">
@@ -157,10 +158,7 @@ import { LucideAngularModule } from 'lucide-angular';
               <lucide-icon name="activity" [size]="28" color="#FFD700" [strokeWidth]="1.8" />
             </div>
             <h3>Suivi en temps réel</h3>
-            <p>
-              Dashboard complet pour l'organisateur. Visualisez les contributions et l'avancement à
-              chaque instant.
-            </p>
+            <p>Dashboard complet pour l'organisateur. Visualisez les contributions et l'avancement à chaque instant.</p>
           </div>
         </div>
       </div>
@@ -169,34 +167,36 @@ import { LucideAngularModule } from 'lucide-angular';
     <!-- HOW IT WORKS MINI -->
     <section class="how-mini">
       <div class="container">
-        <div class="how-mini-header">
-          <div class="section-eyebrow dark">Simple comme bonjour</div>
-          <h2 class="section-title-dark">Lancez-vous en 3 étapes</h2>
-        </div>
-        <div class="steps-row">
-          <div class="step-item">
-            <div class="step-num">01</div>
-            <h3>Créez votre événement</h3>
-            <p>Donnez un nom à votre occasion, ajoutez la date et une description. C'est tout.</p>
+        <div class="how-mini-inner">
+          <div class="how-mini-left">
+            <div class="how-mini-header">
+              <div class="section-eyebrow dark">Simple comme bonjour</div>
+              <h2 class="section-title-dark">Lancez-vous en 3 étapes</h2>
+            </div>
+            <div class="steps-col">
+              <div class="step-item">
+                <div class="step-num">01</div>
+                <h3>Créez votre événement</h3>
+                <p>Donnez un nom à votre occasion, ajoutez la date et une description. C'est tout.</p>
+              </div>
+              <div class="step-item">
+                <div class="step-num">02</div>
+                <h3>Construisez votre wishlist</h3>
+                <p>Ajoutez des produits de notre catalogue ou faites une demande personnalisée.</p>
+              </div>
+              <div class="step-item">
+                <div class="step-num">03</div>
+                <h3>Partagez et recevez</h3>
+                <p>Un lien unique. Vos invités contribuent en quelques clics, vous recevez ce qui vous fait vraiment plaisir.</p>
+              </div>
+            </div>
+            <div class="how-mini-cta">
+              <a routerLink="/how-it-works" class="btn-outline-dark">En savoir plus</a>
+            </div>
           </div>
-          <div class="step-arrow">→</div>
-          <div class="step-item">
-            <div class="step-num">02</div>
-            <h3>Construisez votre wishlist</h3>
-            <p>Ajoutez des produits de notre catalogue ou faites une demande personnalisée.</p>
+          <div class="how-mini-right">
+            <img src="/simple_comme_bonjour.png" alt="Simple comme bonjour" />
           </div>
-          <div class="step-arrow">→</div>
-          <div class="step-item">
-            <div class="step-num">03</div>
-            <h3>Partagez et recevez</h3>
-            <p>
-              Un lien unique. Vos invités contribuent en quelques clics, vous recevez ce qui vous
-              fait vraiment plaisir.
-            </p>
-          </div>
-        </div>
-        <div class="how-mini-cta">
-          <a routerLink="/how-it-works" class="btn-outline-dark">En savoir plus</a>
         </div>
       </div>
     </section>
@@ -221,6 +221,7 @@ import { LucideAngularModule } from 'lucide-angular';
         </div>
       </div>
     </section>
+
   `,
   styles: [
     `
@@ -546,6 +547,21 @@ import { LucideAngularModule } from 'lucide-angular';
         background: #0a0a0a;
         padding: 100px 0;
       }
+      .features-top {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 60px;
+        align-items: center;
+        margin-bottom: 64px;
+      }
+      .features-top-text .section-title-light { margin: 0; }
+      .features-top-img img {
+        width: 100%;
+        max-height: 340px;
+        object-fit: cover;
+        border-radius: 20px;
+        opacity: 0.92;
+      }
       .section-eyebrow {
         color: #ffd700;
         font-size: 0.78rem;
@@ -626,8 +642,14 @@ import { LucideAngularModule } from 'lucide-angular';
         background: #fff;
         padding: 100px 0;
       }
+      .how-mini-inner {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 80px;
+        align-items: center;
+      }
       .how-mini-header {
-        margin-bottom: 64px;
+        margin-bottom: 40px;
       }
       .section-eyebrow.dark {
         color: #ffd700;
@@ -640,44 +662,46 @@ import { LucideAngularModule } from 'lucide-angular';
         letter-spacing: -0.02em;
         margin: 0;
       }
-      .steps-row {
+      .steps-col {
         display: flex;
-        align-items: flex-start;
-        gap: 0;
+        flex-direction: column;
+        gap: 32px;
       }
       .step-item {
-        flex: 1;
-        padding-right: 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding-left: 20px;
+        border-left: 3px solid #f3f4f6;
       }
       .step-num {
-        font-size: 3.5rem;
+        font-size: 1.1rem;
         font-weight: 900;
-        color: #f3f4f6;
+        color: #ffd700;
         line-height: 1;
-        margin-bottom: 16px;
         font-family: monospace;
       }
       .step-item h3 {
-        font-size: 1.1rem;
+        font-size: 1rem;
         font-weight: 800;
         color: #111;
-        margin: 0 0 10px;
+        margin: 0;
       }
       .step-item p {
         color: #6b7280;
-        font-size: 0.9rem;
+        font-size: 0.88rem;
         line-height: 1.7;
         margin: 0;
       }
-      .step-arrow {
-        color: #d1d5db;
-        font-size: 1.5rem;
-        margin-top: 56px;
-        flex-shrink: 0;
-        padding: 0 16px;
+      .how-mini-right img {
+        width: 100%;
+        border-radius: 20px;
+        object-fit: cover;
+        max-height: 480px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.12);
       }
       .how-mini-cta {
-        margin-top: 48px;
+        margin-top: 40px;
       }
       .btn-outline-dark {
         display: inline-flex;
@@ -696,7 +720,6 @@ import { LucideAngularModule } from 'lucide-angular';
 
       /* CTA FINAL */
       .cta-final {
-        background: #000;
         padding: 120px 0;
         position: relative;
         overflow: hidden;
@@ -704,11 +727,9 @@ import { LucideAngularModule } from 'lucide-angular';
       .cta-bg {
         position: absolute;
         inset: 0;
-        background: radial-gradient(
-          ellipse 80% 100% at 50% 100%,
-          rgba(255, 215, 0, 0.1) 0%,
-          transparent 60%
-        );
+        background:
+          linear-gradient(rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.65) 100%),
+          url('/votre_prochain_evenement.png') center / cover no-repeat;
       }
       .cta-content {
         position: relative;
@@ -744,9 +765,7 @@ import { LucideAngularModule } from 'lucide-angular';
 
       /* RESPONSIVE */
       @media (max-width: 1100px) {
-        .features-grid {
-          grid-template-columns: repeat(2, 1fr);
-        }
+        .features-grid { grid-template-columns: repeat(2, 1fr); }
       }
       @media (max-width: 900px) {
         .hero .container {
@@ -754,28 +773,22 @@ import { LucideAngularModule } from 'lucide-angular';
           gap: 48px;
           padding-top: 48px;
         }
-        .hero-visual {
-          display: none;
-        }
-        .steps-row {
-          flex-direction: column;
+        .hero-visual { display: none; }
+        .features-top {
+          grid-template-columns: 1fr;
           gap: 32px;
         }
-        .step-arrow {
-          display: none;
+        .how-mini-inner {
+          grid-template-columns: 1fr;
+          gap: 48px;
         }
+        .how-mini-right { order: -1; }
+        .how-mini-right img { max-height: 280px; }
       }
       @media (max-width: 640px) {
-        .features-grid {
-          grid-template-columns: 1fr;
-        }
-        .hero-stats {
-          flex-wrap: wrap;
-          gap: 16px;
-        }
-        .hero-stat-sep {
-          display: none;
-        }
+        .features-grid { grid-template-columns: 1fr; }
+        .hero-stats { flex-wrap: wrap; gap: 16px; }
+        .hero-stat-sep { display: none; }
       }
     `,
   ],
