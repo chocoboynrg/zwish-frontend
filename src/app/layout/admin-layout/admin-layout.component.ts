@@ -99,7 +99,7 @@ import { LucideAngularModule } from 'lucide-angular';
             Livraisons en attente
           </a>
           <a routerLink="/admin/delivery-date-pending" routerLinkActive="active">
-            <lucide-icon name="calendar-x" [size]="18" color="currentColor" [strokeWidth]="1.8" />
+            <lucide-icon name="alert-triangle" [size]="18" color="currentColor" [strokeWidth]="1.8" />
             Dates à définir
           </a>
 
