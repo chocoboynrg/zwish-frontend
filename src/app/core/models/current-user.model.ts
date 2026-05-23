@@ -6,6 +6,7 @@ export interface CurrentUser {
   email: string;
   platformRole: PlatformRole;
   phoneNumber: string | null;
+  avatarUrl: string | null;
   emailVerified: boolean;
   emailVerifiedAt: string | null;
 }
